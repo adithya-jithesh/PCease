@@ -1,0 +1,126 @@
+/* Copied from original home.css to preserve appearance */
+
+/* ===============================================
+   PCease Home - Main Stylesheet
+   Modern, responsive design with CSS custom properties
+   =============================================== */
+
+/* ========== CSS Custom Properties ========== */
+/* Inherit global theme tokens */
+
+/* ========== Base Styles ========== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body { line-height: 1.6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* ========== Layout ========== */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 var(--space-lg); }
+
+/* ========== Navigation ========== */
+/* Use global navbar */
+
+/* ========== Hero Section ========== */
+.hero { background: linear-gradient(rgba(44, 62, 80, 0.75), rgba(44, 62, 80, 0.75)), url('https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=2070') center/cover; color: white; text-align: center; padding: 100px var(--space-lg); position: relative; }
+.hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-hover)); }
+.hero-content h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: var(--space-md); font-weight: 700; }
+.hero-content p { font-size: clamp(1rem, 2vw, 1.2rem); margin-bottom: var(--space-xl); opacity: 0.95; }
+.hero-actions { display: flex; gap: var(--space-md); justify-content: center; flex-wrap: wrap; margin-bottom: var(--space-md); }
+.hero-stats { margin-top: var(--space-sm); font-size: 0.95rem; opacity: 0.9; }
+
+/* ========== Buttons ========== */
+.cta-button { display: inline-block; background: var(--accent); color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-size: 1.1rem; font-weight: 600; transition: all var(--transition-base); box-shadow: var(--shadow-sm); border: none; cursor: pointer; }
+.cta-button:hover { background-color: var(--accent-hover); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.secondary-button { display: inline-block; background: transparent; color: #fff; border: 2px solid rgba(255, 255, 255, 0.8); padding: 13px 28px; text-decoration: none; border-radius: 6px; font-size: 1.1rem; font-weight: 600; transition: all var(--transition-base); }
+.secondary-button:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
+
+/* ========== Sections ========== */
+.section-title { text-align: center; margin: 0 0 var(--space-xl); color: var(--text); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; }
+
+/* About Section */
+.about { padding: 60px 0 40px; }
+.about p { max-width: 800px; margin: 0 auto; color: var(--muted); font-size: 1.1rem; text-align: center; }
+
+/* Features Section */
+.features { padding: 60px 0; background: var(--surface-2); }
+.features .container { display: block; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-lg); align-items: stretch; }
+.feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: var(--space-xl); text-align: center; transition: all var(--transition-base); }
+.feature-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+.feature-card h3 { margin-top: 0; color: var(--accent); font-size: 1.3rem; }
+
+/* Categories Section */
+.categories { padding: 60px 0 80px; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--space-md); }
+.card { display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: var(--space-lg); text-decoration: none; color: inherit; text-align: center; box-shadow: var(--shadow-sm); transition: all var(--transition-base); }
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--accent); }
+.card-emoji { font-size: 2.5rem; margin-bottom: var(--space-sm); }
+.card h3 { margin: var(--space-sm) 0 var(--space-xs); font-size: 1.1rem; color: var(--text); }
+.card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+/* ========== Forum Section ========== */
+.forum { padding: 60px 0 80px; }
+.forum-subtitle { text-align: center; color: var(--muted); margin: -12px auto 24px; }
+.forum-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+.forum-column { width: 100%; }
+.new-thread-form { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: var(--space-lg); box-shadow: var(--shadow-sm); }
+.new-thread-form .form-row { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-md); }
+.new-thread-form .form-field { display: flex; flex-direction: column; gap: 6px; }
+.new-thread-form label { font-weight: 600; color: var(--text); }
+.new-thread-form input, .new-thread-form select, .new-thread-form textarea { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+.forum-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-md); }
+.forum-filter { display: flex; align-items: center; gap: 8px; }
+.forum-filter select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); }
+.threads-list { display: grid; gap: var(--space-md); }
+.thread-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: var(--space-lg); box-shadow: var(--shadow-sm); }
+.thread-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.thread-title { margin: 0; font-size: 1.05rem; }
+.thread-meta { display: flex; gap: 10px; align-items: center; color: var(--muted); font-size: 0.9rem; }
+.thread-badge { background: var(--surface-2); border: 1px solid var(--border); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; }
+.thread-date { opacity: 0.9; }
+.thread-content { margin-bottom: var(--space-md); color: var(--text); white-space: pre-wrap; }
+.thread-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.thread-delete { border: 1px solid var(--border); background: transparent; color: var(--text); padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+.thread-delete:hover { background: var(--surface-2); }
+.forum-empty { text-align: center; color: var(--muted); }
+
+/* ========== Footer ========== */
+/* Footer uses global styling */
+
+/* ========== Responsive Design ========== */
+@media (max-width: 768px) {
+  .hero { padding: 60px var(--space-md); background-position: center; }
+  .hero-content h1 { font-size: 2rem; }
+  .hero-content p { font-size: 1rem; }
+  .hero-actions { flex-direction: column; width: 100%; }
+  .hero-actions .cta-button, .hero-actions .secondary-button { width: 100%; text-align: center; }
+  
+  .card-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-sm); }
+  .card { padding: var(--space-md); }
+  .card-emoji { font-size: 2rem; }
+  .card h3 { font-size: 1rem; }
+  
+  .features-grid { grid-template-columns: 1fr; gap: var(--space-md); }
+  .feature-card { padding: var(--space-lg); }
+  
+  .forum-layout { grid-template-columns: 1fr; }
+  .new-thread-form .form-row { grid-template-columns: 1fr; }
+  .new-thread-form { padding: var(--space-md); }
+  
+  .section-title { font-size: 1.5rem; }
+  .about, .features, .categories, .forum { padding: 40px 0; }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 40px var(--space-sm); }
+  .hero-content h1 { font-size: 1.75rem; }
+  .hero-stats { font-size: 0.85rem; }
+  
+  .card-grid { grid-template-columns: 1fr; }
+  
+  .cta-button, .secondary-button { padding: 12px 20px; font-size: 1rem; }
+  
+  .thread-header { flex-direction: column; align-items: flex-start; }
+  .thread-meta { flex-wrap: wrap; }
+}
