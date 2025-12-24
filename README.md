@@ -39,6 +39,5 @@ cd backend && npm install
 ## 👨‍💻 Authors
 
 Vaibhav Shiroorkar — https://github.com/vaibhavshiroorkar
-
 Adithya Jithesh — https://github.com/adithyajithesh
 
