@@ -457,6 +457,7 @@ main {
 @media (max-width: 768px) {
   .mobile-menu-toggle {
     display: flex;
+    z-index: 101;
   }
 
   .nav-links {
@@ -467,28 +468,61 @@ main {
     right: 0;
     bottom: 0;
     flex-direction: column;
-    background: var(--bg-secondary);
-    padding: var(--space-lg);
+    background: rgba(15, 22, 41, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: var(--space-xl) var(--space-lg);
     gap: var(--space-sm);
     overflow-y: auto;
-    animation: fadeIn var(--transition-fast);
+    z-index: 999;
+    list-style: none;
   }
 
   .nav-links.mobile-open {
     display: flex;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .nav-links li {
+    width: 100%;
   }
 
   .nav-link {
+    display: block;
     width: 100%;
     padding: var(--space-md) var(--space-lg);
     font-size: 1.1rem;
     border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: var(--accent);
   }
 
   .theme-toggle-btn {
     width: 100%;
     justify-content: center;
-    padding: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
   }
 
   .theme-text {
@@ -982,6 +1016,10 @@ label {
 
   .navbar .container {
     height: 64px;
+  }
+
+  .nav-links {
+    top: 64px;
   }
 
   .brand-logo {
