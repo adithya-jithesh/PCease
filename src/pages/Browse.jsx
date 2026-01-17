@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getComponentsStructured } from '../shared/api.js'
+import { useSearchParams } from 'react-router-dom'
+import {
+  getComponentsStructured,
+  getLowestPrice,
+  getBestVendor,
+  formatPrice,
+  fuzzySearch,
+  filterComponents
+} from '../shared/api.js'
 import '../styles/browse.css'
 
-function transformDB(db){
+function transformDB(db) {
   const all = []
-  for (const [category, items] of Object.entries(db)){
-    for (const item of items){
-      const avgPrice = item.vendors?.length ? Math.round(item.vendors.reduce((s,v)=>s+v.price,0)/item.vendors.length) : 0
+  for (const [category, items] of Object.entries(db)) {
+    for (const item of items) {
       all.push({
-        // create a unique id per category so keys are stable even if numeric ids repeat across categories
         uid: `${category}-${item.id}`,
         id: item.id,
         name: item.name,
         category,
         brand: item.brand || 'Generic',
-        price: avgPrice,
         vendors: item.vendors || [],
         ramType: item.ramType,
         formFactor: item.formFactor,
@@ -22,221 +27,397 @@ function transformDB(db){
         memory: item.memory,
         capacity: item.capacity,
         wattage: item.wattage,
-        socket: item.socket
+        socket: item.socket,
+        type: item.type
       })
     }
   }
   return all
 }
 
-function getCategoryName(cat){
-  const names = { cpu:'Processor', gpu:'Graphics Card', motherboard:'Motherboard', ram:'Memory (RAM)', storage:'Storage', psu:'Power Supply', pcCase:'Case', monitor:'Monitor' }
-  if (cat==='all') return 'All'
-  return names[cat] || cat?.toUpperCase()
+const categoryNames = {
+  cpu: 'Processor',
+  gpu: 'Graphics Card',
+  motherboard: 'Motherboard',
+  ram: 'Memory',
+  storage: 'Storage',
+  psu: 'Power Supply',
+  pcCase: 'Case',
+  monitor: 'Monitor',
+  all: 'All Components'
 }
 
-function getCheapestVendor(component){
-  if (!component?.vendors?.length) return null
-  const inStock = component.vendors.filter(v=>v.stock)
-  const list = inStock.length ? inStock : component.vendors
-  return list.reduce((min,v)=> v.price < min.price ? v : min, list[0])
+function getCategoryName(cat) {
+  return categoryNames[cat] || cat?.toUpperCase() || 'Unknown'
 }
 
-export default function Browse(){
+export default function Browse() {
+  const [searchParams] = useSearchParams()
   const [db, setDb] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(()=>{
-    let active = true
-    ;(async()=>{
-      try{ const grouped = await getComponentsStructured(); if(active) setDb(grouped) }
-      catch{ if(active) setError('Failed to load components') }
-      finally{ if(active) setLoading(false) }
-    })()
-    return ()=>{ active = false }
-  }, [])
-
-  const all = useMemo(()=>transformDB(db), [db])
-  const brands = useMemo(()=>[...new Set(all.map(c=>c.brand).filter(Boolean))].sort(), [all])
-  const categories = useMemo(()=>['all', ...new Set(all.map(c=>c.category))], [all])
-
+  // Filters
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('all')
+  const [category, setCategory] = useState(searchParams.get('category') || 'all')
   const [brand, setBrand] = useState('')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
-  const [favorites, setFavorites] = useState(()=> JSON.parse(localStorage.getItem('favorites')||'[]')||[])
-  const [compareList, setCompareList] = useState(()=> JSON.parse(localStorage.getItem('compareList')||'[]')||[])
+  const [sortBy, setSortBy] = useState('price-low')
+
+  // Lists
+  const [favorites, setFavorites] = useState(() => JSON.parse(localStorage.getItem('favorites') || '[]') || [])
+  const [compareList, setCompareList] = useState(() => JSON.parse(localStorage.getItem('compareList') || '[]') || [])
+
+  // Modals
   const [showFavoritesModal, setShowFavoritesModal] = useState(false)
   const [showCompareModal, setShowCompareModal] = useState(false)
-  const [detail, setDetail] = useState({ open:false, item:null })
+  const [detail, setDetail] = useState({ open: false, item: null })
 
-  useEffect(()=>{ localStorage.setItem('favorites', JSON.stringify(favorites)) }, [favorites])
-  useEffect(()=>{ localStorage.setItem('compareList', JSON.stringify(compareList)) }, [compareList])
+  useEffect(() => {
+    let active = true
+      ; (async () => {
+        try {
+          const grouped = await getComponentsStructured()
+          if (active) setDb(grouped)
+        } catch {
+          if (active) setError('Failed to load components')
+        } finally {
+          if (active) setLoading(false)
+        }
+      })()
+    return () => { active = false }
+  }, [])
 
-  const results = useMemo(()=>{
-    let r = [...all]
-    const q = search.trim().toLowerCase()
-    if (q) r = r.filter(i => i.name.toLowerCase().includes(q) || i.brand?.toLowerCase().includes(q))
-    if (category !== 'all') r = r.filter(i => i.category === category)
-    if (brand) r = r.filter(i => i.brand === brand)
-    if (minPrice!=='') r = r.filter(i => i.price >= Number(minPrice))
-    if (maxPrice!=='') r = r.filter(i => i.price <= Number(maxPrice))
-    return r.sort((a,b)=> a.price-b.price)
-  }, [all, search, category, brand, minPrice, maxPrice])
+  useEffect(() => { localStorage.setItem('favorites', JSON.stringify(favorites)) }, [favorites])
+  useEffect(() => { localStorage.setItem('compareList', JSON.stringify(compareList)) }, [compareList])
 
-  const openDetail = (item) => setDetail({ open:true, item })
-  const closeDetail = () => setDetail({ open:false, item:null })
-  const toggleFavorite = (uid) => setFavorites(list => list.includes(uid) ? list.filter(x=>x!==uid) : [...list, uid])
-  const toggleCompare = (uid) => setCompareList(list => list.includes(uid) ? list.filter(x=>x!==uid) : (list.length>=3 ? list : [...list, uid]))
+  const all = useMemo(() => transformDB(db), [db])
+  const brands = useMemo(() => [...new Set(all.map(c => c.brand).filter(Boolean))].sort(), [all])
+  const categories = useMemo(() => ['all', ...new Set(all.map(c => c.category))], [all])
 
-  const findByUid = (uid) => all.find(i => i.uid === uid || String(i.id) === String(uid))
+  const results = useMemo(() => {
+    // Start with search
+    let r = search ? fuzzySearch(search, all) : [...all]
+
+    // Apply filters
+    r = filterComponents(r, {
+      category: category !== 'all' ? category : null,
+      brand: brand || null,
+      minPrice: minPrice ? Number(minPrice) : null,
+      maxPrice: maxPrice ? Number(maxPrice) : null
+    })
+
+    // Sort
+    if (sortBy === 'price-low') {
+      r.sort((a, b) => (getLowestPrice(a) || 999999) - (getLowestPrice(b) || 999999))
+    } else if (sortBy === 'price-high') {
+      r.sort((a, b) => (getLowestPrice(b) || 0) - (getLowestPrice(a) || 0))
+    } else if (sortBy === 'name') {
+      r.sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    return r
+  }, [all, search, category, brand, minPrice, maxPrice, sortBy])
+
+  const openDetail = (item) => setDetail({ open: true, item })
+  const closeDetail = () => setDetail({ open: false, item: null })
+  const toggleFavorite = (uid) => setFavorites(list => list.includes(uid) ? list.filter(x => x !== uid) : [...list, uid])
+  const toggleCompare = (uid) => setCompareList(list => list.includes(uid) ? list.filter(x => x !== uid) : (list.length >= 3 ? list : [...list, uid]))
+
+  const findByUid = (uid) => all.find(i => i.uid === uid)
   const favoriteItems = favorites.map(findByUid).filter(Boolean)
   const compareItems = compareList.map(findByUid).filter(Boolean)
 
-  if (loading) return (
-    <main className="container"><header className="page-header"><h1>Browse Components</h1><p>Loading components…</p></header></main>
-  )
-  if (error) return <main className="container"><header className="page-header"><h1>Browse Components</h1><p style={{color:'var(--muted)'}}>{error}</p></header></main>
+  const clearFilters = () => {
+    setSearch('')
+    setCategory('all')
+    setBrand('')
+    setMinPrice('')
+    setMaxPrice('')
+    setSortBy('price-low')
+  }
+
+  if (loading) {
+    return (
+      <main className="container">
+        <div className="browse-header">
+          <div className="browse-header-info">
+            <h1>Browse Components</h1>
+            <p>Loading components...</p>
+          </div>
+        </div>
+        <div className="products-grid">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="product-card">
+              <div className="skeleton" style={{ height: 20, width: '40%', marginBottom: 12 }}></div>
+              <div className="skeleton" style={{ height: 24, width: '80%', marginBottom: 8 }}></div>
+              <div className="skeleton" style={{ height: 32, width: '50%', marginBottom: 16 }}></div>
+              <div className="skeleton" style={{ height: 40, width: '100%' }}></div>
+            </div>
+          ))}
+        </div>
+      </main>
+    )
+  }
+
+  if (error) {
+    return (
+      <main className="container">
+        <div className="browse-header">
+          <div className="browse-header-info">
+            <h1>Browse Components</h1>
+            <p className="muted">{error}</p>
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main className="container">
-      <header className="page-header">
-        <h1>Browse Components</h1>
-        <p>Find the right part by category, brand, and price, then compare or buy from listed vendors.</p>
-      </header>
+      <div className="browse-header">
+        <div className="browse-header-info">
+          <h1>Browse Components</h1>
+          <p>Find the perfect parts for your build. Compare prices across vendors.</p>
+        </div>
+      </div>
 
-      {/* Centered toolbar under header: Favorites and Compare buttons side-by-side */}
+      {/* Controls */}
+      <section className="controls">
+        <div className="search-row">
+          <input
+            className="search-input"
+            type="search"
+            placeholder="Search components..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="chips-row">
+          <div className="chips" role="toolbar" aria-label="Filter by category">
+            {categories.map(c => (
+              <button
+                key={c}
+                className={`chip ${c === category ? 'active' : ''}`}
+                onClick={() => setCategory(c)}
+              >
+                {getCategoryName(c)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="filters-row">
+          <div className="filter-group">
+            <label>Brand:</label>
+            <select className="filter-select" value={brand} onChange={e => setBrand(e.target.value)}>
+              <option value="">All brands</option>
+              {brands.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Price:</label>
+            <div className="price-inputs">
+              <input
+                className="price-input"
+                type="number"
+                placeholder="Min ₹"
+                min="0"
+                value={minPrice}
+                onChange={e => setMinPrice(e.target.value)}
+              />
+              <span>—</span>
+              <input
+                className="price-input"
+                type="number"
+                placeholder="Max ₹"
+                min="0"
+                value={maxPrice}
+                onChange={e => setMaxPrice(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="filter-group">
+            <label>Sort:</label>
+            <select className="filter-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="name">Name: A-Z</option>
+            </select>
+          </div>
+
+          <button className="clear-filters" onClick={clearFilters}>Clear All</button>
+        </div>
+      </section>
+
+      {/* Toolbar */}
       <div className="toolbar-row">
+        <span className="results-count">
+          Showing <strong>{results.length}</strong> of {all.length} components
+        </span>
         <div className="toolbar">
-          <button className="toolbar-btn" onClick={()=>setShowFavoritesModal(true)} aria-haspopup="dialog">
-            Favorites {favorites.length>0 && <span className="count">{favorites.length}</span>}
+          <button className="toolbar-btn" onClick={() => setShowFavoritesModal(true)}>
+            ⭐ Favorites {favorites.length > 0 && <span className="count">{favorites.length}</span>}
           </button>
-          <button className="toolbar-btn" onClick={()=>setShowCompareModal(true)} aria-haspopup="dialog" disabled={compareList.length===0}>
-            Compare {compareList.length>0 && <span className="count">{compareList.length}</span>}
+          <button
+            className="toolbar-btn"
+            onClick={() => setShowCompareModal(true)}
+            disabled={compareList.length === 0}
+          >
+            ⚖️ Compare {compareList.length > 0 && <span className="count">{compareList.length}</span>}
           </button>
         </div>
       </div>
 
-      <section className="controls">
-        <input className="control-input" type="search" placeholder="Search by name or brand…" value={search} onChange={e=>setSearch(e.target.value)} />
-        <div className="row">
-          <div className="chips" role="toolbar" aria-label="Filter by category">
-            {categories.map(c => (
-              <button key={c} className={"chip "+(c===category?'active':'')} onClick={()=>setCategory(c)}>{getCategoryName(c)}</button>
-            ))}
+      {/* Products Grid */}
+      <section className="products-grid">
+        {results.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🔍</div>
+            <h3>No components found</h3>
+            <p>Try adjusting your filters or search terms</p>
           </div>
-          <div className="filters">
-            <select className="control-select" value={brand} onChange={e=>setBrand(e.target.value)}>
-              <option value="">All brands</option>
-              {brands.map(b=> <option key={b} value={b}>{b}</option>)}
-            </select>
-            <div className="price">
-              <input className="control-number" type="number" placeholder="Min ₹" min="0" value={minPrice} onChange={e=>setMinPrice(e.target.value)} />
-              <span>—</span>
-              <input className="control-number" type="number" placeholder="Max ₹" min="0" value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} />
-            </div>
-            <button className="clear" onClick={()=>{ setSearch(''); setCategory('all'); setBrand(''); setMinPrice(''); setMaxPrice('') }}>Clear</button>
-          </div>
-        </div>
-      </section>
+        ) : results.map(item => {
+          const lowestPrice = getLowestPrice(item)
+          const bestVendor = getBestVendor(item)
+          const uid = item.uid
+          const isFav = favorites.includes(uid)
+          const inCompare = compareList.includes(uid)
 
-      <section className="grid">
-        {results.length===0 ? <p className="muted">No components match your filters.</p> : results.map(item => {
-          const cheapest = getCheapestVendor(item)
-          // support both legacy numeric ids and new per-category uid values stored in localStorage
-          const uid = item.uid || `${item.category}-${item.id}`
-          const fav = favorites.includes(uid) || favorites.includes(item.id)
-          const inCmp = compareList.includes(uid) || compareList.includes(item.id)
           return (
-            <article key={uid} className="card">
-              <div className="card-top">
-                <span className="badge">{getCategoryName(item.category)}</span>
-                <div className="icons">
-                  <button className={"icon "+(fav?'active':'')} title="Favorite" onClick={()=>toggleFavorite(uid)}>{fav ? '⭐' : '☆'}</button>
-                  <button className={"icon "+(inCmp?'active':'')} title="Compare" onClick={()=>toggleCompare(uid)} disabled={!inCmp && compareList.length>=3}>{inCmp ? '✓' : '⚖️'}</button>
+            <article key={uid} className="product-card">
+              <div className="product-header">
+                <span className="product-badge">{getCategoryName(item.category)}</span>
+                <div className="product-actions-top">
+                  <button
+                    className={`icon-btn ${isFav ? 'active' : ''}`}
+                    title="Add to favorites"
+                    onClick={() => toggleFavorite(uid)}
+                  >
+                    {isFav ? '⭐' : '☆'}
+                  </button>
+                  <button
+                    className={`icon-btn ${inCompare ? 'active' : ''}`}
+                    title="Add to compare"
+                    onClick={() => toggleCompare(uid)}
+                    disabled={!inCompare && compareList.length >= 3}
+                  >
+                    {inCompare ? '✓' : '⚖️'}
+                  </button>
                 </div>
               </div>
-              <h3 className="title" title={item.name}>{item.name}</h3>
-              {cheapest ? <div className="price">From ₹{cheapest.price.toLocaleString('en-IN')}</div> : <div className="price muted">No offers</div>}
-              <div className="actions">
-                <button className="btn" onClick={()=>openDetail(item)}>View Details</button>
-                {cheapest && <a className="btn primary" href={cheapest.url} target="_blank" rel="noreferrer">Buy</a>}
+
+              <h3 className="product-title">{item.name}</h3>
+
+              {lowestPrice ? (
+                <div className="product-price">{formatPrice(lowestPrice)}</div>
+              ) : (
+                <div className="product-price no-price">No offers available</div>
+              )}
+
+              <div className="product-buttons">
+                <button className="btn" onClick={() => openDetail(item)}>Details</button>
+                {bestVendor && (
+                  <a className="btn primary" href={bestVendor.url} target="_blank" rel="noreferrer">
+                    Buy →
+                  </a>
+                )}
               </div>
             </article>
           )
         })}
       </section>
 
+      {/* Detail Modal */}
       {detail.open && detail.item && (
-        <div className="modal-container active" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+        <div className="modal-container active" role="dialog" aria-modal="true">
           <div className="modal-overlay" onClick={closeDetail}></div>
           <div className="modal-content">
             <div className="modal-header">
-              <h2 id="detail-title">{detail.item.name}</h2>
+              <h2>{detail.item.name}</h2>
               <button className="modal-close-btn" onClick={closeDetail}>&times;</button>
             </div>
             <div className="modal-body two-col">
               <div className="col">
-                <div className="meta">
-                  <span className="badge">{getCategoryName(detail.item.category)}</span>
-                  <span className="muted">{detail.item.brand}</span>
-                </div>
-                <ul className="specs">
-                  {detail.item.cores ? <li><strong>Cores:</strong> {detail.item.cores}</li> : null}
-                  {detail.item.memory ? <li><strong>Memory:</strong> {detail.item.memory}</li> : null}
-                  {detail.item.capacity ? <li><strong>Capacity:</strong> {detail.item.capacity}</li> : null}
-                  {detail.item.wattage ? <li><strong>Wattage:</strong> {detail.item.wattage}W</li> : null}
-                  {detail.item.formFactor ? <li><strong>Form Factor:</strong> {detail.item.formFactor}</li> : null}
-                  {detail.item.ramType ? <li><strong>RAM Type:</strong> {detail.item.ramType}</li> : null}
+                <h3>Specifications</h3>
+                <ul className="specs-list">
+                  <li><span>Brand</span><strong>{detail.item.brand}</strong></li>
+                  <li><span>Category</span><strong>{getCategoryName(detail.item.category)}</strong></li>
+                  {detail.item.cores && <li><span>Cores</span><strong>{detail.item.cores}</strong></li>}
+                  {detail.item.socket && <li><span>Socket</span><strong>{detail.item.socket}</strong></li>}
+                  {detail.item.memory && <li><span>Memory</span><strong>{detail.item.memory}</strong></li>}
+                  {detail.item.capacity && <li><span>Capacity</span><strong>{detail.item.capacity}</strong></li>}
+                  {detail.item.wattage && <li><span>Wattage</span><strong>{detail.item.wattage}W</strong></li>}
+                  {detail.item.formFactor && <li><span>Form Factor</span><strong>{detail.item.formFactor}</strong></li>}
+                  {detail.item.ramType && <li><span>RAM Type</span><strong>{detail.item.ramType}</strong></li>}
+                  {detail.item.type && <li><span>Type</span><strong>{detail.item.type}</strong></li>}
                 </ul>
               </div>
               <div className="col">
+                <h3>Vendors</h3>
                 {detail.item.vendors?.length ? (
                   <ul className="vendor-list">
-                    {detail.item.vendors.map((v,i)=> (
+                    {detail.item.vendors.map((v, i) => (
                       <li key={i} className="vendor-item">
-                        <a className="vendor-link" href={v.url} target="_blank" rel="noreferrer">{v.name}</a>
-                        <span className={"stock-status "+(v.stock?'in-stock':'out-of-stock')}>{v.stock ? 'In Stock' : 'Out of Stock'}</span>
-                        <span className="vendor-price">₹{v.price.toLocaleString('en-IN')}</span>
+                        <div className="vendor-info">
+                          <a className="vendor-name" href={v.url} target="_blank" rel="noreferrer">{v.name}</a>
+                          <span className={`stock-badge ${v.inStock || v.stock ? 'in-stock' : 'out-of-stock'}`}>
+                            {v.inStock || v.stock ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        </div>
+                        <span className="vendor-price">{formatPrice(v.price)}</span>
                       </li>
                     ))}
                   </ul>
-                ) : <p className="muted">No vendors listed.</p>}
+                ) : (
+                  <p className="muted">No vendors listed for this item.</p>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Favorites modal */}
+      {/* Favorites Modal */}
       {showFavoritesModal && (
-        <div className="modal-container active" role="dialog" aria-modal="true" aria-labelledby="favorites-title">
-          <div className="modal-overlay" onClick={()=>setShowFavoritesModal(false)}></div>
+        <div className="modal-container active" role="dialog" aria-modal="true">
+          <div className="modal-overlay" onClick={() => setShowFavoritesModal(false)}></div>
           <div className="modal-content">
             <div className="modal-header">
-              <h2 id="favorites-title">Favorites</h2>
-              <button className="modal-close-btn" onClick={()=>setShowFavoritesModal(false)}>&times;</button>
+              <h2>⭐ Favorites</h2>
+              <button className="modal-close-btn" onClick={() => setShowFavoritesModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
-              {favoriteItems.length===0 ? (
-                <p className="muted">No favorites yet. Click the star on any card to save it here.</p>
+              {favoriteItems.length === 0 ? (
+                <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>
+                  No favorites yet. Click the star on any component to save it here.
+                </p>
               ) : (
                 <ul className="fav-list">
-                  {favoriteItems.map(it => (
-                    <li key={it.uid} className="fav-item">
-                      <div className="fav-meta">
-                        <strong>{it.name}</strong>
-                        <span className="muted">{it.brand} — {getCategoryName(it.category)}</span>
-                      </div>
-                      <div className="fav-actions">
-                        <button className="btn" onClick={()=>{ setShowFavoritesModal(false); openDetail(it) }}>View</button>
-                        <button className="btn" onClick={()=>toggleFavorite(it.uid)}>Remove</button>
-                        {getCheapestVendor(it) && <a className="btn primary" href={getCheapestVendor(it).url} target="_blank" rel="noreferrer">Buy</a>}
-                      </div>
-                    </li>
-                  ))}
+                  {favoriteItems.map(item => {
+                    const bestVendor = getBestVendor(item)
+                    return (
+                      <li key={item.uid} className="fav-item">
+                        <div className="fav-info">
+                          <h4>{item.name}</h4>
+                          <p>{item.brand} • {getCategoryName(item.category)}</p>
+                        </div>
+                        <div className="fav-actions">
+                          <button className="btn" onClick={() => { setShowFavoritesModal(false); openDetail(item) }}>View</button>
+                          <button className="btn" onClick={() => toggleFavorite(item.uid)}>Remove</button>
+                          {bestVendor && (
+                            <a className="btn primary" href={bestVendor.url} target="_blank" rel="noreferrer">
+                              {formatPrice(getLowestPrice(item))}
+                            </a>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>
@@ -244,31 +425,30 @@ export default function Browse(){
         </div>
       )}
 
-      {/* Compare modal (table) */}
+      {/* Compare Modal */}
       {showCompareModal && (
-        <div className="modal-container active" role="dialog" aria-modal="true" aria-labelledby="compare-title">
-          <div className="modal-overlay" onClick={()=>setShowCompareModal(false)}></div>
+        <div className="modal-container active" role="dialog" aria-modal="true">
+          <div className="modal-overlay" onClick={() => setShowCompareModal(false)}></div>
           <div className="modal-content">
             <div className="modal-header">
-              <h2 id="compare-title">Compare ({compareItems.length})</h2>
-              <button className="modal-close-btn" onClick={()=>setShowCompareModal(false)}>&times;</button>
+              <h2>⚖️ Compare ({compareItems.length})</h2>
+              <button className="modal-close-btn" onClick={() => setShowCompareModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
-              {compareItems.length<2 ? (
-                <p className="muted">Select at least two items to compare. Use the ⚖️ button on cards to add them.</p>
+              {compareItems.length < 2 ? (
+                <p className="muted" style={{ textAlign: 'center', padding: '2rem' }}>
+                  Select at least 2 items to compare. Use the ⚖️ button on product cards.
+                </p>
               ) : (
-                <div className="compare-table-wrap">
+                <div className="compare-wrap">
                   <table className="compare-table">
                     <thead>
                       <tr>
                         <th>Attribute</th>
-                        {compareItems.map(it => (
-                          <th key={it.uid}>
-                            <div className="cmp-col-head">
-                              <div className="cmp-title">{it.name}</div>
-                              <div className="cmp-sub">{it.brand}</div>
-                              <button className="small-link" onClick={()=>toggleCompare(it.uid)}>Remove</button>
-                            </div>
+                        {compareItems.map(item => (
+                          <th key={item.uid}>
+                            <div style={{ marginBottom: 8 }}>{item.name}</div>
+                            <button className="btn" onClick={() => toggleCompare(item.uid)}>Remove</button>
                           </th>
                         ))}
                       </tr>
@@ -276,47 +456,19 @@ export default function Browse(){
                     <tbody>
                       <tr>
                         <td>Category</td>
-                        {compareItems.map(it=> <td key={it.uid}>{getCategoryName(it.category)}</td>)}
+                        {compareItems.map(item => <td key={item.uid}>{getCategoryName(item.category)}</td>)}
                       </tr>
                       <tr>
                         <td>Brand</td>
-                        {compareItems.map(it=> <td key={it.uid}>{it.brand}</td>)}
+                        {compareItems.map(item => <td key={item.uid}>{item.brand}</td>)}
                       </tr>
                       <tr>
-                        <td>Price (cheapest)</td>
-                        {compareItems.map(it=> {
-                          const v = getCheapestVendor(it)
-                          return <td key={it.uid}>{v ? `₹${v.price.toLocaleString('en-IN')}` : '—'}</td>
-                        })}
-                      </tr>
-                      <tr>
-                        <td>Specs</td>
-                        {compareItems.map(it=> (
-                          <td key={it.uid}>
-                            <div className="specs-compact">
-                              {it.cores ? <div><strong>Cores:</strong> {it.cores}</div> : null}
-                              {it.memory ? <div><strong>Memory:</strong> {it.memory}</div> : null}
-                              {it.capacity ? <div><strong>Capacity:</strong> {it.capacity}</div> : null}
-                              {it.wattage ? <div><strong>Wattage:</strong> {it.wattage}W</div> : null}
-                              {it.formFactor ? <div><strong>Form:</strong> {it.formFactor}</div> : null}
-                              {it.ramType ? <div><strong>RAM:</strong> {it.ramType}</div> : null}
-                            </div>
-                          </td>
-                        ))}
+                        <td>Price</td>
+                        {compareItems.map(item => <td key={item.uid}>{formatPrice(getLowestPrice(item))}</td>)}
                       </tr>
                       <tr>
                         <td>Vendors</td>
-                        {compareItems.map(it=> (
-                          <td key={it.uid}>
-                            {it.vendors?.length ? (
-                              <ul className="vendor-compact">
-                                {it.vendors.map((v,i)=> (
-                                  <li key={i}><a href={v.url} target="_blank" rel="noreferrer">{v.name}</a> — ₹{v.price.toLocaleString('en-IN')} {v.stock? <span className="muted">(In stock)</span> : <span className="muted">(OOS)</span>}</li>
-                                ))}
-                              </ul>
-                            ) : 'No offers'}
-                          </td>
-                        ))}
+                        {compareItems.map(item => <td key={item.uid}>{item.vendors?.length || 0} available</td>)}
                       </tr>
                     </tbody>
                   </table>

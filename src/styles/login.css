@@ -1,42 +1,53 @@
 /* =====================================================
-   PCease Login - Premium Design
+   PCease Login - Premium Design v2.0
    ===================================================== */
 
-.login-container {
-	max-width: 420px;
-	margin: var(--space-3xl) auto;
-	padding: 0 var(--space-lg);
-	animation: fadeInUp 0.5s ease-out;
-}
-
-.login-card {
-	background: var(--bg-card);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-xl);
-	padding: var(--space-2xl);
+/* ========== Page Layout ========== */
+.login-page {
+	min-height: 80vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-xl);
 	position: relative;
 	overflow: hidden;
 }
 
-.login-card::before {
+/* Background effects */
+.login-page::before {
 	content: '';
 	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
-	height: 4px;
-	background: var(--gradient-primary);
+	inset: 0;
+	background:
+		radial-gradient(ellipse 60% 40% at 50% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+		radial-gradient(ellipse 50% 30% at 70% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+	pointer-events: none;
+}
+
+/* ========== Login Card ========== */
+.login-card {
+	position: relative;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xl);
+	width: 100%;
+	max-width: 440px;
+	overflow: hidden;
+	animation: scaleIn 0.4s ease-out;
+	box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 .login-header {
+	padding: var(--space-2xl) var(--space-xl) var(--space-xl);
+	background: var(--gradient-card);
 	text-align: center;
-	margin-bottom: var(--space-xl);
+	border-bottom: 1px solid var(--border);
 }
 
 .login-header h1 {
 	margin: 0 0 var(--space-sm);
 	font-size: 1.75rem;
-	background: var(--gradient-primary);
+	background: var(--gradient-hero);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
@@ -44,7 +55,45 @@
 
 .login-header p {
 	margin: 0;
+	color: var(--text-muted);
+}
+
+/* ========== Mode Toggle ========== */
+.mode-toggle {
+	display: flex;
+	background: var(--surface);
+	border-radius: var(--radius-lg);
+	padding: 4px;
+	margin: var(--space-xl);
+	margin-bottom: 0;
+}
+
+.mode-btn {
+	flex: 1;
+	padding: var(--space-md);
+	background: transparent;
+	border: none;
 	color: var(--text-secondary);
+	font-size: 0.95rem;
+	font-weight: 600;
+	cursor: pointer;
+	border-radius: var(--radius-md);
+	transition: all var(--transition-fast);
+}
+
+.mode-btn:hover {
+	color: var(--text);
+}
+
+.mode-btn.active {
+	background: var(--gradient-primary);
+	color: white;
+	box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+/* ========== Form ========== */
+.login-body {
+	padding: var(--space-xl);
 }
 
 .login-form {
@@ -53,49 +102,68 @@
 	gap: var(--space-lg);
 }
 
-.form-field {
+.form-group {
 	display: flex;
 	flex-direction: column;
 	gap: var(--space-sm);
 }
 
-.form-field label {
-	font-weight: 500;
-	font-size: 0.95rem;
+.form-group label {
+	font-size: 0.9rem;
+	font-weight: 600;
 	color: var(--text);
-	margin: 0;
 }
 
-.form-field input {
-	padding: var(--space-md);
+.form-group input {
+	padding: var(--space-md) var(--space-lg);
 	font-size: 1rem;
 }
 
-.login-form .cta-button {
-	width: 100%;
+/* Error Message */
+.error-message {
 	padding: var(--space-md);
-	font-size: 1rem;
+	background: var(--danger-bg);
+	border: 1px solid rgba(244, 63, 94, 0.3);
+	border-radius: var(--radius-md);
+	color: #fda4af;
+	font-size: 0.9rem;
+	text-align: center;
+	animation: fadeInUp 0.2s ease-out;
+}
+
+/* Submit Button */
+.login-submit {
+	background: var(--gradient-hero);
+	background-size: 200% 200%;
+	border: none;
+	color: white;
+	padding: var(--space-lg);
+	border-radius: var(--radius-lg);
+	font-size: 1.05rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all var(--transition-base);
+	box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
 	margin-top: var(--space-sm);
 }
 
-.login-error {
-	padding: var(--space-md);
-	background: var(--danger-bg);
-	border: 1px solid rgba(239, 68, 68, 0.3);
-	border-radius: var(--radius-md);
-	color: #fca5a5;
-	font-size: 0.9rem;
-	text-align: center;
-	animation: fadeIn 0.3s ease-out;
+.login-submit:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 30px rgba(99, 102, 241, 0.5);
+	animation: gradientShift 3s ease infinite;
 }
 
+.login-submit:active {
+	transform: translateY(0);
+}
+
+/* ========== Footer ========== */
 .login-footer {
-	text-align: center;
-	margin-top: var(--space-xl);
-	padding-top: var(--space-lg);
+	padding: var(--space-lg) var(--space-xl);
 	border-top: 1px solid var(--border);
-	color: var(--text-secondary);
-	font-size: 0.95rem;
+	text-align: center;
+	font-size: 0.9rem;
+	color: var(--text-muted);
 }
 
 .login-footer a {
@@ -103,48 +171,37 @@
 	font-weight: 500;
 }
 
-.login-footer a:hover {
-	text-decoration: underline;
-}
-
-/* Mode Toggle */
-.mode-toggle {
-	display: flex;
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-md);
-	overflow: hidden;
-	margin-bottom: var(--space-lg);
-}
-
-.mode-toggle button {
-	flex: 1;
-	padding: var(--space-md);
-	background: transparent;
-	border: none;
-	color: var(--text-secondary);
-	font-weight: 500;
-	cursor: pointer;
-	transition: all var(--transition-fast);
-}
-
-.mode-toggle button.active {
-	background: var(--gradient-primary);
-	color: white;
-}
-
-.mode-toggle button:not(.active):hover {
-	background: var(--surface-2);
-	color: var(--text);
-}
-
 /* ========== Responsive ========== */
 @media (max-width: 480px) {
-	.login-container {
-		margin: var(--space-xl) auto;
+	.login-page {
+		padding: var(--space-md);
+		align-items: flex-start;
+		padding-top: var(--space-2xl);
 	}
 
 	.login-card {
-		padding: var(--space-xl);
+		border-radius: var(--radius-lg);
+	}
+
+	.login-header {
+		padding: var(--space-xl) var(--space-lg) var(--space-lg);
+	}
+
+	.login-header h1 {
+		font-size: 1.5rem;
+	}
+
+	.mode-toggle {
+		margin: var(--space-lg);
+		margin-bottom: 0;
+	}
+
+	.login-body {
+		padding: var(--space-lg);
+	}
+
+	.form-group input {
+		font-size: 16px;
+		/* Prevents iOS zoom */
 	}
 }

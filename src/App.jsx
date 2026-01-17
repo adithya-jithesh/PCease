@@ -1,87 +1,97 @@
-import React from 'react'
-import { Routes, Route, Link, NavLink, Navigate } from 'react-router-dom'
-import Home from './pages/Home.jsx'
-import Browse from './pages/Browse.jsx'
-import Builder from './pages/Builder.jsx'
-import Forum from './pages/Forum.jsx'
-import Login from './pages/Login.jsx'
-import Query from './pages/Query.jsx'
-import { useTheme } from './lib/theme.js'
-import { AuthNav } from './components/AuthNav.jsx'
+import React, { useState, useEffect } from 'react'
+import { Routes, Route, Link, NavLink, useLocation } from 'react-router-dom'
+import Home from './pages/Home'
+import Browse from './pages/Browse'
+import Builder from './pages/Builder'
+import Forum from './pages/Forum'
+import Login from './pages/Login'
+import Query from './pages/Query'
 import './styles/global.css'
 
-function NavBar() {
-  const { theme, toggle } = useTheme()
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    }
+    return 'dark'
+  })
 
-  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
-  const closeMobileMenu = () => setMobileMenuOpen(false)
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+
+  return (
+    <>
+      {React.cloneElement(children, { theme, toggleTheme })}
+    </>
+  )
+}
+
+function NavBar({ theme, toggleTheme }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const location = useLocation()
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location])
 
   return (
     <nav className="navbar">
       <div className="container">
-        <Link to="/" className="brand-logo" onClick={closeMobileMenu}>
-          <span>🖥️</span> PCease
+        <Link to="/" className="brand-logo">
+          💻 <span>PCease</span>
         </Link>
+
         <button
           className="mobile-menu-toggle"
-          onClick={toggleMobileMenu}
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
-          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? '✕' : '☰'}
         </button>
+
         <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           <li>
-            <NavLink
-              to="/browse"
-              className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
-              onClick={closeMobileMenu}
-            >
+            <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Home
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/browse" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               Browse
             </NavLink>
           </li>
           <li>
-            <NavLink
-              to="/builder"
-              className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
-              onClick={closeMobileMenu}
-            >
-              PC Builder
+            <NavLink to="/builder" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Builder
             </NavLink>
           </li>
           <li>
-            <NavLink
-              to="/query"
-              className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
-              onClick={closeMobileMenu}
-            >
-              Build Advisor
+            <NavLink to="/query" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Advisor
             </NavLink>
           </li>
           <li>
-            <NavLink
-              to="/forum"
-              className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
-              onClick={closeMobileMenu}
-            >
+            <NavLink to="/forum" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               Forum
             </NavLink>
           </li>
           <li>
-            <button
-              id="theme-toggle"
-              className="theme-toggle-btn"
-              type="button"
-              aria-pressed={theme === 'dark'}
-              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-              onClick={toggle}
-            >
+            <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Login
+            </NavLink>
+          </li>
+          <li>
+            <button className="theme-toggle-btn" onClick={toggleTheme}>
               <span className="theme-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
               <span className="theme-text">{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
           </li>
-          <li><AuthNav onNavigate={closeMobileMenu} /></li>
         </ul>
       </div>
     </nav>
@@ -90,21 +100,20 @@ function NavBar() {
 
 function Footer() {
   return (
-    <footer className="footer" role="contentinfo">
+    <footer className="footer">
       <div className="container">
         <p>
-          © {new Date().getFullYear()} PCease — Build your dream PC with confidence.
-          <span style={{ opacity: 0.7, marginLeft: '8px' }}>Made in India 🇮🇳</span>
+          Made with 💜 in India • <strong>PCease</strong> © {new Date().getFullYear()}
         </p>
       </div>
     </footer>
   )
 }
 
-export default function App() {
+function AppContent(props) {
   return (
     <>
-      <NavBar />
+      <NavBar {...props} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/browse" element={<Browse />} />
@@ -112,9 +121,16 @@ export default function App() {
         <Route path="/forum" element={<Forum />} />
         <Route path="/login" element={<Login />} />
         <Route path="/query" element={<Query />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Footer />
     </>
+  )
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   )
 }
