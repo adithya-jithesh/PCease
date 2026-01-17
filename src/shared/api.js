@@ -34,11 +34,19 @@ export async function login(username, password) {
   return res.json();
 }
 
-// ✅ Fetch all components
+// ✅ Fetch all components with fallback to local JSON
 export async function getComponents() {
-  const res = await fetch(`${API_URL}/components`);
-  if (!res.ok) throw new Error("Failed to load components");
-  return res.json();
+  try {
+    const res = await fetch(`${API_URL}/components`);
+    if (!res.ok) throw new Error("API request failed");
+    return res.json();
+  } catch (err) {
+    // Fallback to local components JSON when API is unavailable
+    console.warn("API unavailable, loading local components data...");
+    const fallbackRes = await fetch("/backend_components.json");
+    if (!fallbackRes.ok) throw new Error("Failed to load components");
+    return fallbackRes.json();
+  }
 }
 
 // Group list of components by category to mirror the old componentsDB shape
@@ -70,7 +78,7 @@ export async function createThread({ title, category = 'General', content, token
     body: JSON.stringify({ title, category, content })
   });
   if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
+    const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to create thread');
   }
   return res.json();
@@ -82,61 +90,61 @@ export async function deleteThread({ id, token }) {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
+    const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to delete thread');
   }
   return res.json();
 }
 
 // Thread details and replies
-export async function getThread(id){
+export async function getThread(id) {
   const res = await fetch(`${API_URL}/threads/${id}`)
-  if (!res.ok){ const err = await res.json().catch(()=>({})); throw new Error(err.error || 'Failed to load thread') }
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to load thread') }
   return res.json()
 }
 
-export async function addReply({ id, content, token }){
+export async function addReply({ id, content, token }) {
   const res = await fetch(`${API_URL}/threads/${id}/replies`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ content })
   })
-  if (!res.ok){ const err = await res.json().catch(()=>({})); throw new Error(err.error || 'Failed to post reply') }
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to post reply') }
   return res.json()
 }
 
 // ===== Saved Builds API =====
-export async function getSavedBuilds(token){
+export async function getSavedBuilds(token) {
   const res = await fetch(`${API_URL}/saved-builds`, { headers: { Authorization: `Bearer ${token}` } })
   if (!res.ok) throw new Error('Failed to load saved builds')
   return res.json()
 }
 
-export async function createSavedBuild({ name, items, token }){
+export async function createSavedBuild({ name, items, token }) {
   const res = await fetch(`${API_URL}/saved-builds`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ name, items })
   })
-  if (!res.ok){ const err = await res.json().catch(()=>({})); throw new Error(err.error || 'Failed to save build') }
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to save build') }
   return res.json()
 }
 
-export async function updateSavedBuild({ id, name, items, token }){
+export async function updateSavedBuild({ id, name, items, token }) {
   const res = await fetch(`${API_URL}/saved-builds/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({ name, items })
   })
-  if (!res.ok){ const err = await res.json().catch(()=>({})); throw new Error(err.error || 'Failed to update build') }
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to update build') }
   return res.json()
 }
 
-export async function deleteSavedBuild({ id, token }){
+export async function deleteSavedBuild({ id, token }) {
   const res = await fetch(`${API_URL}/saved-builds/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` }
   })
-  if (!res.ok){ const err = await res.json().catch(()=>({})); throw new Error(err.error || 'Failed to delete build') }
+  if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Failed to delete build') }
   return res.json()
 }

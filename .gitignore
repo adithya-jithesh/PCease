@@ -1,48 +1,24 @@
+# Environment
+.env
+.env.*
+
 # Node
 node_modules/
-.env
-.DS_Store
+backend/node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build
-/dist
-/build
-/.next
-/.vercel
-
-# Logs
-logs
-*.log
-
 # OS
+.DS_Store
 Thumbs.db
-Desktop.ini
 
-# Vercel
-.vercel/
-
-# VSCode
+# IDE
 .vscode/
-
-# Misc
-*.local
-*.cache
-*.tmp
-
-# Backend
-backend/node_modules/
-backend/.env
-backend/.DS_Store
-backend/logs
-backend/*.log
-backend/.vercel
-backend/.vscode
-backend/.cache
-backend/.tmp
-backend/dist
-backend/build
-backend/scripts/*.log
-backend/scripts/*.tmp
-backend/scripts/*.cache
+.idea/
