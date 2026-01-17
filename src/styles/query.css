@@ -470,29 +470,76 @@
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
     .query-form-section {
-        padding: var(--space-xl);
+        padding: var(--space-lg);
     }
 
     .preset-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-sm);
+    }
+
+    .preset-card {
+        padding: var(--space-md);
+    }
+
+    .preset-title {
+        font-size: 0.95rem;
+        flex-wrap: wrap;
+    }
+
+    .preset-desc {
+        font-size: 0.8rem;
+    }
+
+    .preset-meta {
+        font-size: 0.75rem;
+        margin-top: var(--space-sm);
+        padding-top: var(--space-xs);
     }
 
     .performance-options {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-sm);
+    }
+
+    .radio-card-content {
+        padding: var(--space-md);
+    }
+
+    .radio-icon {
+        font-size: 1.5rem;
+    }
+
+    .radio-label {
+        font-size: 0.9rem;
     }
 
     .budget-input-group {
         max-width: 100%;
     }
 
+    .form-group>label {
+        font-size: 1rem;
+    }
+
+    .label-hint {
+        font-size: 0.85rem;
+    }
+
     .submit-btn {
         width: 100%;
         text-align: center;
+        padding: var(--space-md);
     }
 
     .results-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: var(--space-sm);
+    }
+
+    .results-header h2 {
+        font-size: 1.25rem;
     }
 
     .recommended-components {
@@ -507,6 +554,14 @@
         width: 100%;
         justify-content: center;
     }
+
+    .build-summary {
+        padding: var(--space-lg);
+    }
+
+    .build-summary h3 {
+        font-size: 1.1rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -515,19 +570,54 @@
     }
 
     .performance-options {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .summary-stats {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-xs);
+    }
+
+    .stat-box {
+        padding: var(--space-md);
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+    }
+
+    .stat-value {
+        font-size: 0.95rem;
     }
 
     .recommended-components .component-card {
-        flex-direction: column;
-        text-align: center;
+        padding: var(--space-md);
+        gap: var(--space-md);
+    }
+
+    .component-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+
+    .component-name {
+        font-size: 0.9rem;
+    }
+
+    .component-price {
+        font-size: 0.95rem;
     }
 
     .component-info {
-        text-align: center;
+        min-width: 0;
+    }
+
+    .presets-section h2 {
+        font-size: 1.1rem;
+    }
+
+    .presets-section>p {
+        font-size: 0.9rem;
     }
 }

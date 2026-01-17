@@ -523,12 +523,19 @@
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
 	.controls {
-		padding: var(--space-lg);
+		padding: var(--space-md);
+		margin-bottom: var(--space-lg);
+	}
+
+	.control-input {
+		padding: var(--space-md);
+		margin-bottom: var(--space-md);
 	}
 
 	.filters {
 		flex-direction: column;
 		align-items: stretch;
+		gap: var(--space-sm);
 	}
 
 	.control-select,
@@ -538,11 +545,24 @@
 
 	.price {
 		flex-wrap: wrap;
+		gap: var(--space-xs);
+	}
+
+	.price span {
+		display: none;
 	}
 
 	.grid {
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 		gap: var(--space-md);
+	}
+
+	.grid .card {
+		padding: var(--space-md);
+	}
+
+	.grid .card:hover {
+		transform: none;
 	}
 
 	.modal-body.two-col {
@@ -553,18 +573,63 @@
 		width: 100%;
 		justify-content: center;
 	}
+
+	.toolbar-btn {
+		padding: var(--space-sm) var(--space-md);
+		font-size: 0.85rem;
+	}
+
+	.toolbar-row {
+		margin-bottom: var(--space-lg);
+	}
 }
 
 @media (max-width: 480px) {
+	.controls {
+		padding: var(--space-sm);
+		border-radius: var(--radius-lg);
+	}
+
 	.chips {
 		overflow-x: auto;
 		flex-wrap: nowrap;
 		padding-bottom: var(--space-sm);
 		-webkit-overflow-scrolling: touch;
+		margin: 0 calc(var(--space-sm) * -1);
+		padding-left: var(--space-sm);
+		padding-right: var(--space-sm);
+	}
+
+	.chip {
+		padding: var(--space-xs) var(--space-md);
+		font-size: 0.8rem;
 	}
 
 	.grid {
 		grid-template-columns: 1fr;
+		gap: var(--space-sm);
+	}
+
+	.grid .card {
+		padding: var(--space-md);
+		gap: var(--space-sm);
+	}
+
+	.title {
+		font-size: 0.95rem;
+	}
+
+	.grid .card .price {
+		font-size: 1.1rem;
+	}
+
+	.actions {
+		gap: var(--space-xs);
+	}
+
+	.btn {
+		padding: var(--space-sm);
+		font-size: 0.85rem;
 	}
 
 	.fav-item {
@@ -574,5 +639,16 @@
 
 	.fav-actions {
 		justify-content: flex-end;
+	}
+
+	.vendor-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-xs);
+	}
+
+	/* Hide toolbar text on very small screens */
+	.toolbar-btn {
+		padding: var(--space-sm);
 	}
 }

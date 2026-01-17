@@ -540,47 +540,129 @@
 @media (max-width: 900px) {
 	.main-content {
 		grid-template-columns: 1fr;
+		gap: var(--space-lg);
 	}
 
+	/* Show component picker first on mobile, build summary below */
 	.current-build {
 		position: static;
-		order: -1;
+		order: 1;
+		/* Below component picker */
+		padding: var(--space-lg);
+	}
+
+	.component-picker {
+		order: 0;
+		/* First */
 	}
 
 	.builder-header {
 		flex-direction: column;
 		align-items: stretch;
 		text-align: center;
+		padding-bottom: var(--space-md);
+	}
+
+	.builder-header h2 {
+		font-size: 1.25rem;
 	}
 
 	.builder-toolbar {
 		justify-content: center;
 	}
+
+	.builder-toolbar .toolbar-btn {
+		flex: 1;
+		justify-content: center;
+		min-width: 0;
+		padding: var(--space-sm);
+		font-size: 0.8rem;
+	}
+
+	/* Compact build stats on tablet */
+	.build-stats {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	#build-items {
+		max-height: 200px;
+	}
 }
 
 @media (max-width: 600px) {
 	.component-slot {
-		flex-direction: column;
-		align-items: stretch;
-		text-align: center;
+		padding: var(--space-md);
+		gap: var(--space-sm);
+	}
+
+	.component-slot-info h3 {
+		font-size: 0.9rem;
+	}
+
+	.component-slot-info p {
+		font-size: 0.8rem;
 	}
 
 	.choose-btn {
-		width: 100%;
+		padding: var(--space-sm) var(--space-md);
+		font-size: 0.85rem;
 	}
 
 	.selected-item {
-		flex-direction: column;
-		align-items: stretch;
-		text-align: center;
-	}
-
-	.selected-item>span:last-child {
-		justify-content: center;
-		padding-top: var(--space-sm);
+		font-size: 0.85rem;
+		padding: var(--space-sm) var(--space-md);
 	}
 
 	.build-stats {
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(2, 1fr);
+		gap: var(--space-xs);
+	}
+
+	.stat-item {
+		padding: var(--space-sm);
+	}
+
+	.stat-label {
+		font-size: 0.65rem;
+	}
+
+	.stat-value {
+		font-size: 0.9rem;
+	}
+
+	.total-price {
+		padding: var(--space-md);
+	}
+
+	.total-price h3 {
+		font-size: 1.25rem;
+	}
+
+	.current-build h2 {
+		font-size: 1.1rem;
+	}
+
+	/* Compact toolbar buttons */
+	.builder-toolbar .toolbar-btn {
+		padding: var(--space-xs) var(--space-sm);
+		font-size: 0.75rem;
+	}
+
+	/* Modal adjustments for mobile */
+	.modal-body .component-card {
+		padding: var(--space-md);
+		flex-wrap: wrap;
+		gap: var(--space-sm);
+	}
+
+	.modal-body .component-card h4 {
+		font-size: 0.85rem;
+		flex: 1 1 100%;
+	}
+
+	.vendor-item {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-sm);
 	}
 }
