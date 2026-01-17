@@ -37,7 +37,7 @@ export default function Login() {
   }
 
   return (
-    <main className="login-container">
+    <main className="login-page">
       <div className="login-card">
         <div className="login-header">
           <h1>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h1>
@@ -46,52 +46,54 @@ export default function Login() {
 
         <div className="mode-toggle">
           <button
-            className={mode === 'login' ? 'active' : ''}
+            className={`mode-btn ${mode === 'login' ? 'active' : ''}`}
             onClick={() => { setMode('login'); setError('') }}
           >
             Login
           </button>
           <button
-            className={mode === 'register' ? 'active' : ''}
+            className={`mode-btn ${mode === 'register' ? 'active' : ''}`}
             onClick={() => { setMode('register'); setError('') }}
           >
             Register
           </button>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="form-field">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              type="text"
-              placeholder="Enter your username"
-              value={form.username}
-              onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
-              required
-              autoComplete="username"
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
-              value={form.password}
-              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              required
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength={mode === 'register' ? 6 : undefined}
-            />
-          </div>
+        <div className="login-body">
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={form.username}
+                onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
+                required
+                autoComplete="username"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
+                value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                required
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                minLength={mode === 'register' ? 6 : undefined}
+              />
+            </div>
 
-          {error && <div className="login-error">{error}</div>}
+            {error && <div className="error-message">{error}</div>}
 
-          <button className="cta-button" type="submit" disabled={loading}>
-            {loading ? '...' : mode === 'login' ? 'Sign In' : 'Create Account'}
-          </button>
-        </form>
+            <button className="login-submit" type="submit" disabled={loading}>
+              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
+        </div>
 
         <div className="login-footer">
           {mode === 'login' ? (
