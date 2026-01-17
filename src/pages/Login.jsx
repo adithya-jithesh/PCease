@@ -4,59 +4,101 @@ import { login as doLogin, register as doRegister } from '../lib/auth.js'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
 export default function Login() {
-  const [tab, setTab] = useState('login')
+  const [mode, setMode] = useState('login')
   const [search] = useSearchParams()
   const navigate = useNavigate()
 
-  const [loginForm, setLoginForm] = useState({ username: '', password: '' })
-  const [loginError, setLoginError] = useState('')
-  const [regForm, setRegForm] = useState({ username: '', password: '' })
-  const [regError, setRegError] = useState('')
+  const [form, setForm] = useState({ username: '', password: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const redirect = search.get('redirect') || '/forum'
+  const redirect = search.get('redirect') || '/'
 
-  const onLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    try {
-      await doLogin(loginForm.username.trim(), loginForm.password)
-      navigate(redirect)
-    } catch (err) { setLoginError(err.message || 'Login failed') }
-  }
+    setError('')
+    setLoading(true)
 
-  const onRegister = async (e) => {
-    e.preventDefault()
-    const { username, password } = regForm
-    if (!username || !password) { setRegError('Fill all fields'); return }
-    if (password.length < 6) { setRegError('Use at least 6 characters'); return }
     try {
-      await doRegister(username.trim(), password)
-      await doLogin(username.trim(), password)
+      if (mode === 'register') {
+        if (form.password.length < 6) {
+          setError('Password must be at least 6 characters')
+          setLoading(false)
+          return
+        }
+        await doRegister(form.username.trim(), form.password)
+      }
+      await doLogin(form.username.trim(), form.password)
       navigate(redirect)
-    } catch (err) { setRegError(err.message || 'Registration failed') }
+    } catch (err) {
+      setError(err.message || `${mode === 'login' ? 'Login' : 'Registration'} failed`)
+    }
+    setLoading(false)
   }
 
   return (
-    <main className="container auth-container">
-      <div className="auth-card">
-        <div className="tabs">
-          <button className={"tab-btn "+(tab==='login'?'active':'')} onClick={()=>setTab('login')}>Login</button>
-          <button className={"tab-btn "+(tab==='register'?'active':'')} onClick={()=>setTab('register')}>Register</button>
+    <main className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <h1>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h1>
+          <p>{mode === 'login' ? 'Sign in to save builds and join discussions' : 'Join the PCease community'}</p>
         </div>
-        <div className={"tab-panel "+(tab==='login'?'active':'')} id="tab-login">
-          <form onSubmit={onLogin}>
-            <div className="form-field"><label htmlFor="login-username">Username</label><input id="login-username" value={loginForm.username} onChange={e=>setLoginForm(f=>({...f,username:e.target.value}))} required /></div>
-            <div className="form-field"><label htmlFor="login-password">Password</label><input id="login-password" type="password" value={loginForm.password} onChange={e=>setLoginForm(f=>({...f,password:e.target.value}))} required /></div>
-            <button className="cta-button" type="submit">Login</button>
-            <p className="form-note">{loginError}</p>
-          </form>
+
+        <div className="mode-toggle">
+          <button
+            className={mode === 'login' ? 'active' : ''}
+            onClick={() => { setMode('login'); setError('') }}
+          >
+            Login
+          </button>
+          <button
+            className={mode === 'register' ? 'active' : ''}
+            onClick={() => { setMode('register'); setError('') }}
+          >
+            Register
+          </button>
         </div>
-        <div className={"tab-panel "+(tab==='register'?'active':'')} id="tab-register">
-          <form onSubmit={onRegister}>
-            <div className="form-field"><label htmlFor="reg-username">Username</label><input id="reg-username" value={regForm.username} onChange={e=>setRegForm(f=>({...f,username:e.target.value}))} required /></div>
-            <div className="form-field"><label htmlFor="reg-password">Password</label><input id="reg-password" type="password" minLength={6} value={regForm.password} onChange={e=>setRegForm(f=>({...f,password:e.target.value}))} required /></div>
-            <button className="cta-button" type="submit">Create Account</button>
-            <p className="form-note">{regError}</p>
-          </form>
+
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="form-field">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              type="text"
+              placeholder="Enter your username"
+              value={form.username}
+              onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
+              required
+              autoComplete="username"
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
+              value={form.password}
+              onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              required
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              minLength={mode === 'register' ? 6 : undefined}
+            />
+          </div>
+
+          {error && <div className="login-error">{error}</div>}
+
+          <button className="cta-button" type="submit" disabled={loading}>
+            {loading ? '...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+          </button>
+        </form>
+
+        <div className="login-footer">
+          {mode === 'login' ? (
+            <p>Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setMode('register'); setError('') }}>Sign up</a></p>
+          ) : (
+            <p>Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setMode('login'); setError('') }}>Sign in</a></p>
+          )}
         </div>
       </div>
     </main>

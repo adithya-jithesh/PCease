@@ -38,11 +38,15 @@ export async function login(username, password) {
 export async function getComponents() {
   try {
     const res = await fetch(`${API_URL}/components`);
-    if (!res.ok) throw new Error("API request failed");
+    // Check if response is actually JSON (not an HTML error page)
+    const contentType = res.headers.get("content-type") || "";
+    if (!res.ok || !contentType.includes("application/json")) {
+      throw new Error("API request failed or returned non-JSON");
+    }
     return res.json();
   } catch (err) {
     // Fallback to local components JSON when API is unavailable
-    console.warn("API unavailable, loading local components data...");
+    console.warn("API unavailable, loading local components data...", err.message);
     const fallbackRes = await fetch("/backend_components.json");
     if (!fallbackRes.ok) throw new Error("Failed to load components");
     return fallbackRes.json();
