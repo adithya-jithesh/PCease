@@ -51,49 +51,42 @@ function NavBar({ theme, toggleTheme }) {
           className="mobile-menu-toggle"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? '✕' : '☰'}
         </button>
 
-        <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-          <li>
-            <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              Home
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/browse" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              Browse
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/builder" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              Builder
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/query" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              Advisor
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/forum" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              Forum
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-              Login
-            </NavLink>
-          </li>
+        {/* Desktop nav - stays inside container */}
+        <ul className="nav-links desktop-only">
+          <li><NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Home</NavLink></li>
+          <li><NavLink to="/browse" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Browse</NavLink></li>
+          <li><NavLink to="/builder" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Builder</NavLink></li>
+          <li><NavLink to="/query" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Advisor</NavLink></li>
+          <li><NavLink to="/forum" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Forum</NavLink></li>
+          <li><NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Login</NavLink></li>
           <li>
             <button className="theme-toggle-btn" onClick={toggleTheme}>
               <span className="theme-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
-              <span className="theme-text">{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
           </li>
         </ul>
       </div>
+
+      {/* Mobile nav - outside container to avoid height constraints */}
+      <ul className={`nav-links mobile-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <li><NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Home</NavLink></li>
+        <li><NavLink to="/browse" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Browse</NavLink></li>
+        <li><NavLink to="/builder" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Builder</NavLink></li>
+        <li><NavLink to="/query" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Advisor</NavLink></li>
+        <li><NavLink to="/forum" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Forum</NavLink></li>
+        <li><NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>Login</NavLink></li>
+        <li>
+          <button className="theme-toggle-btn" onClick={toggleTheme}>
+            <span className="theme-icon">{theme === 'dark' ? '☀️' : '🌙'}</span>
+            <span className="theme-text">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+          </button>
+        </li>
+      </ul>
     </nav>
   )
 }
