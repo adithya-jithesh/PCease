@@ -1,185 +1,217 @@
-/* ========== Advisor Header ========== */
-.advisor-header {
-    text-align: center;
-    max-width: 600px;
-    margin: 0 auto var(--space-2xl);
-}
+/* =====================================================
+   Advisor Page Styles - Clean Recommendation Layout
+   ===================================================== */
 
-.advisor-header h1 {
-    margin-bottom: var(--space-md);
-}
-
-/* ========== Advisor Layout ========== */
-.advisor-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-xl);
-    max-width: 1000px;
+.advisor-page {
+    max-width: 900px;
     margin: 0 auto;
 }
 
-.advisor-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xl);
+.advisor-header {
+    text-align: center;
+    margin-bottom: var(--space-10);
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: var(--space-md);
-    font-size: 1.1rem;
+.advisor-header h1 {
+    margin-bottom: var(--space-3);
 }
 
-/* ========== Budget Input ========== */
-.budget-input {
-    display: flex;
-    align-items: center;
-    gap: var(--space-lg);
+.advisor-header p {
+    font-size: 1rem;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
-.budget-input input[type="range"] {
-    flex: 1;
-    height: 8px;
-    border-radius: 4px;
-    background: var(--surface);
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    -webkit-appearance: none;
+/* Budget Form */
+.budget-form {
+    padding: var(--space-8);
+    margin-bottom: var(--space-10);
 }
 
-.budget-input input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 24px;
-    height: 24px;
-    background: var(--gradient-primary);
-    border-radius: 50%;
-    cursor: pointer;
+.budget-form h2 {
+    font-size: 1rem;
+    margin-bottom: var(--space-6);
+    text-align: center;
 }
 
-.budget-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--accent);
-    min-width: 120px;
-    text-align: right;
-}
-
-/* ========== Use Case Grid ========== */
-.use-case-grid {
+.form-row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-md);
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
 }
 
-.use-case-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-    padding: var(--space-lg);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    text-align: left;
-    transition: all var(--transition-fast);
+.slider-group {
+    margin-bottom: var(--space-6);
 }
 
-.use-case-card:hover {
-    border-color: var(--border-accent);
-}
-
-.use-case-card.active {
-    border-color: var(--accent);
-    background: rgba(0, 212, 255, 0.1);
-}
-
-.use-case-card strong {
-    color: var(--text);
-}
-
-.use-case-card span {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-/* ========== Recommendation ========== */
-.recommendation {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
-}
-
-.recommendation h2 {
-    margin-bottom: 0;
-}
-
-.recommendation>p {
-    margin-top: calc(-1 * var(--space-md));
-}
-
-.rec-list {
-    list-style: none;
-}
-
-.rec-list li {
-    display: grid;
-    grid-template-columns: 100px 1fr auto;
-    gap: var(--space-md);
-    padding: var(--space-md);
-    background: var(--surface);
-    border-radius: var(--radius-sm);
-    margin-bottom: var(--space-sm);
-}
-
-.rec-cat {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-}
-
-.rec-name {
-    color: var(--text);
-}
-
-.rec-price {
-    font-weight: 600;
-    color: var(--text-secondary);
-}
-
-.rec-total {
+.slider-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-md);
-    border-top: 1px solid var(--border);
+    margin-bottom: var(--space-3);
 }
 
-.total-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+.slider-header label {
+    margin-bottom: 0;
 }
 
-/* ========== Responsive ========== */
-@media (max-width: 768px) {
-    .advisor-layout {
+.slider-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+input[type="range"] {
+    width: 100%;
+    height: 6px;
+    background: var(--surface);
+    border-radius: var(--radius-full);
+    border: none;
+    padding: 0;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--bg-primary);
+}
+
+.budget-form .btn {
+    width: 100%;
+}
+
+/* Results */
+.results-section {
+    margin-top: var(--space-10);
+}
+
+.results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+}
+
+.results-header h2 {
+    font-size: 1.125rem;
+}
+
+.total-estimate {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.total-estimate strong {
+    color: var(--accent);
+    font-size: 1.125rem;
+}
+
+.recommendations-grid {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.recommendation-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+.rec-category {
+    flex-shrink: 0;
+    width: 80px;
+}
+
+.rec-category span {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.rec-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.rec-info h4 {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin-bottom: var(--space-1);
+}
+
+.rec-info p {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+}
+
+.rec-price {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Action */
+.results-action {
+    margin-top: var(--space-8);
+    text-align: center;
+}
+
+.results-action p {
+    font-size: 0.875rem;
+    margin-bottom: var(--space-4);
+}
+
+/* Loading */
+.loading-state {
+    text-align: center;
+    padding: var(--space-16);
+}
+
+.loading-state .spinner {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto var(--space-4);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .form-row {
         grid-template-columns: 1fr;
     }
 
-    .use-case-grid {
-        grid-template-columns: 1fr;
+    .recommendation-card {
+        flex-wrap: wrap;
     }
 
-    .budget-input {
-        flex-direction: column;
-        align-items: stretch;
+    .rec-category {
+        width: 100%;
+        margin-bottom: var(--space-1);
     }
 
-    .budget-value {
-        text-align: center;
+    .rec-price {
+        width: 100%;
+        margin-top: var(--space-2);
     }
 }

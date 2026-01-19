@@ -1,198 +1,271 @@
-/* ========== Builder Header ========== */
+/* =====================================================
+   Builder Page Styles - Clean Component Selection
+   ===================================================== */
+
+.builder-page {
+    padding-top: 100px;
+}
+
 .builder-header {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
-    gap: var(--space-lg);
-    margin-bottom: var(--space-xl);
-    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.builder-header h1 {
+    margin-bottom: var(--space-2);
+}
+
+.builder-header p {
+    font-size: 0.9375rem;
 }
 
 .builder-actions {
     display: flex;
-    gap: var(--space-md);
-    align-items: center;
+    gap: var(--space-3);
+    flex-shrink: 0;
 }
 
-.build-name-input {
-    width: 200px;
-}
-
-/* ========== Builder Layout ========== */
+/* Main Layout */
 .builder-layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: var(--space-xl);
+    grid-template-columns: 1fr 340px;
+    gap: var(--space-6);
+    align-items: start;
 }
 
-/* ========== Slots ========== */
-.slots-list {
+/* Component Slots */
+.component-slots {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-4);
 }
 
-.slot-card {
-    padding: var(--space-lg);
+.component-slot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--glass-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-fast);
 }
 
-.slot-card.filled {
+.component-slot:hover {
+    border-color: var(--border-hover);
+}
+
+.component-slot.filled {
     border-color: var(--border-accent);
+    background: var(--accent-muted);
 }
 
 .slot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-md);
+    flex: 1;
+    min-width: 0;
+}
+
+.slot-category {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
 }
 
 .slot-name {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.required {
-    font-size: 0.75rem;
+.slot-price {
+    font-size: 0.9375rem;
+    font-weight: 600;
     color: var(--accent);
-    background: rgba(0, 212, 255, 0.1);
-    padding: var(--space-xs) var(--space-sm);
+    white-space: nowrap;
+}
+
+.slot-badge {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: var(--space-1) var(--space-2);
+    background: var(--surface);
     border-radius: var(--radius-sm);
+    color: var(--warning);
 }
 
-.slot-selected {
+.slot-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-md);
-    flex-wrap: wrap;
-}
-
-.selected-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xs);
-}
-
-.selected-info span {
-    color: var(--accent);
-    font-weight: 600;
-}
-
-.slot-btns {
-    display: flex;
-    gap: var(--space-sm);
+    gap: var(--space-2);
 }
 
 .add-btn {
-    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    color: var(--accent);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
 }
 
-/* ========== Build Summary ========== */
+.add-btn:hover {
+    background: var(--accent-muted);
+    border-style: solid;
+    border-color: var(--border-accent);
+}
+
+/* Build Summary */
 .build-summary {
     position: sticky;
     top: 100px;
-    height: fit-content;
+    padding: var(--space-6);
 }
 
-.build-summary h3 {
-    margin-bottom: var(--space-lg);
+.build-summary h2 {
+    font-size: 1rem;
+    margin-bottom: var(--space-5);
 }
 
-.summary-list {
-    list-style: none;
-    margin-bottom: var(--space-lg);
-}
-
-.summary-list li {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--space-sm) 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
-}
-
-.summary-list li span:first-child {
-    color: var(--text-muted);
-}
-
-.total-price {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: var(--space-md);
-    border-top: 2px solid var(--border);
-}
-
-.total-price .price {
-    font-size: 1.5rem;
-    font-weight: 800;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* ========== Component Modal ========== */
-.modal-lg {
-    max-width: 700px;
-}
-
-.component-list {
+.summary-items {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
-    max-height: 400px;
-    overflow-y: auto;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
 }
 
-.component-option {
+.summary-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--space-md);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    text-align: left;
-    transition: all var(--transition-fast);
-    width: 100%;
+    font-size: 0.875rem;
 }
 
-.component-option:hover {
-    border-color: var(--border-accent);
-    background: var(--surface-2);
+.summary-item span:first-child {
+    color: var(--text-secondary);
 }
 
-.component-option strong {
-    display: block;
-    margin-bottom: var(--space-xs);
-}
-
-.component-option .brand {
-    font-size: 0.85rem;
+.summary-item span:last-child {
     color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
 }
 
-.comp-price {
+.summary-item.has-value span:last-child {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.summary-divider {
+    height: 1px;
+    background: var(--border);
+    margin: var(--space-4) 0;
+}
+
+.summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-6);
+}
+
+.summary-total span:first-child {
+    font-weight: 600;
+}
+
+.summary-total span:last-child {
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--accent);
 }
 
-.loading {
-    text-align: center;
-    padding: var(--space-2xl);
+/* Selection Modal */
+.selection-grid {
+    display: grid;
+    gap: var(--space-3);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.selection-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.selection-item:hover {
+    border-color: var(--border-accent);
+    background: var(--accent-muted);
+}
+
+.selection-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.selection-info h4 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: var(--space-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selection-info p {
+    font-size: 0.75rem;
     color: var(--text-muted);
 }
 
-/* ========== Responsive ========== */
-@media (max-width: 900px) {
+.selection-price {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
     .builder-layout {
         grid-template-columns: 1fr;
     }
 
     .build-summary {
-        position: static;
-        order: -1;
+        position: relative;
+        top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .builder-header {
+        flex-direction: column;
+    }
+
+    .builder-actions {
+        width: 100%;
+    }
+
+    .builder-actions .btn {
+        flex: 1;
     }
 }

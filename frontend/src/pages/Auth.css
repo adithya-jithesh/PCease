@@ -1,69 +1,76 @@
+/* =====================================================
+   Auth Page Styles - Clean Form Design
+   ===================================================== */
+
 .auth-page {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - 150px);
-}
-
-.auth-container {
-    width: 100%;
-    max-width: 420px;
-    padding: var(--space-lg);
+    min-height: calc(100vh - 200px);
+    padding: var(--space-8);
 }
 
 .auth-card {
-    padding: var(--space-2xl);
+    width: 100%;
+    max-width: 400px;
+    padding: var(--space-8);
 }
 
-.auth-header {
+.auth-card h1 {
     text-align: center;
-    margin-bottom: var(--space-xl);
+    margin-bottom: var(--space-8);
+    font-size: 1.5rem;
 }
 
-.auth-header h1 {
-    margin-bottom: var(--space-sm);
-}
-
-.auth-error {
-    background: rgba(255, 61, 113, 0.1);
-    border: 1px solid var(--danger);
-    color: var(--danger);
-    padding: var(--space-md);
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-lg);
-    text-align: center;
-    font-size: 0.9rem;
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
 }
 
 .form-group {
-    margin-bottom: var(--space-lg);
+    display: flex;
+    flex-direction: column;
 }
 
-.auth-submit {
-    width: 100%;
-    margin-top: var(--space-md);
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: var(--space-2);
 }
 
-.auth-switch {
+.auth-form .btn {
+    margin-top: var(--space-2);
+}
+
+.auth-toggle {
     text-align: center;
-    margin-top: var(--space-xl);
-    padding-top: var(--space-xl);
-    border-top: 1px solid var(--border);
+    margin-top: var(--space-6);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
-.auth-switch p {
-    color: var(--text-muted);
-}
-
-.auth-switch button {
+.auth-toggle button {
     background: none;
     border: none;
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     font-size: inherit;
+    padding: 0;
+    margin-left: var(--space-1);
 }
 
-.auth-switch button:hover {
+.auth-toggle button:hover {
     text-decoration: underline;
+}
+
+.auth-error {
+    padding: var(--space-3) var(--space-4);
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: var(--radius-md);
+    color: var(--error);
+    font-size: 0.875rem;
+    text-align: center;
 }

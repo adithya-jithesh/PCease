@@ -1,11 +1,16 @@
+/* =====================================================
+   Navbar Styles - Clean Header Design
+   ===================================================== */
+
 .navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(10, 10, 15, 0.9);
+    background: rgba(3, 7, 18, 0.85);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
 }
 
@@ -13,14 +18,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 72px;
+    height: 64px;
 }
 
 .logo {
-    font-size: 1.5rem;
-    font-weight: 800;
+    font-size: 1.25rem;
+    font-weight: 700;
     color: var(--text);
     text-decoration: none;
+    letter-spacing: -0.02em;
 }
 
 .logo-accent {
@@ -33,7 +39,7 @@
 .nav-links {
     display: flex;
     align-items: center;
-    gap: var(--space-lg);
+    gap: var(--space-1);
     list-style: none;
 }
 
@@ -41,14 +47,14 @@
 .nav-user {
     color: var(--text-secondary);
     font-weight: 500;
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
     transition: all var(--transition-fast);
     text-decoration: none;
     background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 1rem;
     font-family: inherit;
 }
 
@@ -64,36 +70,54 @@
 
 .nav-login {
     background: var(--gradient-primary) !important;
-    color: #0a0a0f !important;
-    font-weight: 700 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: var(--space-2) var(--space-4) !important;
+}
+
+.nav-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
 .mobile-toggle {
     display: none;
-    background: var(--surface);
+    background: transparent;
     border: 1px solid var(--border);
     color: var(--text);
     font-size: 1.25rem;
-    padding: var(--space-sm);
+    width: 40px;
+    height: 40px;
     cursor: pointer;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.mobile-toggle:hover {
+    background: var(--surface);
 }
 
 @media (max-width: 768px) {
+    .navbar-inner {
+        height: 56px;
+    }
+
     .mobile-toggle {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .nav-links {
         position: absolute;
-        top: 72px;
+        top: 56px;
         left: 0;
         right: 0;
         flex-direction: column;
         background: var(--bg-secondary);
         border-bottom: 1px solid var(--border);
-        padding: var(--space-md);
-        gap: var(--space-sm);
+        padding: var(--space-4);
+        gap: var(--space-2);
         display: none;
     }
 
@@ -105,6 +129,7 @@
     .nav-user {
         width: 100%;
         text-align: center;
-        padding: var(--space-md);
+        padding: var(--space-3) var(--space-4);
+        font-size: 0.9375rem;
     }
 }

@@ -1,139 +1,182 @@
-/* ========== Forum Header ========== */
+/* =====================================================
+   Forum Page Styles - Clean Discussion Layout
+   ===================================================== */
+
 .forum-header {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
-    gap: var(--space-lg);
-    margin-bottom: var(--space-xl);
-    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
 }
 
+.forum-header h1 {
+    margin-bottom: var(--space-2);
+}
+
+.forum-header p {
+    font-size: 0.9375rem;
+}
+
+/* Filters */
 .forum-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-xl);
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
 }
 
-/* ========== Threads List ========== */
+/* Thread List */
 .threads-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-4);
 }
 
 .thread-item {
+    padding: var(--space-5);
     cursor: pointer;
-    padding: var(--space-lg);
-}
-
-.thread-item:hover {
-    border-color: var(--accent);
-}
-
-.thread-cat {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.thread-item h3 {
-    font-size: 1.1rem;
-    margin: var(--space-sm) 0;
 }
 
 .thread-meta {
     display: flex;
-    gap: var(--space-md);
-    font-size: 0.85rem;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+}
+
+.thread-category {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: var(--accent-muted);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+}
+
+.thread-author {
+    font-size: 0.8125rem;
     color: var(--text-muted);
 }
 
-/* ========== Thread Detail ========== */
-.thread-detail {
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--border);
-    margin-bottom: var(--space-lg);
+.thread-item h3 {
+    font-size: 1rem;
+    margin-bottom: var(--space-2);
 }
 
-.thread-detail .thread-meta {
-    margin-bottom: var(--space-md);
+.thread-item p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Thread Detail */
+.thread-detail {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-6);
+}
+
+.back-link:hover {
+    color: var(--accent);
 }
 
 .thread-content {
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+}
+
+.thread-content h1 {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-4);
+}
+
+.thread-content .thread-meta {
+    margin-bottom: var(--space-6);
+}
+
+.thread-body {
+    font-size: 0.9375rem;
+    line-height: 1.8;
+    color: var(--text-secondary);
+}
+
+/* Replies */
+.replies-section h2 {
     font-size: 1rem;
-    line-height: 1.7;
-    color: var(--text);
+    margin-bottom: var(--space-5);
 }
 
-/* ========== Replies ========== */
-.replies-section {
-    margin-bottom: var(--space-lg);
-}
-
-.replies-section h4 {
-    margin-bottom: var(--space-md);
+.replies-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
 }
 
 .reply-item {
+    padding: var(--space-4);
     background: var(--surface);
-    padding: var(--space-md);
     border-radius: var(--radius-md);
-    margin-bottom: var(--space-sm);
 }
 
 .reply-meta {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-sm);
-    font-size: 0.85rem;
-}
-
-.reply-meta span {
+    gap: var(--space-2);
+    font-size: 0.8125rem;
     color: var(--text-muted);
+    margin-bottom: var(--space-2);
 }
 
-.reply-item p {
+.reply-author {
+    font-weight: 500;
     color: var(--text);
-    font-size: 0.95rem;
 }
 
-/* ========== Reply Form ========== */
+.reply-content {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Reply Form */
 .reply-form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
-    padding-top: var(--space-lg);
-    border-top: 1px solid var(--border);
+    gap: var(--space-4);
 }
 
-.reply-form button {
-    align-self: flex-end;
+.reply-form textarea {
+    min-height: 100px;
+    resize: vertical;
 }
 
-/* ========== Form ========== */
-.form-group {
-    margin-bottom: var(--space-lg);
+/* New Thread Modal */
+.new-thread-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
 }
 
-.loading {
-    text-align: center;
-    padding: var(--space-2xl);
-    color: var(--text-muted);
+.new-thread-form textarea {
+    min-height: 120px;
+    resize: vertical;
 }
 
-.empty-state {
-    text-align: center;
-    padding: var(--space-3xl);
-}
-
-.empty-state h3 {
-    margin-bottom: var(--space-sm);
-}
-
-.empty-state p {
-    margin-bottom: var(--space-lg);
+/* Responsive */
+@media (max-width: 768px) {
+    .forum-header {
+        flex-direction: column;
+    }
 }
