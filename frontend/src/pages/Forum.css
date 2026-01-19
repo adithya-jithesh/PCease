@@ -1,0 +1,139 @@
+/* ========== Forum Header ========== */
+.forum-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    flex-wrap: wrap;
+}
+
+.forum-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
+}
+
+/* ========== Threads List ========== */
+.threads-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.thread-item {
+    cursor: pointer;
+    padding: var(--space-lg);
+}
+
+.thread-item:hover {
+    border-color: var(--accent);
+}
+
+.thread-cat {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.thread-item h3 {
+    font-size: 1.1rem;
+    margin: var(--space-sm) 0;
+}
+
+.thread-meta {
+    display: flex;
+    gap: var(--space-md);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ========== Thread Detail ========== */
+.thread-detail {
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-lg);
+}
+
+.thread-detail .thread-meta {
+    margin-bottom: var(--space-md);
+}
+
+.thread-content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text);
+}
+
+/* ========== Replies ========== */
+.replies-section {
+    margin-bottom: var(--space-lg);
+}
+
+.replies-section h4 {
+    margin-bottom: var(--space-md);
+}
+
+.reply-item {
+    background: var(--surface);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-sm);
+}
+
+.reply-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+    font-size: 0.85rem;
+}
+
+.reply-meta span {
+    color: var(--text-muted);
+}
+
+.reply-item p {
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+/* ========== Reply Form ========== */
+.reply-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--border);
+}
+
+.reply-form button {
+    align-self: flex-end;
+}
+
+/* ========== Form ========== */
+.form-group {
+    margin-bottom: var(--space-lg);
+}
+
+.loading {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--text-muted);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--space-3xl);
+}
+
+.empty-state h3 {
+    margin-bottom: var(--space-sm);
+}
+
+.empty-state p {
+    margin-bottom: var(--space-lg);
+}

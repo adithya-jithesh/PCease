@@ -1,0 +1,185 @@
+/* ========== Advisor Header ========== */
+.advisor-header {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto var(--space-2xl);
+}
+
+.advisor-header h1 {
+    margin-bottom: var(--space-md);
+}
+
+/* ========== Advisor Layout ========== */
+.advisor-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.advisor-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--space-md);
+    font-size: 1.1rem;
+}
+
+/* ========== Budget Input ========== */
+.budget-input {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.budget-input input[type="range"] {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+}
+
+.budget-input input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px;
+    height: 24px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.budget-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    min-width: 120px;
+    text-align: right;
+}
+
+/* ========== Use Case Grid ========== */
+.use-case-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+.use-case-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: all var(--transition-fast);
+}
+
+.use-case-card:hover {
+    border-color: var(--border-accent);
+}
+
+.use-case-card.active {
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.use-case-card strong {
+    color: var(--text);
+}
+
+.use-case-card span {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* ========== Recommendation ========== */
+.recommendation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.recommendation h2 {
+    margin-bottom: 0;
+}
+
+.recommendation>p {
+    margin-top: calc(-1 * var(--space-md));
+}
+
+.rec-list {
+    list-style: none;
+}
+
+.rec-list li {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.rec-cat {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+}
+
+.rec-name {
+    color: var(--text);
+}
+
+.rec-price {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.rec-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    border-top: 1px solid var(--border);
+}
+
+.total-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    .advisor-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .use-case-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .budget-input {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .budget-value {
+        text-align: center;
+    }
+}
