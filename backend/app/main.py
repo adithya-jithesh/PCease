@@ -54,5 +54,16 @@ def health_check():
     return {"status": "healthy"}
 
 
+@app.get("/seed")
+def seed_data():
+    """Seed database with sample data"""
+    try:
+        from .seed import seed_database
+        seed_database()
+        return {"message": "Database seeded successfully!"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # Vercel serverless handler
 handler = Mangum(app)
