@@ -41,7 +41,7 @@ def get_components(
     min_price: Optional[float] = None,
     max_price: Optional[float] = None,
     search: Optional[str] = None,
-    sort: str = Query("price-low", regex="^(price-low|price-high|name)$"),
+    sort: str = Query("price-low", pattern="^(price-low|price-high|name)$"),
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db)
