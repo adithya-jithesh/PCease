@@ -3,6 +3,8 @@
 // Backend: FastAPI on Render | DB: Supabase
 // =====================================================
 
+// In production VITE_API_URL should be the full base like "https://pcease-api.onrender.com/api"
+// In dev the Vite proxy handles /api → localhost:8000
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 // ========== Core Fetch Helper ==========

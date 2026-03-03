@@ -45,4 +45,11 @@ def root():
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "version": "3.0.0"}
+    """Health check for Render — tests Supabase connectivity."""
+    from .database import get_db
+    try:
+        db = get_db()
+        db.table('categories').select('id').limit(1).execute()
+        return {"status": "healthy", "version": "3.0.0", "db": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "version": "3.0.0", "db": str(e)}
