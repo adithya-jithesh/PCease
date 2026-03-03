@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { API, timeAgo } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
+import { FiPlus, FiSearch, FiChevronUp, FiChevronDown, FiX, FiMessageCircle, FiUser, FiClock } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import './Forum.css'
 
@@ -22,262 +23,140 @@ export default function Forum() {
 
     const loadThreads = async () => {
         setLoading(true)
-        try {
-            const cat = category === 'All' ? '' : category
-            const data = await API.getThreads({ category: cat })
-            setThreads(data)
-        } catch {
-            setThreads([])
-        } finally {
-            setLoading(false)
-        }
+        try { setThreads(await API.getThreads({ category: category === 'All' ? '' : category })) }
+        catch { setThreads([]) }
+        finally { setLoading(false) }
     }
 
-    const openThread = async (id) => {
-        try {
-            const data = await API.getThread(id)
-            setActiveThread(data)
-        } catch {
-            toast.error('Failed to load thread')
-        }
-    }
+    const openThread = async (id) => { try { setActiveThread(await API.getThread(id)) } catch { toast.error('Failed to load thread') } }
 
     const handleCreateThread = async (e) => {
         e.preventDefault()
-        if (!user) return toast.error('Please login to create a thread')
-        try {
-            await API.createThread(newThread)
-            setNewThread({ title: '', content: '', category: 'Discussion' })
-            setShowNewThread(false)
-            loadThreads()
-            toast.success('Thread created!')
-        } catch (err) {
-            toast.error('Failed: ' + err.message)
-        }
+        if (!user) return toast.error('Please login')
+        try { await API.createThread(newThread); setNewThread({ title: '', content: '', category: 'Discussion' }); setShowNewThread(false); loadThreads(); toast.success('Thread created!') }
+        catch (err) { toast.error('Failed: ' + err.message) }
     }
 
     const handleReply = async (e) => {
         e.preventDefault()
-        if (!user) return toast.error('Please login to reply')
-        try {
-            await API.createReply(activeThread.id, newReply)
-            setNewReply('')
-            openThread(activeThread.id)
-            toast.success('Reply posted!')
-        } catch (err) {
-            toast.error('Failed: ' + err.message)
-        }
+        if (!user) return toast.error('Please login')
+        try { await API.createReply(activeThread.id, newReply); setNewReply(''); openThread(activeThread.id); toast.success('Reply posted!') }
+        catch (err) { toast.error('Failed: ' + err.message) }
     }
 
     const handleVoteThread = async (id, type) => {
-        if (!user) return toast.error('Please login to vote')
-        try {
-            await API.voteThread(id, type)
-            if (activeThread?.id === id) openThread(id)
-            loadThreads()
-        } catch (err) {
-            toast.error(err.message)
-        }
+        if (!user) return toast.error('Please login')
+        try { await API.voteThread(id, type); if (activeThread?.id === id) openThread(id); loadThreads() }
+        catch (err) { toast.error(err.message) }
     }
 
     const handleVoteReply = async (id, type) => {
-        if (!user) return toast.error('Please login to vote')
-        try {
-            await API.voteReply(id, type)
-            if (activeThread) openThread(activeThread.id)
-        } catch (err) {
-            toast.error(err.message)
-        }
+        if (!user) return toast.error('Please login')
+        try { await API.voteReply(id, type); if (activeThread) openThread(activeThread.id) }
+        catch (err) { toast.error(err.message) }
     }
 
-    const filtered = threads.filter(t =>
-        !search || t.title?.toLowerCase().includes(search.toLowerCase())
-    )
-
-    const getAuthor = (thread) => thread.author?.username || thread.author_username || 'Unknown'
+    const filtered = threads.filter(t => !search || t.title?.toLowerCase().includes(search.toLowerCase()))
+    const getAuthor = (t) => t.author?.username || t.author_username || 'Unknown'
 
     return (
-        <main className="page-content">
+        <main className="page">
             <div className="container">
-                <header className="forum-header">
+                <header className="fm-header">
                     <div>
-                        <h1>💬 Community Forum</h1>
-                        <p>Ask questions, share builds, discuss deals, and help fellow builders.</p>
+                        <h1>Community Forum</h1>
+                        <p className="fm-header__sub">Ask questions, share builds, and help fellow builders.</p>
                     </div>
-                    {user ? (
-                        <button className="btn btn-primary" onClick={() => setShowNewThread(true)}>
-                            + New Thread
-                        </button>
-                    ) : (
-                        <Link to="/login" className="btn btn-primary">Login to Post</Link>
-                    )}
+                    {user ? <button className="btn btn-primary" onClick={() => setShowNewThread(true)}><FiPlus size={14} /> New Thread</button>
+                        : <Link to="/login" className="btn btn-primary">Login to Post</Link>}
                 </header>
 
-                {/* Search & Filters */}
-                <div className="forum-toolbar">
-                    <input
-                        type="text"
-                        className="forum-search"
-                        placeholder="Search threads..."
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                    />
-                    <div className="forum-filters">
-                        {categories.map(cat => (
-                            <button
-                                key={cat}
-                                className={`chip ${category === cat ? 'active' : ''}`}
-                                onClick={() => setCategory(cat)}
-                            >{cat}</button>
+                <div className="fm-toolbar">
+                    <div className="fm-search"><FiSearch className="fm-search__icon" /><input type="text" placeholder="Search threads..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+                    <div className="fm-chips">{categories.map(cat => <button key={cat} className={`chip ${category === cat ? 'active' : ''}`} onClick={() => setCategory(cat)}>{cat}</button>)}</div>
+                </div>
+
+                <span className="fm-count">{threads.length} threads</span>
+
+                <section className="fm-list">
+                    {loading ? <p className="text-muted">Loading...</p>
+                        : filtered.length === 0 ? <div className="fm-empty"><FiMessageCircle size={32} /><h3>No threads found</h3><p>{search ? 'Try a different term.' : 'Start a discussion!'}</p></div>
+                        : filtered.map(thread => (
+                            <article key={thread.id} className="fm-thread">
+                                <div className="fm-votes">
+                                    <button className="fm-vote" onClick={() => handleVoteThread(thread.id, 'upvote')}><FiChevronUp size={16} /></button>
+                                    <span className="fm-vote__count">{(thread.upvotes || 0) - (thread.downvotes || 0)}</span>
+                                    <button className="fm-vote" onClick={() => handleVoteThread(thread.id, 'downvote')}><FiChevronDown size={16} /></button>
+                                </div>
+                                <div className="fm-thread__main" onClick={() => openThread(thread.id)}>
+                                    <div className="fm-thread__top">
+                                        <span className="fm-thread__cat">{thread.category}</span>
+                                        <h3>{thread.title}</h3>
+                                    </div>
+                                    <div className="fm-thread__meta">
+                                        <span><FiUser size={12} /> {getAuthor(thread)}</span>
+                                        <span><FiMessageCircle size={12} /> {thread.reply_count || 0}</span>
+                                        <span><FiClock size={12} /> {timeAgo(thread.created_at)}</span>
+                                    </div>
+                                </div>
+                            </article>
                         ))}
-                    </div>
-                </div>
-
-                {/* Stats Bar */}
-                <div className="forum-stats">
-                    <span>📝 {threads.length} threads</span>
-                    <span>👥 Community driven</span>
-                </div>
-
-                {/* Thread List */}
-                <section className="threads-list">
-                    {loading ? (
-                        <div className="loading">Loading threads...</div>
-                    ) : filtered.length === 0 ? (
-                        <div className="empty-state">
-                            <span className="empty-icon">💬</span>
-                            <h3>No threads found</h3>
-                            <p>{search ? 'Try a different search term.' : 'Be the first to start a discussion!'}</p>
-                        </div>
-                    ) : filtered.map(thread => (
-                        <article key={thread.id} className="thread-item card">
-                            {/* Vote Column */}
-                            <div className="thread-votes">
-                                <button className="vote-btn up" onClick={() => handleVoteThread(thread.id, 'upvote')} title="Upvote">▲</button>
-                                <span className="vote-count">{(thread.upvotes || 0) - (thread.downvotes || 0)}</span>
-                                <button className="vote-btn down" onClick={() => handleVoteThread(thread.id, 'downvote')} title="Downvote">▼</button>
-                            </div>
-                            {/* Content */}
-                            <div className="thread-main" onClick={() => openThread(thread.id)}>
-                                <div className="thread-top">
-                                    <span className="thread-cat">{thread.category}</span>
-                                    <h3>{thread.title}</h3>
-                                </div>
-                                <div className="thread-meta">
-                                    <span className="meta-author">👤 {getAuthor(thread)}</span>
-                                    <span>💬 {thread.reply_count || 0} replies</span>
-                                    <span>🕐 {timeAgo(thread.created_at)}</span>
-                                </div>
-                            </div>
-                        </article>
-                    ))}
                 </section>
 
-                {/* New Thread Modal */}
                 {showNewThread && (
                     <div className="modal-overlay" onClick={() => setShowNewThread(false)}>
                         <div className="modal" onClick={e => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h2>Start a New Thread</h2>
-                                <button className="modal-close" onClick={() => setShowNewThread(false)}>×</button>
-                            </div>
+                            <div className="modal-header"><h2>New Thread</h2><button className="modal-close" onClick={() => setShowNewThread(false)}><FiX /></button></div>
                             <form className="modal-body" onSubmit={handleCreateThread}>
-                                <div className="form-group">
-                                    <label>Title</label>
-                                    <input
-                                        type="text"
-                                        value={newThread.title}
-                                        onChange={e => setNewThread(prev => ({ ...prev, title: e.target.value }))}
-                                        required
-                                        placeholder="What's your question or topic?"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label>Category</label>
-                                    <select
-                                        value={newThread.category}
-                                        onChange={e => setNewThread(prev => ({ ...prev, category: e.target.value }))}
-                                    >
-                                        {categories.slice(1).map(cat => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Content</label>
-                                    <textarea
-                                        rows="6"
-                                        value={newThread.content}
-                                        onChange={e => setNewThread(prev => ({ ...prev, content: e.target.value }))}
-                                        required
-                                        placeholder="Share details, specs, or context..."
-                                    />
-                                </div>
+                                <div className="form-group"><label>Title</label><input type="text" value={newThread.title} onChange={e => setNewThread(p => ({ ...p, title: e.target.value }))} required placeholder="Your question or topic" /></div>
+                                <div className="form-group"><label>Category</label><select value={newThread.category} onChange={e => setNewThread(p => ({ ...p, category: e.target.value }))}>{categories.slice(1).map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                                <div className="form-group"><label>Content</label><textarea rows="5" value={newThread.content} onChange={e => setNewThread(p => ({ ...p, content: e.target.value }))} required placeholder="Details, specs, context..." /></div>
                                 <button type="submit" className="btn btn-primary">Post Thread</button>
                             </form>
                         </div>
                     </div>
                 )}
 
-                {/* Thread Detail Modal */}
                 {activeThread && (
                     <div className="modal-overlay" onClick={() => setActiveThread(null)}>
                         <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h2>{activeThread.title}</h2>
-                                <button className="modal-close" onClick={() => setActiveThread(null)}>×</button>
-                            </div>
+                            <div className="modal-header"><h2>{activeThread.title}</h2><button className="modal-close" onClick={() => setActiveThread(null)}><FiX /></button></div>
                             <div className="modal-body">
-                                <div className="thread-detail">
-                                    <div className="thread-meta">
-                                        <span className="thread-cat">{activeThread.category}</span>
-                                        <span>👤 {getAuthor(activeThread)}</span>
-                                        <span>🕐 {timeAgo(activeThread.created_at)}</span>
+                                <div className="fm-detail">
+                                    <div className="fm-detail__meta">
+                                        <span className="fm-thread__cat">{activeThread.category}</span>
+                                        <span><FiUser size={12} /> {getAuthor(activeThread)}</span>
+                                        <span><FiClock size={12} /> {timeAgo(activeThread.created_at)}</span>
                                     </div>
-                                    <div className="thread-detail-votes">
-                                        <button className="vote-btn up" onClick={() => handleVoteThread(activeThread.id, 'upvote')}>▲</button>
-                                        <span className="vote-count">{(activeThread.upvotes || 0) - (activeThread.downvotes || 0)}</span>
-                                        <button className="vote-btn down" onClick={() => handleVoteThread(activeThread.id, 'downvote')}>▼</button>
+                                    <div className="fm-detail__votes">
+                                        <button className="fm-vote" onClick={() => handleVoteThread(activeThread.id, 'upvote')}><FiChevronUp size={16} /></button>
+                                        <span className="fm-vote__count">{(activeThread.upvotes || 0) - (activeThread.downvotes || 0)}</span>
+                                        <button className="fm-vote" onClick={() => handleVoteThread(activeThread.id, 'downvote')}><FiChevronDown size={16} /></button>
                                     </div>
-                                    <p className="thread-content">{activeThread.content}</p>
+                                    <p className="fm-detail__body">{activeThread.content}</p>
                                 </div>
-
-                                <div className="replies-section">
-                                    <h4>💬 {activeThread.replies?.length || 0} Replies</h4>
-                                    {activeThread.replies?.map(reply => (
-                                        <div key={reply.id} className="reply-item">
-                                            <div className="reply-votes">
-                                                <button className="vote-btn up" onClick={() => handleVoteReply(reply.id, 'upvote')}>▲</button>
-                                                <span className="vote-count">{(reply.upvotes || 0) - (reply.downvotes || 0)}</span>
-                                                <button className="vote-btn down" onClick={() => handleVoteReply(reply.id, 'downvote')}>▼</button>
+                                <div className="fm-replies">
+                                    <h4><FiMessageCircle size={14} /> {activeThread.replies?.length || 0} Replies</h4>
+                                    {activeThread.replies?.map(r => (
+                                        <div key={r.id} className="fm-reply">
+                                            <div className="fm-votes fm-votes--sm">
+                                                <button className="fm-vote" onClick={() => handleVoteReply(r.id, 'upvote')}><FiChevronUp size={14} /></button>
+                                                <span className="fm-vote__count">{(r.upvotes || 0) - (r.downvotes || 0)}</span>
+                                                <button className="fm-vote" onClick={() => handleVoteReply(r.id, 'downvote')}><FiChevronDown size={14} /></button>
                                             </div>
-                                            <div className="reply-content">
-                                                <div className="reply-meta">
-                                                    <strong>👤 {reply.author?.username || reply.author_username}</strong>
-                                                    <span>{timeAgo(reply.created_at)}</span>
-                                                </div>
-                                                <p>{reply.content}</p>
+                                            <div className="fm-reply__content">
+                                                <div className="fm-reply__meta"><strong>{r.author?.username || r.author_username}</strong><span>{timeAgo(r.created_at)}</span></div>
+                                                <p>{r.content}</p>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
-
                                 {user ? (
-                                    <form className="reply-form" onSubmit={handleReply}>
-                                        <textarea
-                                            rows="3"
-                                            value={newReply}
-                                            onChange={e => setNewReply(e.target.value)}
-                                            required
-                                            placeholder="Write a helpful reply..."
-                                        />
+                                    <form className="fm-reply-form" onSubmit={handleReply}>
+                                        <textarea rows="3" value={newReply} onChange={e => setNewReply(e.target.value)} required placeholder="Write a reply..." />
                                         <button type="submit" className="btn btn-primary">Post Reply</button>
                                     </form>
-                                ) : (
-                                    <div className="login-prompt">
-                                        <Link to="/login" className="btn btn-primary">Login to Reply</Link>
-                                    </div>
-                                )}
+                                ) : <div className="fm-login-prompt"><Link to="/login" className="btn btn-primary">Login to Reply</Link></div>}
                             </div>
                         </div>
                     </div>
