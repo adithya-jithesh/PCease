@@ -5,7 +5,7 @@
 /* ── Hero ── */
 .hero {
     position: relative;
-    padding: 140px 0 80px;
+    padding: 120px 0 64px;
     text-align: center;
     overflow: hidden;
 }
@@ -24,46 +24,12 @@
     max-width: 640px;
     margin: 0 auto;
 }
-.hero__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 14px;
-    background: var(--accent-subtle);
-    border: 1px solid var(--accent-border);
-    border-radius: 9999px;
-    font-size: .75rem;
-    font-weight: 600;
-    color: var(--accent);
-    margin-bottom: 28px;
-    letter-spacing: .02em;
-}
-.hero__badge-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse-dot 2s infinite;
-}
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .3; }
-}
 .hero h1 {
     font-size: clamp(2.5rem, 5.5vw, 3.75rem);
     font-weight: 800;
     line-height: 1.08;
     letter-spacing: -.04em;
-    margin-bottom: 18px;
-}
-.hero__sub {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: 32px;
-    max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-bottom: 28px;
 }
 .hero__cta {
     display: flex;

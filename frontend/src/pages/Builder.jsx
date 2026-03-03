@@ -25,7 +25,7 @@ const CORE_SLOTS = BUILD_SLOTS.filter(s => s.key !== 'ram2' && s.key !== 'fans')
 
 // Accessory categories — infinite add
 const ACCESSORY_DEFS = [
-    { category: 'fans', name: 'Case Fan', icon: '🌀' },
+    { category: 'fans', name: 'Case Fan' },
 ]
 
 function getInlineSpecs(comp, maxCount = 3) {
@@ -256,7 +256,7 @@ export default function Builder() {
                                 <div key={slot.key} className={`bd-slot-group${isRam ? ' bd-slot-group--ram' : ''}`}>
                                     <div className={`bd-slot${sel ? ' bd-slot--filled' : ''}`}>
                                         <div className="bd-slot__head">
-                                            <span className="bd-slot__name">{slot.icon} {slot.name}</span>
+                                            <span className="bd-slot__name">{slot.name}</span>
                                             {slot.required && <span className="bd-slot__req">Required</span>}
                                         </div>
 
@@ -290,7 +290,7 @@ export default function Builder() {
                                     {isRam && extraRam.map((ram, i) => (
                                         <div key={`extra_ram_${i}`} className="bd-slot bd-slot--filled bd-slot--extra">
                                             <div className="bd-slot__head">
-                                                <span className="bd-slot__name">💾 Extra RAM #{i + 1}</span>
+                                                <span className="bd-slot__name">Extra RAM #{i + 1}</span>
                                             </div>
                                             <div className="bd-slot__sel">
                                                 <div className="bd-slot__info">
@@ -325,7 +325,7 @@ export default function Builder() {
                                         {items.map((comp, i) => (
                                             <div key={`${def.category}_${i}`} className="bd-slot bd-slot--filled bd-slot--accessory">
                                                 <div className="bd-slot__head">
-                                                    <span className="bd-slot__name">{def.icon} {def.name} #{i + 1}</span>
+                                                    <span className="bd-slot__name">{def.name} #{i + 1}</span>
                                                 </div>
                                                 <div className="bd-slot__sel">
                                                     <div className="bd-slot__info">

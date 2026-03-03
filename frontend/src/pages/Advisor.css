@@ -10,7 +10,8 @@
 .ad-tab.active { background: var(--accent); color: white; font-weight: 600; }
 
 /* Recommend Layout */
-.ad-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.ad-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; max-width: 860px; margin: 0 auto; }
+.ad-layout--single { grid-template-columns: 1fr; max-width: 520px; }
 .ad-form { padding: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .ad-form h3 { margin-bottom: 20px; }
 .ad-budget { display: flex; align-items: center; gap: 16px; }
@@ -71,7 +72,7 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
 .ad-chat__input input { flex: 1; }
 
 /* Templates */
-.ad-tmpl-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 16px; }
+.ad-tmpl-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 16px; max-width: 860px; margin: 0 auto; }
 .ad-tmpl { padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .ad-tmpl__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .ad-tmpl__head h3 { font-size: 1rem; }

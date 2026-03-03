@@ -32,18 +32,10 @@ export default function Home() {
             <section className="hero">
                 <div className="hero__glow" />
                 <div className="container hero__inner">
-                    <span className="hero__badge">
-                        <span className="hero__badge-dot" />
-                        India&#39;s PC building platform
-                    </span>
                     <h1>
                         Build smarter.<br />
                         <span className="text-accent">Pay less.</span>
                     </h1>
-                    <p className="hero__sub">
-                        Compare prices across 9 Indian retailers, get AI-powered recommendations,
-                        and share your build — completely free.
-                    </p>
                     <div className="hero__cta">
                         <Link to="/builder" className="btn btn-primary btn-lg">
                             Start Building <FiArrowRight size={15} />

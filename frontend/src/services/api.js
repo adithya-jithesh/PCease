@@ -196,31 +196,31 @@ export function timeAgo(dateStr) {
     return `${months}mo ago`
 }
 
-// Category display names + icons (keys must match DB slugs)
+// Category display names (keys must match DB slugs)
 export const CATEGORIES = {
-    cpu: { name: 'Processor', icon: '⚡', abbr: 'CPU' },
-    gpu: { name: 'Graphics Card', icon: '🎮', abbr: 'GPU' },
-    motherboard: { name: 'Motherboard', icon: '🔧', abbr: 'MB' },
-    ram: { name: 'Memory', icon: '💾', abbr: 'RAM' },
-    storage: { name: 'Storage', icon: '💿', abbr: 'SSD' },
-    psu: { name: 'Power Supply', icon: '🔌', abbr: 'PSU' },
-    case: { name: 'Case', icon: '🖥️', abbr: 'CASE' },
-    cooler: { name: 'CPU Cooler', icon: '❄️', abbr: 'COOL' },
-    monitor: { name: 'Monitor', icon: '🖥', abbr: 'MON' },
-    fans: { name: 'Case Fans', icon: '🌀', abbr: 'FAN' },
+    cpu: { name: 'Processor', abbr: 'CPU' },
+    gpu: { name: 'Graphics Card', abbr: 'GPU' },
+    motherboard: { name: 'Motherboard', abbr: 'MB' },
+    ram: { name: 'Memory', abbr: 'RAM' },
+    storage: { name: 'Storage', abbr: 'SSD' },
+    psu: { name: 'Power Supply', abbr: 'PSU' },
+    case: { name: 'Case', abbr: 'CASE' },
+    cooler: { name: 'CPU Cooler', abbr: 'COOL' },
+    monitor: { name: 'Monitor', abbr: 'MON' },
+    fans: { name: 'Case Fans', abbr: 'FAN' },
 }
 
 // Build slots config
 export const BUILD_SLOTS = [
-    { key: 'cpu', name: 'Processor', required: true, icon: '⚡' },
-    { key: 'gpu', name: 'Graphics Card', required: false, icon: '🎮' },
-    { key: 'motherboard', name: 'Motherboard', required: true, icon: '🔧' },
-    { key: 'ram', name: 'Memory', required: true, icon: '💾' },
-    { key: 'ram2', name: 'Extra RAM (optional)', required: false, icon: '💾', category: 'ram' },
-    { key: 'storage', name: 'Storage', required: true, icon: '💿' },
-    { key: 'psu', name: 'Power Supply', required: true, icon: '🔌' },
-    { key: 'case', name: 'Case', required: false, icon: '🖥️' },
-    { key: 'cooler', name: 'CPU Cooler', required: false, icon: '❄️' },
-    { key: 'monitor', name: 'Monitor', required: false, icon: '🖥' },
-    { key: 'fans', name: 'Case Fans', required: false, icon: '🌀' },
+    { key: 'cpu', name: 'Processor', required: true },
+    { key: 'gpu', name: 'Graphics Card', required: false },
+    { key: 'motherboard', name: 'Motherboard', required: true },
+    { key: 'ram', name: 'Memory', required: true },
+    { key: 'ram2', name: 'Extra RAM (optional)', required: false, category: 'ram' },
+    { key: 'storage', name: 'Storage', required: true },
+    { key: 'psu', name: 'Power Supply', required: true },
+    { key: 'case', name: 'Case', required: false },
+    { key: 'cooler', name: 'CPU Cooler', required: false },
+    { key: 'monitor', name: 'Monitor', required: false },
+    { key: 'fans', name: 'Case Fans', required: false },
 ]

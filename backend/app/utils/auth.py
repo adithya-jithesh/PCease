@@ -55,8 +55,8 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    result = db.table("users").select("*").eq("id", user_id).single().execute()
-    if not result.data:
+    result = db.table("users").select("*").eq("id", user_id).maybe_single().execute()
+    if not result or not result.data:
         raise credentials_exception
 
     return result.data

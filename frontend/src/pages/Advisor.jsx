@@ -65,7 +65,7 @@ export default function Advisor() {
                 </div>
 
                 {tab === 'recommend' && (
-                    <div className="ad-layout">
+                    <div className={`ad-layout${recommendation ? '' : ' ad-layout--single'}`}>
                         <section className="ad-form">
                             <h3>Tell us about your build</h3>
                             <div className="form-group">
