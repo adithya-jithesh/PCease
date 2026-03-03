@@ -1,16 +1,57 @@
-.ft { border-top: 1px solid var(--border); padding: 48px 0 24px; margin-top: auto; }
-.ft__grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 40px; }
-.ft__brand p { color: var(--text-muted); font-size: .8125rem; margin-top: 8px; max-width: 260px; }
-.ft__logo { font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -.03em; }
+/* =====================================================
+   Footer — v2  Compact single-row strip
+   ===================================================== */
+
+.ft {
+    border-top: 1px solid var(--border);
+    padding: 16px 0;
+    margin-top: auto;
+}
+.ft__inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.ft__logo {
+    font-size: .9375rem;
+    font-weight: 800;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -.03em;
+    flex-shrink: 0;
+}
+.ft__accent { color: var(--accent); }
 .ft__dot { color: var(--accent); }
-.ft__col { display: flex; flex-direction: column; gap: 6px; }
-.ft__heading { font-size: .6875rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
-.ft__col a { color: var(--text-secondary); font-size: .8125rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: color var(--transition); }
-.ft__col a:hover { color: var(--text); }
-.ft__bottom { display: flex; justify-content: space-between; border-top: 1px solid var(--border); margin-top: 32px; padding-top: 16px; }
-.ft__bottom p { color: var(--text-muted); font-size: .75rem; }
+.ft__links {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+}
+.ft__links a {
+    color: var(--text-muted);
+    font-size: .75rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color .15s;
+}
+.ft__links a:hover { color: var(--text); }
+.ft__copy {
+    font-size: .6875rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    margin-left: auto;
+}
+
 @media (max-width: 768px) {
-    .ft__grid { grid-template-columns: 1fr 1fr; gap: 24px; }
-    .ft__brand { grid-column: 1 / -1; }
-    .ft__bottom { flex-direction: column; gap: 4px; }
+    .ft__inner {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    .ft__links { justify-content: center; flex-wrap: wrap; }
+    .ft__copy { margin-left: 0; }
 }

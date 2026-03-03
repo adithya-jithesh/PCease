@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import { FiMenu, FiX, FiLogOut, FiUser } from 'react-icons/fi'
+import { FiMenu, FiX, FiLogOut } from 'react-icons/fi'
 import { useAuth } from '../context/AuthContext'
 import './Navbar.css'
 
@@ -29,12 +29,16 @@ export default function Navbar() {
         <nav className={`nav${scrolled ? ' nav--scrolled' : ''}`}>
             <div className="container nav__inner">
                 <Link to="/" className="nav__logo">
-                    PCease<span className="nav__dot">.</span>
+                    PC<span className="nav__logo-accent">ease</span><span className="nav__dot">.</span>
                 </Link>
 
                 <div className={`nav__links${open ? ' nav__links--open' : ''}`}>
                     {navItems.map(item => (
-                        <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav__link${isActive ? ' nav__link--active' : ''}`}>
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            className={({ isActive }) => `nav__link${isActive ? ' nav__link--active' : ''}`}
+                        >
                             {item.label}
                         </NavLink>
                     ))}
@@ -45,13 +49,13 @@ export default function Navbar() {
                         <div className="nav__user">
                             <span className="nav__avatar">{user.username?.charAt(0).toUpperCase()}</span>
                             <span className="nav__username">{user.username}</span>
-                            <button className="nav__logout" onClick={logout} title="Logout"><FiLogOut size={15} /></button>
+                            <button className="nav__logout" onClick={logout} title="Logout"><FiLogOut size={14} /></button>
                         </div>
                     ) : (
-                        <NavLink to="/login" className="btn btn-primary btn-sm">Sign In</NavLink>
+                        <NavLink to="/login" className="btn btn-primary btn-sm nav__signin">Sign In</NavLink>
                     )}
                     <button className="nav__toggle" onClick={() => setOpen(!open)} aria-label="Menu">
-                        {open ? <FiX size={18} /> : <FiMenu size={18} />}
+                        {open ? <FiX size={17} /> : <FiMenu size={17} />}
                     </button>
                 </div>
             </div>

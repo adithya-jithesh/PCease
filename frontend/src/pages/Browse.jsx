@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { API, formatPrice, getLowestPrice, getSavings, CATEGORIES } from '../services/api'
-import { FiSearch, FiX, FiExternalLink, FiCheck, FiPlus, FiGrid, FiList, FiShoppingCart } from 'react-icons/fi'
+import { API, formatPrice, getLowestPrice, getSavings, getBestVendor, CATEGORIES } from '../services/api'
+import { FiSearch, FiX, FiExternalLink, FiCheck, FiPlus, FiGrid, FiList, FiShoppingCart, FiInfo, FiChevronRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import './Browse.css'
 
-// Priority spec keys per category to show inline
 const SPEC_PRIORITY = {
     cpu: ['cores', 'boost_clock', 'socket', 'tdp'],
     gpu: ['memory', 'boost_clock', 'tdp', 'cuda_cores'],
@@ -74,22 +73,28 @@ export default function Browse() {
         navigate(`/compare?ids=${compareList.map(c => c.id).join(',')}`)
     }
 
-    const Skeleton = ({ mode }) => mode === 'list'
-        ? <div className="br-list-item br-list-item--skeleton">
-            <div style={{ flex: 2 }}><div className="skeleton" style={{ height: 13, width: '35%', marginBottom: 8 }} /><div className="skeleton" style={{ height: 17, width: '70%', marginBottom: 6 }} /><div className="skeleton" style={{ height: 13, width: '30%' }} /></div>
-            <div style={{ flex: 3, display: 'flex', flexDirection: 'column', gap: 6 }}>{Array(4).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: 13, width: `${60 + i * 5}%` }} />)}</div>
-            <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>{Array(3).fill(0).map((_, i) => <div key={i} className="skeleton" style={{ height: 26, width: '100%', borderRadius: 6 }} />)}</div>
-            <div style={{ flex: 1 }}><div className="skeleton" style={{ height: 24, width: '60%', marginBottom: 8 }} /><div className="skeleton" style={{ height: 32, width: '100%' }} /></div>
-          </div>
-        : <div className="br-card br-card--skeleton">
-            <div className="skeleton" style={{ height: 16, width: '40%', marginBottom: 12 }} />
-            <div className="skeleton" style={{ height: 18, width: '80%', marginBottom: 6 }} />
-            <div className="skeleton" style={{ height: 13, width: '30%', marginBottom: 10 }} />
-            <div className="skeleton" style={{ height: 50, width: '100%', marginBottom: 10 }} />
-            <div className="skeleton" style={{ height: 20, width: '45%', marginBottom: 6 }} />
-            <div className="skeleton" style={{ height: 70, width: '100%', marginBottom: 10 }} />
-            <div className="skeleton" style={{ height: 36, width: '100%' }} />
-          </div>
+    const CardSkeleton = () => (
+        <div className="br-card br-card--skeleton">
+            <div className="skeleton" style={{ height: 14, width: '35%', marginBottom: 10 }} />
+            <div className="skeleton" style={{ height: 16, width: '85%', marginBottom: 6 }} />
+            <div className="skeleton" style={{ height: 12, width: '30%', marginBottom: 14 }} />
+            <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
+                <div className="skeleton" style={{ height: 22, width: '30%', borderRadius: 5 }} />
+                <div className="skeleton" style={{ height: 22, width: '35%', borderRadius: 5 }} />
+            </div>
+            <div className="skeleton" style={{ height: 20, width: '40%', marginBottom: 12 }} />
+            <div className="skeleton" style={{ height: 34, width: '100%', borderRadius: 8 }} />
+        </div>
+    )
+
+    const ListSkeleton = () => (
+        <div className="br-list-item br-list-item--skeleton">
+            <div style={{ flex: 1 }}><div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 8 }} /><div className="skeleton" style={{ height: 16, width: '75%' }} /></div>
+            <div style={{ flex: 1, display: 'flex', gap: 4, flexWrap: 'wrap' }}><div className="skeleton" style={{ height: 22, width: '28%', borderRadius: 5 }} /><div className="skeleton" style={{ height: 22, width: '32%', borderRadius: 5 }} /></div>
+            <div style={{ width: 100 }}><div className="skeleton" style={{ height: 20, width: '80%' }} /></div>
+            <div style={{ width: 80 }}><div className="skeleton" style={{ height: 30, width: '100%', borderRadius: 7 }} /></div>
+        </div>
+    )
 
     const EmptyState = () => (
         <div className="br-empty">
@@ -145,22 +150,29 @@ export default function Browse() {
                 {viewMode === 'grid' && (
                     <section className="br-grid">
                         {loading
-                            ? Array(8).fill(0).map((_, i) => <Skeleton key={i} mode="grid" />)
+                            ? Array(12).fill(0).map((_, i) => <CardSkeleton key={i} />)
                             : components.length === 0 ? <EmptyState />
                             : components.map(item => {
                                 const lowest = getLowestPrice(item)
                                 const savings = getSavings(item)
+                                const bestVendor = getBestVendor(item)
                                 const isComp = compareList.some(c => c.id === item.id)
-                                const sortedPrices = [...(item.prices || [])].sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
+                                const vendorCount = (item.prices || []).length
                                 const keySpecs = getKeySpecs(item, 3)
+
                                 return (
-                                    <article key={item.id} className={`br-card ${isComp ? 'br-card--selected' : ''}`}>
+                                    <article key={item.id} className={`br-card${isComp ? ' br-card--selected' : ''}`} onClick={() => setDetail(item)}>
                                         <div className="br-card__top">
                                             <span className="br-card__badge">{CATEGORIES[item.category?.slug]?.name || 'Part'}</span>
-                                            <button className={`br-card__cmp ${isComp ? 'active' : ''}`} onClick={() => toggleCompare(item)} title={isComp ? 'Remove from compare' : 'Add to compare'}>
+                                            <button
+                                                className={`br-card__cmp ${isComp ? 'active' : ''}`}
+                                                onClick={e => { e.stopPropagation(); toggleCompare(item) }}
+                                                title={isComp ? 'Remove from compare' : 'Add to compare'}
+                                            >
                                                 {isComp ? <FiCheck size={12} /> : <FiPlus size={12} />}
                                             </button>
                                         </div>
+
                                         <h3 className="br-card__title">{item.name}</h3>
                                         <span className="br-card__brand">{item.brand}</span>
 
@@ -174,31 +186,27 @@ export default function Browse() {
                                             </div>
                                         )}
 
-                                        <div className="br-card__price">
-                                            <span className="br-card__amount">{lowest ? formatPrice(lowest) : 'N/A'}</span>
-                                            {savings > 0 && <span className="br-card__save">Save {formatPrice(savings)}</span>}
+                                        <div className="br-card__price-row">
+                                            <div className="br-card__price">
+                                                <span className="br-card__amount">{lowest ? formatPrice(lowest) : 'N/A'}</span>
+                                                {savings > 0 && <span className="br-card__save">Save {formatPrice(savings)}</span>}
+                                            </div>
                                         </div>
 
-                                        {sortedPrices.length > 0 && (
-                                            <div className="br-card__vendor-prices">
-                                                {sortedPrices.slice(0, 3).map((p, i) => (
-                                                    <div key={i} className={`br-card__vp ${i === 0 ? 'br-card__vp--best' : ''}`}>
-                                                        <span className="br-card__vp-name">{p.vendor?.name || 'Store'}</span>
-                                                        <span className="br-card__vp-price">{formatPrice(p.price)}</span>
-                                                        {p.url
-                                                            ? <a href={p.url} target="_blank" rel="noreferrer" className="br-card__vp-link" onClick={e => e.stopPropagation()} title={`Buy at ${p.vendor?.name}`}>
-                                                                <FiExternalLink size={11} />
-                                                              </a>
-                                                            : <span className="br-card__vp-link br-card__vp-link--none" />}
-                                                    </div>
-                                                ))}
-                                                {sortedPrices.length > 3 && (
-                                                    <button className="br-card__more" onClick={() => setDetail(item)}>+{sortedPrices.length - 3} more stores</button>
+                                        {bestVendor && (
+                                            <div className="br-card__cheapest">
+                                                <span className="br-card__cheapest-store">{bestVendor.vendor?.name || 'Store'}</span>
+                                                {vendorCount > 1 && (
+                                                    <span className="br-card__cheapest-more">+{vendorCount - 1} more</span>
                                                 )}
                                             </div>
                                         )}
 
-                                        <button className="btn br-card__btn" onClick={() => setDetail(item)}>Full Details &amp; All Prices</button>
+                                        <div className="br-card__footer">
+                                            <span className="br-card__view-details">
+                                                View Details <FiChevronRight size={13} />
+                                            </span>
+                                        </div>
                                     </article>
                                 )
                             })
@@ -210,16 +218,18 @@ export default function Browse() {
                 {viewMode === 'list' && (
                     <section className="br-list">
                         {loading
-                            ? Array(6).fill(0).map((_, i) => <Skeleton key={i} mode="list" />)
+                            ? Array(8).fill(0).map((_, i) => <ListSkeleton key={i} />)
                             : components.length === 0 ? <EmptyState />
                             : components.map(item => {
                                 const lowest = getLowestPrice(item)
                                 const savings = getSavings(item)
+                                const bestVendor = getBestVendor(item)
                                 const isComp = compareList.some(c => c.id === item.id)
-                                const sortedPrices = [...(item.prices || [])].sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
-                                const keySpecs = getKeySpecs(item, 5)
+                                const vendorCount = (item.prices || []).length
+                                const keySpecs = getKeySpecs(item, 3)
+
                                 return (
-                                    <article key={item.id} className={`br-list-item ${isComp ? 'br-list-item--selected' : ''}`}>
+                                    <article key={item.id} className={`br-list-item${isComp ? ' br-list-item--selected' : ''}`} onClick={() => setDetail(item)}>
                                         <div className="br-list-item__left">
                                             <span className="br-card__badge">{CATEGORIES[item.category?.slug]?.name || 'Part'}</span>
                                             <h3 className="br-list-item__name">{item.name}</h3>
@@ -228,48 +238,30 @@ export default function Browse() {
 
                                         <div className="br-list-item__specs">
                                             {keySpecs.map(s => (
-                                                <div key={s.key} className="br-list-item__spec">
-                                                    <span className="br-list-item__spec-k">{s.key}</span>
-                                                    <span className="br-list-item__spec-v">{s.val}</span>
-                                                </div>
+                                                <span key={s.key} className="br-spec-chip">
+                                                    <span className="br-spec-chip__k">{s.key}</span>{s.val}
+                                                </span>
                                             ))}
                                         </div>
 
-                                        <div className="br-list-item__vendors">
-                                            {sortedPrices.length === 0
-                                                ? <span className="text-muted" style={{ fontSize: '0.8125rem' }}>No pricing available</span>
-                                                : sortedPrices.slice(0, 5).map((p, i) => (
-                                                    <div key={i} className={`br-list-vp ${i === 0 ? 'br-list-vp--best' : ''}`}>
-                                                        <span className="br-list-vp__name">{p.vendor?.name || 'Store'}</span>
-                                                        <span className="br-list-vp__price">{formatPrice(p.price)}</span>
-                                                        {p.url
-                                                            ? <a href={p.url} target="_blank" rel="noreferrer" className="br-list-vp__link">
-                                                                <FiShoppingCart size={11} /> Buy
-                                                              </a>
-                                                            : <span className="br-list-vp__no-link">No link</span>}
-                                                    </div>
-                                                ))
-                                            }
-                                            {sortedPrices.length > 5 && (
-                                                <button className="br-card__more" onClick={() => setDetail(item)}>+{sortedPrices.length - 5} more</button>
+                                        <div className="br-list-item__price-col">
+                                            <span className="br-card__amount">{lowest ? formatPrice(lowest) : 'N/A'}</span>
+                                            {savings > 0 && <span className="br-card__save">-{formatPrice(savings)}</span>}
+                                            {bestVendor && (
+                                                <span className="br-list-item__store">
+                                                    at {bestVendor.vendor?.name} {vendorCount > 1 && `+${vendorCount - 1}`}
+                                                </span>
                                             )}
                                         </div>
 
                                         <div className="br-list-item__actions">
-                                            <div className="br-list-item__price">
-                                                <span className="br-card__amount">{lowest ? formatPrice(lowest) : 'N/A'}</span>
-                                                {savings > 0 && <span className="br-card__save">-{formatPrice(savings)}</span>}
-                                            </div>
-                                            <div className="br-list-item__btns">
-                                                <button
-                                                    className={`br-card__cmp ${isComp ? 'active' : ''}`}
-                                                    onClick={() => toggleCompare(item)}
-                                                    title={isComp ? 'Remove from compare' : 'Add to compare'}
-                                                >
-                                                    {isComp ? <FiCheck size={12} /> : <FiPlus size={12} />}
-                                                </button>
-                                                <button className="btn btn-sm" onClick={() => setDetail(item)}>Details</button>
-                                            </div>
+                                            <button
+                                                className={`br-card__cmp ${isComp ? 'active' : ''}`}
+                                                onClick={e => { e.stopPropagation(); toggleCompare(item) }}
+                                            >
+                                                {isComp ? <FiCheck size={12} /> : <FiPlus size={12} />}
+                                            </button>
+                                            <span className="br-list-item__arrow"><FiChevronRight size={16} /></span>
                                         </div>
                                     </article>
                                 )
@@ -283,18 +275,18 @@ export default function Browse() {
                     <div className="modal-overlay" onClick={() => setDetail(null)}>
                         <div className="modal modal-lg" onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <div>
-                                    <span className="br-card__badge" style={{ marginBottom: 8 }}>{CATEGORIES[detail.category?.slug]?.name || 'Component'}</span>
-                                    <h2>{detail.name}</h2>
-                                </div>
+                                <h2>{detail.name}</h2>
                                 <button className="modal-close" onClick={() => setDetail(null)}><FiX /></button>
                             </div>
                             <div className="modal-body">
-                                <p className="br-detail__brand"><strong>Brand:</strong> {detail.brand}</p>
+                                <div className="br-detail-top">
+                                    <span className="br-card__badge">{CATEGORIES[detail.category?.slug]?.name || 'Component'}</span>
+                                    <span className="br-detail__brand">{detail.brand}</span>
+                                </div>
 
                                 {detail.specs && Object.keys(detail.specs).length > 0 && (
                                     <div className="br-specs">
-                                        <h4>Specifications</h4>
+                                        <h4><FiInfo size={14} /> Specifications</h4>
                                         <div className="br-specs__grid">
                                             {Object.entries(detail.specs).map(([k, v]) => (
                                                 <div key={k} className="br-specs__item">
@@ -307,20 +299,19 @@ export default function Browse() {
                                 )}
 
                                 <div className="br-prices">
-                                    <h4>Price Comparison — {detail.prices?.length || 0} stores</h4>
+                                    <h4><FiShoppingCart size={14} /> Price Comparison — {detail.prices?.length || 0} retailers</h4>
                                     {detail.prices?.length ? (
                                         <div className="br-vendor-list">
                                             {[...detail.prices].sort((a, b) => parseFloat(a.price) - parseFloat(b.price)).map((p, i) => (
-                                                <div key={i} className={`br-vendor ${i === 0 ? 'br-vendor--best' : ''}`}>
+                                                <div key={i} className={`br-vendor${i === 0 ? ' br-vendor--best' : ''}`}>
                                                     <div className="br-vendor__info">
                                                         {i === 0 && <span className="br-vendor__label">Best Price</span>}
                                                         <span className="br-vendor__name">{p.vendor?.name || 'Unknown'}</span>
-                                                        {p.in_stock === false && <span className="br-vendor__oos">Out of Stock</span>}
                                                     </div>
                                                     <span className="br-vendor__price">{formatPrice(p.price)}</span>
                                                     {p.url
-                                                        ? <a href={p.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-primary">
-                                                            <FiShoppingCart size={13} /> Buy Now
+                                                        ? <a href={p.url} target="_blank" rel="noreferrer" className="btn btn-sm btn-primary" onClick={e => e.stopPropagation()}>
+                                                            <FiExternalLink size={12} /> Visit
                                                           </a>
                                                         : <span className="btn btn-sm" style={{ opacity: 0.4, cursor: 'default' }}>No link</span>}
                                                 </div>
@@ -335,7 +326,7 @@ export default function Browse() {
                                         onClick={() => toggleCompare(detail)}
                                     >
                                         {compareList.some(c => c.id === detail.id)
-                                            ? <><FiCheck size={14} /> Added to Compare</>
+                                            ? <><FiCheck size={14} /> In Compare</>
                                             : <><FiPlus size={14} /> Add to Compare</>}
                                     </button>
                                 </div>
@@ -355,11 +346,7 @@ export default function Browse() {
                                 </span>
                             ))}
                         </div>
-                        <button
-                            className="btn btn-primary"
-                            onClick={goCompare}
-                            disabled={compareList.length < 2}
-                        >
+                        <button className="btn btn-primary" onClick={goCompare} disabled={compareList.length < 2}>
                             Compare {compareList.length} {compareList.length === 1 ? '(need 1 more)' : 'items'}
                         </button>
                     </div>
