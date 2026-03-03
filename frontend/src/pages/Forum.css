@@ -27,7 +27,7 @@
 /* Thread content */
 .fm-thread__main { flex: 1; min-width: 0; cursor: pointer; }
 .fm-thread__top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
-.fm-thread__cat { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: rgba(99,102,241,.1); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
+.fm-thread__cat { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: var(--accent-subtle); padding: 2px 8px; border-radius: 4px; flex-shrink: 0; }
 .fm-thread__top h3 { font-size: .9375rem; line-height: 1.4; }
 .fm-thread__meta { display: flex; align-items: center; gap: 12px; font-size: .75rem; color: var(--text-muted); }
 .fm-thread__meta span { display: inline-flex; align-items: center; gap: 4px; }

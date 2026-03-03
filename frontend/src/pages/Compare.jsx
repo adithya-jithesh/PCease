@@ -4,9 +4,77 @@ import { API, formatPrice, getLowestPrice, getBestVendor, getSavings } from '../
 import toast from 'react-hot-toast'
 import {
     FiPlus, FiX, FiSearch, FiAward, FiPackage,
-    FiArrowRight, FiExternalLink, FiTrendingDown, FiLoader
+    FiArrowRight, FiExternalLink, FiTrendingDown, FiLoader, FiShoppingCart
 } from 'react-icons/fi'
 import './Compare.css'
+
+// Spec keys where lower value = better
+const LOWER_IS_BETTER = new Set(['tdp', 'wattage', 'power', 'cas_latency', 'latency', 'noise_level'])
+
+function getSpecsObj(item) {
+    const s = item?.specs || item?.specifications
+    if (!s) return {}
+    if (typeof s === 'string') { try { return JSON.parse(s) } catch { return {} } }
+    return s
+}
+
+function parseNum(v) {
+    if (v === null || v === undefined) return null
+    const n = parseFloat(String(v).replace(/[^0-9.-]/g, ''))
+    return isNaN(n) ? null : n
+}
+
+function SpecsComparisonTable({ components }) {
+    if (!components || components.length < 2) return null
+    const allSpecs = components.map(getSpecsObj)
+    const allKeys = [...new Set(allSpecs.flatMap(s => Object.keys(s)))]
+    if (!allKeys.length) return null
+
+    return (
+        <section className="cp-specs-table">
+            <h2 className="cp-specs-table__title">Specs Comparison</h2>
+            <div className="cp-specs-table__wrap">
+                <table className="cp-specs-tbl">
+                    <thead>
+                        <tr>
+                            <th className="cp-specs-tbl__label-col">Specification</th>
+                            {components.map((c, i) => (
+                                <th key={i} className="cp-specs-tbl__comp-col">
+                                    <span className="cp-specs-tbl__comp-name">{c.name}</span>
+                                    <span className="cp-specs-tbl__comp-brand">{c.brand}</span>
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {allKeys.map(key => {
+                            const vals = allSpecs.map(s => s[key] !== undefined ? s[key] : null)
+                            const nums = vals.map(parseNum)
+                            const allNum = nums.every(n => n !== null)
+                            let bestIdx = -1
+                            if (allNum) {
+                                bestIdx = LOWER_IS_BETTER.has(key)
+                                    ? nums.indexOf(Math.min(...nums))
+                                    : nums.indexOf(Math.max(...nums))
+                            }
+                            return (
+                                <tr key={key}>
+                                    <td className="cp-specs-tbl__key">{key.replace(/_/g, ' ')}</td>
+                                    {vals.map((v, i) => (
+                                        <td key={i} className={`cp-specs-tbl__val${i === bestIdx ? ' cp-specs-tbl__val--best' : ''}${v === null ? ' cp-specs-tbl__val--na' : ''}`}>
+                                            {v !== null ? String(v) : '—'}
+                                        </td>
+                                    ))}
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+            <p className="cp-specs-table__note">Green = best value for that spec</p>
+        </section>
+    )
+}
 
 const MAX_SLOTS = 4
 
@@ -196,11 +264,11 @@ export default function Compare() {
                                                             <span className="cp-vendor-row__price">
                                                                 {formatPrice(p.price)}
                                                             </span>
-                                                            {p.url && (
-                                                                <a href={p.url} target="_blank" rel="noopener" className="cp-vendor-row__link">
-                                                                    <FiExternalLink size={11} />
-                                                                </a>
-                                                            )}
+                                                            {p.url
+                                                                ? <a href={p.url} target="_blank" rel="noopener" className="cp-vendor-row__link cp-vendor-row__link--buy" title="Buy now">
+                                                                    <FiShoppingCart size={10} />
+                                                                  </a>
+                                                                : null}
                                                         </div>
                                                         <div className="cp-vendor-row__bar-track">
                                                             <div className="cp-vendor-row__bar-fill" style={{ width: `${pct}%` }} />
@@ -210,17 +278,17 @@ export default function Compare() {
                                             })}
                                         </div>
                                         {Object.keys(getSpecs(slot)).length > 0 && (
-                                            <details className="cp-card__specs">
-                                                <summary>Specs</summary>
+                                            <div className="cp-card__specs">
+                                                <div className="cp-card__specs-label">Specs</div>
                                                 <div className="cp-card__specs-grid">
-                                                    {Object.entries(getSpecs(slot)).slice(0, 8).map(([k, v]) => (
+                                                    {Object.entries(getSpecs(slot)).map(([k, v]) => (
                                                         <div key={k} className="cp-spec-row">
                                                             <span className="cp-spec-row__key">{k.replace(/_/g, ' ')}</span>
-                                                            <span className="cp-spec-row__val">{v}</span>
+                                                            <span className="cp-spec-row__val">{String(v)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
-                                            </details>
+                                            </div>
                                         )}
                                     </>
                                 ) : (
@@ -284,6 +352,8 @@ export default function Compare() {
                         </div>
                     </div>
                 )}
+
+                <SpecsComparisonTable components={filledSlots} />
 
                 {filledSlots.length >= 2 && (
                     <section className="cp-verdict">

@@ -204,6 +204,8 @@ export const CATEGORIES = {
     psu: { name: 'Power Supply', icon: '🔌', abbr: 'PSU' },
     case: { name: 'Case', icon: '🖥️', abbr: 'CASE' },
     cooler: { name: 'CPU Cooler', icon: '❄️', abbr: 'COOL' },
+    monitor: { name: 'Monitor', icon: '🖥', abbr: 'MON' },
+    fans: { name: 'Case Fans', icon: '🌀', abbr: 'FAN' },
 }
 
 // Build slots config
@@ -212,8 +214,11 @@ export const BUILD_SLOTS = [
     { key: 'gpu', name: 'Graphics Card', required: false, icon: '🎮' },
     { key: 'motherboard', name: 'Motherboard', required: true, icon: '🔧' },
     { key: 'ram', name: 'Memory', required: true, icon: '💾' },
+    { key: 'ram2', name: 'Extra RAM (optional)', required: false, icon: '💾', category: 'ram' },
     { key: 'storage', name: 'Storage', required: true, icon: '💿' },
     { key: 'psu', name: 'Power Supply', required: true, icon: '🔌' },
     { key: 'case', name: 'Case', required: false, icon: '🖥️' },
     { key: 'cooler', name: 'CPU Cooler', required: false, icon: '❄️' },
+    { key: 'monitor', name: 'Monitor', required: false, icon: '🖥' },
+    { key: 'fans', name: 'Case Fans', required: false, icon: '🌀' },
 ]

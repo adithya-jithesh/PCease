@@ -1,4 +1,9 @@
-/* Builder */
+/* =====================================================
+   Builder — v2.0
+   Two-step modal · RAM grouping · Dynamic accessories
+   ===================================================== */
+
+/* Header */
 .bd-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
 .bd-header h1 { margin-bottom: 4px; }
 .bd-header__sub { font-size: .9375rem; color: var(--text-secondary); }
@@ -9,23 +14,80 @@
 /* Layout */
 .bd-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
 
-/* Slots */
+/* ── Slot Groups ── */
 .bd-slots { display: flex; flex-direction: column; gap: 12px; }
-.bd-slot { padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; transition: border-color .2s; }
-.bd-slot:hover { border-color: rgba(255,255,255,.12); }
+.bd-slot-group { display: flex; flex-direction: column; gap: 0; }
+.bd-slot-group--ram {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    gap: 0;
+}
+.bd-slot-group--ram .bd-slot { border-radius: 0; border-left: none; border-right: none; border-top: none; }
+.bd-slot-group--ram .bd-slot:first-child { border-radius: 14px 14px 0 0; border-top: none; }
+.bd-slot-group--ram .bd-slot:last-child { border-bottom: none; }
+.bd-slot-group--ram .bd-slot--extra { border-top: 1px solid var(--border); background: var(--bg-secondary); }
+
+/* ── Individual Slot ── */
+.bd-slot {
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: border-color .2s, background .2s;
+}
+.bd-slot:hover { border-color: rgba(255,255,255,.1); }
 .bd-slot--filled { border-color: var(--accent); }
+.bd-slot--extra { padding: 12px 20px 12px 32px; }
+.bd-slot--accessory { margin-bottom: 0; }
 .bd-slot__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .bd-slot__name { font-size: .875rem; font-weight: 600; }
-.bd-slot__req { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: rgba(99,102,241,.1); padding: 2px 8px; border-radius: 4px; }
+.bd-slot__req {
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--accent); background: var(--accent-subtle); padding: 2px 8px; border-radius: 4px;
+}
 .bd-slot__sel { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .bd-slot__info { flex: 1; min-width: 0; }
 .bd-slot__info strong { font-size: .875rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bd-slot__meta { font-size: .8125rem; color: var(--text-muted); margin-top: 2px; }
+.bd-slot__meta { font-size: .8125rem; color: var(--text-muted); margin-top: 2px; display: block; }
+.bd-slot__meta em { color: var(--accent); font-style: normal; font-weight: 500; }
+.bd-slot__specs {
+    font-size: .75rem; color: var(--text-muted); margin-top: 4px;
+    display: block; font-style: italic;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .bd-slot__btns { display: flex; gap: 6px; flex-shrink: 0; }
-.bd-slot__add { display: flex; align-items: center; gap: 6px; width: 100%; padding: 10px; background: transparent; border: 1px dashed var(--border); border-radius: 8px; color: var(--accent); font-size: .875rem; font-weight: 500; cursor: pointer; transition: all .2s; }
-.bd-slot__add:hover { border-color: var(--accent); background: rgba(99,102,241,.05); }
 
-/* Sidebar */
+/* Add buttons */
+.bd-slot__add {
+    display: flex; align-items: center; gap: 6px; width: 100%; padding: 10px;
+    background: transparent; border: 1px dashed var(--border); border-radius: 8px;
+    color: var(--accent); font-size: .875rem; font-weight: 500; cursor: pointer; transition: all .2s;
+}
+.bd-slot__add:hover { border-color: var(--accent); background: var(--accent-subtle); }
+
+/* "Add Another RAM Stick" — inline link style */
+.bd-slot__add-extra {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 20px 12px 32px;
+    background: var(--bg-secondary); border: none;
+    color: var(--accent); font-size: .8125rem; font-weight: 500;
+    cursor: pointer; transition: color .2s;
+    border-radius: 0 0 14px 14px;
+}
+.bd-slot__add-extra:hover { color: var(--accent-hover); text-decoration: underline; }
+
+/* ── Accessories Section ── */
+.bd-accessories {
+    margin-top: 8px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+.bd-accessories__title { font-size: .9375rem; font-weight: 600; margin-bottom: 2px; }
+.bd-accessories__sub { font-size: .8125rem; color: var(--text-muted); margin-bottom: 14px; }
+.bd-accessory-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.bd-accessory-group .bd-slot { border-radius: 10px; }
+
+/* ── Sidebar ── */
 .bd-sidebar { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 16px; }
 .bd-summary { padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .bd-summary h3 { font-size: .9375rem; margin-bottom: 16px; }
@@ -38,7 +100,7 @@
 .bd-summary__total span:first-child { font-weight: 600; font-size: .875rem; }
 .bd-summary__price { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
 
-/* Info Cards (wattage / bottleneck) */
+/* ── Info Cards (wattage / bottleneck) ── */
 .bd-info-card { padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .bd-info-card h3 { font-size: .875rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
 .bd-info__row { display: flex; justify-content: space-between; font-size: .8125rem; padding: 4px 0; }
@@ -54,19 +116,111 @@
 .bd-bn--bad { border-color: rgba(239,68,68,.3); }
 .bd-bn--bad .bd-info__val { color: #ef4444; }
 
-/* Modal search */
+/* ── Modal: Search & Loading ── */
 .bd-modal-search { position: relative; margin-bottom: 16px; }
 .bd-modal-search__icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
 .bd-modal-search input { padding-left: 36px; width: 100%; }
+.bd-modal-loading { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 0; color: var(--text-muted); }
+.bd-spinner {
+    width: 28px; height: 28px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: bd-spin .7s linear infinite;
+}
+@keyframes bd-spin { to { transform: rotate(360deg); } }
 
-/* Component list in modal */
-.bd-comp-list { display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto; }
-.bd-comp-opt { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: border-color .2s; text-align: left; width: 100%; color: inherit; }
-.bd-comp-opt:hover { border-color: var(--accent); }
-.bd-comp-opt strong { font-size: .875rem; display: block; }
-.bd-comp-opt__brand { font-size: .75rem; color: var(--text-muted); }
-.bd-comp-opt__price { font-weight: 600; font-size: .9375rem; white-space: nowrap; }
+/* ── Modal: Back Button ── */
+.bd-modal-back {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); cursor: pointer; transition: all .15s;
+    flex-shrink: 0; margin-right: 8px;
+}
+.bd-modal-back:hover { background: var(--surface-hover); border-color: var(--accent); color: var(--accent); }
 
-/* Responsive */
-@media (max-width: 1024px) { .bd-layout { grid-template-columns: 1fr; } .bd-sidebar { position: relative; top: 0; } }
-@media (max-width: 768px) { .bd-header { flex-direction: column; } .bd-actions { width: 100%; flex-wrap: wrap; } .bd-actions .btn { flex: 1; min-width: 100px; } .bd-name { width: 100%; } }
+/* ── Modal: Component List (Step 1) ── */
+.bd-comp-list { display: flex; flex-direction: column; gap: 8px; max-height: 440px; overflow-y: auto; }
+.bd-comp-opt {
+    padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; cursor: pointer; transition: all .2s;
+    text-align: left; width: 100%; color: inherit;
+}
+.bd-comp-opt:hover { border-color: var(--accent); background: var(--accent-subtle); }
+.bd-comp-opt__main { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.bd-comp-opt__info { flex: 1; min-width: 0; }
+.bd-comp-opt__info strong { font-size: .875rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-comp-opt__brand { font-size: .75rem; color: var(--text-muted); display: block; margin-top: 2px; }
+.bd-comp-opt__specs { font-size: .75rem; color: var(--text-muted); display: block; margin-top: 4px; font-style: italic; }
+.bd-comp-opt__right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 2px; }
+.bd-comp-opt__lowest { font-size: .9375rem; font-weight: 700; color: #22c55e; font-variant-numeric: tabular-nums; }
+.bd-comp-opt__vendor-count { font-size: .6875rem; color: var(--text-muted); }
+
+/* ── Modal: Retailer View (Step 2) ── */
+.bd-retailer-view { display: flex; flex-direction: column; gap: 16px; }
+.bd-retailer-comp {
+    padding: 16px; background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 10px;
+}
+.bd-retailer-comp__brand { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.bd-retailer-comp__name { font-size: 1.0625rem; font-weight: 600; margin-top: 2px; }
+.bd-retailer-comp__specs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.bd-spec-chip {
+    font-size: .75rem; padding: 3px 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 100px; color: var(--text-secondary);
+}
+.bd-retailer-heading {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .875rem; font-weight: 600; color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Retailer rows */
+.bd-retailer-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+.bd-retailer-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; gap: 12px; transition: border-color .2s;
+}
+.bd-retailer-row:hover { border-color: var(--border-hover); }
+.bd-retailer-row--best { border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.04); }
+.bd-retailer-row--best:hover { border-color: rgba(34,197,94,.5); }
+.bd-retailer-row__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bd-retailer-row__name { font-size: .875rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.bd-retailer-badge {
+    font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    padding: 2px 7px; border-radius: 4px;
+    background: rgba(34,197,94,.15); color: #22c55e;
+}
+.bd-retailer-row__price { font-size: 1.0625rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+.bd-retailer-row--best .bd-retailer-row__price { color: #22c55e; }
+.bd-retailer-row__actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+.bd-retailer-visit {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: var(--text-muted); font-size: .78rem;
+}
+.bd-retailer-visit:hover { color: var(--accent); }
+
+/* Quick-add button at bottom */
+.bd-retailer-quick {
+    width: 100%; margin-top: 4px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px; font-size: .875rem; font-weight: 500;
+    background: var(--surface); border: 1px dashed var(--border);
+    color: var(--accent); border-radius: 8px; cursor: pointer; transition: all .2s;
+}
+.bd-retailer-quick:hover { background: var(--accent-subtle); border-color: var(--accent); }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .bd-layout { grid-template-columns: 1fr; }
+    .bd-sidebar { position: relative; top: 0; }
+}
+@media (max-width: 768px) {
+    .bd-header { flex-direction: column; }
+    .bd-actions { width: 100%; flex-wrap: wrap; }
+    .bd-actions .btn { flex: 1; min-width: 100px; }
+    .bd-name { width: 100%; }
+    .bd-retailer-row { flex-direction: column; align-items: stretch; gap: 8px; }
+    .bd-retailer-row__actions { justify-content: flex-end; }
+}

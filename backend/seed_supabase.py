@@ -31,6 +31,8 @@ CATEGORIES = [
     {"name": "Power Supply",   "slug": "psu",         "icon": "⚡", "display_order": 6},
     {"name": "Cabinet",        "slug": "case",        "icon": "🖥️", "display_order": 7},
     {"name": "CPU Cooler",     "slug": "cooler",      "icon": "❄️", "display_order": 8},
+    {"name": "Monitor",        "slug": "monitor",     "icon": "🖥", "display_order": 9},
+    {"name": "Case Fans",      "slug": "fans",        "icon": "🌀", "display_order": 10},
 ]
 
 # ──────────────────────────────────────────────
@@ -186,6 +188,36 @@ COOLERS = [
     {"name": "NZXT Kraken 360",                "brand":"NZXT",          "model":"Kraken 360",         "base":16999,"specs":{"type":"AIO Liquid 360mm","fan_size":"3x 120mm","tdp_rating":"350W","radiator":"360mm","sockets":"AM4/AM5/LGA 1700","lcd_display":True}},
 ]
 
+# ---------- Monitors ----------
+MONITORS = [
+    {"name": "Acer Nitro VG240Y S 24\" 165Hz IPS",         "brand":"Acer",       "model":"VG240Y S",        "base":10499, "specs":{"size":"24 inch","resolution":"1920x1080","panel_type":"IPS","refresh_rate":"165 Hz","response_time":"0.5ms","adaptive_sync":"FreeSync","ports":"HDMI x2, DP","hdr":False}},
+    {"name": "LG 24GS60F 24\" 180Hz IPS",                  "brand":"LG",         "model":"24GS60F",         "base":11999, "specs":{"size":"24 inch","resolution":"1920x1080","panel_type":"IPS","refresh_rate":"180 Hz","response_time":"1ms","adaptive_sync":"FreeSync","ports":"HDMI x2, DP","hdr":"HDR10"}},
+    {"name": "MSI G2412 24\" 170Hz IPS",                    "brand":"MSI",        "model":"G2412",           "base":10999, "specs":{"size":"24 inch","resolution":"1920x1080","panel_type":"IPS","refresh_rate":"170 Hz","response_time":"1ms","adaptive_sync":"FreeSync Premium","ports":"HDMI x2, DP","hdr":False}},
+    {"name": "Samsung Odyssey G3 27\" 165Hz VA",            "brand":"Samsung",    "model":"Odyssey G3 27",   "base":13999, "specs":{"size":"27 inch","resolution":"1920x1080","panel_type":"VA","refresh_rate":"165 Hz","response_time":"1ms","adaptive_sync":"FreeSync","ports":"HDMI, DP","hdr":False}},
+    {"name": "Acer Nitro VG271U M3 27\" 180Hz IPS",        "brand":"Acer",       "model":"VG271U M3",       "base":17999, "specs":{"size":"27 inch","resolution":"2560x1440","panel_type":"IPS","refresh_rate":"180 Hz","response_time":"0.5ms","adaptive_sync":"FreeSync Premium","ports":"HDMI x2, DP","hdr":"HDR10"}},
+    {"name": "LG 27GP850-B 27\" 165Hz Nano IPS",           "brand":"LG",         "model":"27GP850-B",       "base":24999, "specs":{"size":"27 inch","resolution":"2560x1440","panel_type":"Nano IPS","refresh_rate":"165 Hz","response_time":"1ms","adaptive_sync":"G-Sync Compatible","ports":"HDMI x2, DP, USB","hdr":"HDR400"}},
+    {"name": "MSI MAG 274QRF-QD 27\" 165Hz Rapid IPS",     "brand":"MSI",        "model":"MAG 274QRF-QD",   "base":24999, "specs":{"size":"27 inch","resolution":"2560x1440","panel_type":"Rapid IPS","refresh_rate":"165 Hz","response_time":"1ms","adaptive_sync":"G-Sync Compatible","ports":"HDMI x2, DP, USB-C","hdr":"HDR400"}},
+    {"name": "Dell S2722QC 27\" 4K 60Hz IPS USB-C",        "brand":"Dell",       "model":"S2722QC",         "base":25999, "specs":{"size":"27 inch","resolution":"3840x2160","panel_type":"IPS","refresh_rate":"60 Hz","response_time":"4ms","adaptive_sync":"FreeSync","ports":"HDMI x2, USB-C 65W","hdr":"HDR400"}},
+    {"name": "Samsung Odyssey G5 27\" 165Hz QHD VA",        "brand":"Samsung",    "model":"Odyssey G5 27",   "base":19999, "specs":{"size":"27 inch","resolution":"2560x1440","panel_type":"VA","refresh_rate":"165 Hz","response_time":"1ms","adaptive_sync":"FreeSync Premium","ports":"HDMI, DP","hdr":"HDR10","curved":"1000R"}},
+    {"name": "ASUS VG28UQL1A 28\" 4K 144Hz IPS",           "brand":"ASUS",       "model":"VG28UQL1A",       "base":39999, "specs":{"size":"28 inch","resolution":"3840x2160","panel_type":"IPS","refresh_rate":"144 Hz","response_time":"1ms","adaptive_sync":"G-Sync Compatible","ports":"HDMI 2.1 x2, DP, USB","hdr":"HDR400"}},
+    {"name": "LG 27GR95QE-B 27\" QHD OLED 240Hz",         "brand":"LG",         "model":"27GR95QE-B",      "base":64999, "specs":{"size":"27 inch","resolution":"2560x1440","panel_type":"OLED","refresh_rate":"240 Hz","response_time":"0.03ms","adaptive_sync":"G-Sync Compatible","ports":"HDMI 2.1 x2, DP, USB","hdr":"HDR10"}},
+    {"name": "Samsung Odyssey OLED G8 34\" UWQHD 175Hz",   "brand":"Samsung",    "model":"Odyssey OLED G8", "base":79999, "specs":{"size":"34 inch","resolution":"3440x1440","panel_type":"OLED","refresh_rate":"175 Hz","response_time":"0.03ms","adaptive_sync":"G-Sync Compatible","ports":"HDMI 2.1 x2, DP 1.4, USB-C","hdr":"HDR True Black 400","curved":"1800R"}},
+]
+
+# ---------- Case Fans ----------
+FANS = [
+    {"name": "Arctic P12 PWM PST 120mm (Single)",           "brand":"Arctic",        "model":"P12 PWM PST",     "base":399,  "specs":{"size":"120mm","quantity":1,"rpm":"200-1800","airflow":"56.3 CFM","noise":"22.5 dBA","bearing":"FDB","pwm":True,"rgb":False}},
+    {"name": "Arctic P12 PWM PST 120mm (5-Pack)",           "brand":"Arctic",        "model":"P12 PWM 5-Pack",  "base":1599, "specs":{"size":"120mm","quantity":5,"rpm":"200-1800","airflow":"56.3 CFM","noise":"22.5 dBA","bearing":"FDB","pwm":True,"rgb":False}},
+    {"name": "Deepcool RF120 FS 120mm (3-Pack)",            "brand":"Deepcool",      "model":"RF120 FS 3-Pack", "base":999,  "specs":{"size":"120mm","quantity":3,"rpm":"500-1500","airflow":"56.5 CFM","noise":"27 dBA","bearing":"Hydro","pwm":False,"rgb":False}},
+    {"name": "Cooler Master SickleFlow 120 ARGB (3-Pack)",  "brand":"Cooler Master", "model":"SickleFlow 120 ARGB 3-Pack","base":2499,"specs":{"size":"120mm","quantity":3,"rpm":"650-1800","airflow":"62 CFM","noise":"27 dBA","bearing":"Rifle","pwm":True,"rgb":"ARGB"}},
+    {"name": "Corsair iCUE SP120 RGB Elite (3-Pack)",       "brand":"Corsair",       "model":"SP120 RGB Elite 3-Pack","base":3499,"specs":{"size":"120mm","quantity":3,"rpm":"550-1500","airflow":"47.7 CFM","noise":"18 dBA","bearing":"Hydraulic","pwm":True,"rgb":"iCUE RGB"}},
+    {"name": "Lian Li UNI FAN SL-INF 120 (3-Pack)",        "brand":"Lian Li",       "model":"SL-INF 120 3-Pack","base":5999,"specs":{"size":"120mm","quantity":3,"rpm":"250-2100","airflow":"61.3 CFM","noise":"29 dBA","bearing":"FDB","pwm":True,"rgb":"ARGB","daisy_chain":True}},
+    {"name": "be quiet! Light Wings 140mm (3-Pack)",        "brand":"be quiet!",     "model":"Light Wings 140 3-Pack","base":4499,"specs":{"size":"140mm","quantity":3,"rpm":"1100","airflow":"70.5 CFM","noise":"20.6 dBA","bearing":"Rifle","pwm":True,"rgb":"ARGB"}},
+    {"name": "Noctua NF-A12x25 PWM 120mm",                 "brand":"Noctua",        "model":"NF-A12x25 PWM",  "base":2999, "specs":{"size":"120mm","quantity":1,"rpm":"450-2000","airflow":"60.1 CFM","noise":"22.6 dBA","bearing":"SSO2","pwm":True,"rgb":False}},
+    {"name": "Noctua NF-A14 PWM 140mm",                    "brand":"Noctua",        "model":"NF-A14 PWM",     "base":2799, "specs":{"size":"140mm","quantity":1,"rpm":"300-1500","airflow":"82.5 CFM","noise":"24.6 dBA","bearing":"SSO2","pwm":True,"rgb":False}},
+    {"name": "Deepcool FC120 ARGB 120mm (3-Pack)",         "brand":"Deepcool",      "model":"FC120 ARGB 3-Pack","base":2199,"specs":{"size":"120mm","quantity":3,"rpm":"500-1800","airflow":"61.9 CFM","noise":"28 dBA","bearing":"FDB","pwm":True,"rgb":"ARGB","daisy_chain":True}},
+]
+
 
 # ──────────────────────────────────────────────
 # SEED LOGIC
@@ -247,6 +279,8 @@ def seed():
         ("psu",         PSUS),
         ("case",        CASES),
         ("cooler",      COOLERS),
+        ("monitor",     MONITORS),
+        ("fans",        FANS),
     ]
 
     total_comps = 0
