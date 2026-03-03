@@ -9,6 +9,7 @@ export default function Browse() {
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
     const [components, setComponents] = useState([])
+    const [fetchError, setFetchError] = useState(null)
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState(searchParams.get('search') || '')
     const [category, setCategory] = useState(searchParams.get('category') || '')
@@ -18,9 +19,17 @@ export default function Browse() {
 
     useEffect(() => {
         setLoading(true)
+        setFetchError(null)
         API.getComponents({ category, search, sort })
-            .then(setComponents)
-            .catch(() => setComponents([]))
+            .then(data => {
+                console.log('[Browse] getComponents returned:', Array.isArray(data) ? `array(${data.length})` : typeof data, data)
+                setComponents(Array.isArray(data) ? data : [])
+            })
+            .catch(e => {
+                console.error('[Browse] getComponents error:', e)
+                setFetchError(e.message || 'Unknown error')
+                setComponents([])
+            })
             .finally(() => setLoading(false))
     }, [category, search, sort])
 
@@ -96,7 +105,10 @@ export default function Browse() {
                         <div className="br-empty">
                             <FiSearch size={32} />
                             <h3>No components found</h3>
-                            <p>Try adjusting your filters or search term</p>
+                            {fetchError
+                                ? <p style={{ color: '#ef4444', fontFamily: 'monospace', fontSize: '0.8rem' }}>Error: {fetchError}</p>
+                                : <p>Try adjusting your filters or search term</p>
+                            }
                         </div>
                     ) : components.map(item => {
                         const lowest = getLowestPrice(item)

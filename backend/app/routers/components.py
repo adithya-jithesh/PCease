@@ -32,10 +32,13 @@ def get_components(
     )
 
     if category:
-        # Look up category id by slug
-        cat = db.table("categories").select("id").eq("slug", category).single().execute()
-        if cat.data:
+        # Look up category id by slug; use maybe_single so unknown slugs return None instead of 500
+        cat = db.table("categories").select("id").eq("slug", category).maybe_single().execute()
+        if cat and cat.data:
             query = query.eq("category_id", cat.data["id"])
+        else:
+            # Unknown category slug — return empty list immediately
+            return []
 
     if brand:
         query = query.ilike("brand", f"%{brand}%")

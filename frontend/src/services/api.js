@@ -194,7 +194,7 @@ export function timeAgo(dateStr) {
     return `${months}mo ago`
 }
 
-// Category display names + icons
+// Category display names + icons (keys must match DB slugs)
 export const CATEGORIES = {
     cpu: { name: 'Processor', icon: '⚡', abbr: 'CPU' },
     gpu: { name: 'Graphics Card', icon: '🎮', abbr: 'GPU' },
@@ -202,8 +202,8 @@ export const CATEGORIES = {
     ram: { name: 'Memory', icon: '💾', abbr: 'RAM' },
     storage: { name: 'Storage', icon: '💿', abbr: 'SSD' },
     psu: { name: 'Power Supply', icon: '🔌', abbr: 'PSU' },
-    pcCase: { name: 'Case', icon: '🖥️', abbr: 'CASE' },
-    monitor: { name: 'Monitor', icon: '🖥️', abbr: 'MON' },
+    case: { name: 'Case', icon: '🖥️', abbr: 'CASE' },
+    cooler: { name: 'CPU Cooler', icon: '❄️', abbr: 'COOL' },
 }
 
 // Build slots config
@@ -214,6 +214,6 @@ export const BUILD_SLOTS = [
     { key: 'ram', name: 'Memory', required: true, icon: '💾' },
     { key: 'storage', name: 'Storage', required: true, icon: '💿' },
     { key: 'psu', name: 'Power Supply', required: true, icon: '🔌' },
-    { key: 'pcCase', name: 'Case', required: false, icon: '🖥️' },
-    { key: 'monitor', name: 'Monitor', required: false, icon: '🖥️' },
+    { key: 'case', name: 'Case', required: false, icon: '🖥️' },
+    { key: 'cooler', name: 'CPU Cooler', required: false, icon: '❄️' },
 ]
