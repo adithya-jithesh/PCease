@@ -1,5 +1,5 @@
 /* =====================================================
-   Home Page Styles - Premium Design
+   Home Page Styles - PCease v3.0 Premium Design
    ===================================================== */
 
 /* Hero Section */
@@ -81,15 +81,8 @@
 }
 
 @keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.4;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
 .hero h1 {
@@ -137,6 +130,47 @@
     margin-top: var(--space-1);
 }
 
+/* Retailers Strip */
+.retailers-strip {
+    padding: var(--space-10) 0;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+.retailers-strip p {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--space-5);
+}
+
+.retailers-logos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-6);
+}
+
+.retailer-badge {
+    padding: var(--space-2) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.retailer-badge:hover {
+    border-color: var(--border-accent);
+    color: var(--accent);
+    background: var(--accent-muted);
+}
+
 /* Features Section */
 .features {
     padding: var(--space-20) 0;
@@ -167,6 +201,12 @@
 
 .feature-card:hover::before {
     opacity: 1;
+}
+
+.feature-icon {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-3);
+    display: block;
 }
 
 .feature-num {
@@ -210,6 +250,12 @@
     border-color: var(--border-accent);
 }
 
+.cat-icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: var(--space-2);
+}
+
 .cat-abbr {
     display: flex;
     align-items: center;
@@ -229,6 +275,91 @@
 .category-card h3 {
     font-size: 0.875rem;
     font-weight: 500;
+}
+
+/* How It Works */
+.how-it-works {
+    padding: var(--space-20) 0;
+}
+
+.how-it-works .section-header {
+    text-align: center;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    margin-top: var(--space-8);
+}
+
+.step-card {
+    text-align: center;
+    padding: var(--space-8) var(--space-6);
+}
+
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: var(--space-5);
+}
+
+.step-card h3 {
+    margin-bottom: var(--space-3);
+}
+
+.step-card p {
+    font-size: 0.9375rem;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: var(--space-20) 0;
+    text-align: center;
+}
+
+.cta-card {
+    padding: var(--space-12) var(--space-8);
+    background: var(--gradient-subtle);
+    border: 1px solid var(--border-accent);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.cta-card h2 {
+    position: relative;
+    font-size: 1.75rem;
+    margin-bottom: var(--space-4);
+}
+
+.cta-card p {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto var(--space-8);
+    font-size: 1rem;
+}
+
+.cta-card .btn {
+    position: relative;
 }
 
 /* Forum Preview */
@@ -299,7 +430,20 @@
         grid-template-columns: 1fr;
     }
 
+    .steps-grid {
+        grid-template-columns: 1fr;
+    }
+
     .category-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .retailers-logos {
+        gap: var(--space-3);
+    }
+
+    .retailer-badge {
+        font-size: 0.75rem;
+        padding: var(--space-2) var(--space-3);
     }
 }

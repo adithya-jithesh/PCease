@@ -1,5 +1,5 @@
 /* =====================================================
-   Navbar Styles - Clean Header Design
+   Navbar Styles - PCease v3.0 Premium Header
    ===================================================== */
 
 .navbar {
@@ -8,10 +8,17 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(3, 7, 18, 0.85);
+    background: rgba(3, 7, 18, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid transparent;
+    transition: all var(--transition-base);
+}
+
+.navbar.scrolled {
+    background: rgba(3, 7, 18, 0.95);
+    border-bottom-color: var(--border);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
 }
 
 .navbar-inner {
@@ -22,6 +29,9 @@
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text);
@@ -36,6 +46,19 @@
     background-clip: text;
 }
 
+.india-badge {
+    font-size: 0.625rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ff9933, #ffffff, #138808);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    border: 1px solid rgba(255, 153, 51, 0.3);
+    padding: 1px 6px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.08em;
+}
+
 .nav-links {
     display: flex;
     align-items: center;
@@ -43,8 +66,10 @@
     list-style: none;
 }
 
-.nav-links a,
-.nav-user {
+.nav-links a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     color: var(--text-secondary);
     font-weight: 500;
     font-size: 0.875rem;
@@ -52,20 +77,50 @@
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
     text-decoration: none;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
 }
 
-.nav-links a:hover,
-.nav-user:hover {
+.nav-links a:hover {
     color: var(--text);
     background: var(--surface);
 }
 
 .nav-links a.active {
     color: var(--accent);
+    background: var(--accent-muted);
+}
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+}
+
+.nav-user:hover {
+    color: var(--text);
+    background: var(--surface);
+}
+
+.nav-avatar {
+    width: 28px;
+    height: 28px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
 }
 
 .nav-login {
@@ -80,21 +135,45 @@
     box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
+/* Hamburger */
 .mobile-toggle {
     display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
     background: transparent;
     border: 1px solid var(--border);
     color: var(--text);
-    font-size: 1.25rem;
     width: 40px;
     height: 40px;
     cursor: pointer;
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
+    padding: 0;
 }
 
 .mobile-toggle:hover {
     background: var(--surface);
+}
+
+.hamburger-line {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.mobile-toggle.active .hamburger-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+.mobile-toggle.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+.mobile-toggle.active .hamburger-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 @media (max-width: 768px) {
@@ -104,8 +183,6 @@
 
     .mobile-toggle {
         display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
     .nav-links {
@@ -119,16 +196,19 @@
         padding: var(--space-4);
         gap: var(--space-2);
         display: none;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
 
     .nav-links.open {
         display: flex;
+        animation: slideUp 0.3s var(--ease-out);
     }
 
     .nav-links a,
     .nav-user {
         width: 100%;
         text-align: center;
+        justify-content: center;
         padding: var(--space-3) var(--space-4);
         font-size: 0.9375rem;
     }

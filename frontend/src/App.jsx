@@ -8,6 +8,7 @@ import Builder from './pages/Builder'
 import Advisor from './pages/Advisor'
 import Forum from './pages/Forum'
 import Auth from './pages/Auth'
+import Compare from './pages/Compare'
 
 export default function App() {
     return (
@@ -17,8 +18,10 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/browse" element={<Browse />} />
                 <Route path="/builder" element={<Builder />} />
+                <Route path="/builder/:shareId" element={<Builder />} />
                 <Route path="/advisor" element={<Advisor />} />
                 <Route path="/forum" element={<Forum />} />
+                <Route path="/compare" element={<Compare />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/register" element={<Auth isRegister />} />
             </Routes>

@@ -1,5 +1,5 @@
 /* =====================================================
-   Browse Page Styles - Clean Grid Layout
+   Browse Page Styles - PCease v3.0 Grid + Compare
    ===================================================== */
 
 .browse-header {
@@ -48,6 +48,33 @@
     color: var(--text-muted);
 }
 
+/* Compare Bar */
+.compare-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-accent);
+    padding: var(--space-4) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 100;
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
+    animation: slideUp 0.3s var(--ease-out);
+}
+
+.compare-bar span {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.compare-bar strong {
+    color: var(--accent);
+}
+
 /* Products Grid */
 .products-grid {
     display: grid;
@@ -60,6 +87,40 @@
     flex-direction: column;
     gap: var(--space-3);
     padding: var(--space-5);
+    position: relative;
+}
+
+.product-card.compare-selected {
+    border-color: var(--accent);
+    background: var(--accent-muted);
+}
+
+.compare-check {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all var(--transition-fast);
+    color: transparent;
+}
+
+.compare-check:hover {
+    border-color: var(--accent);
+}
+
+.compare-check.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
 }
 
 .skeleton-card {
@@ -92,6 +153,12 @@
     color: var(--text-muted);
 }
 
+.product-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+}
+
 .product-price {
     font-size: 1.25rem;
     font-weight: 700;
@@ -99,8 +166,35 @@
     font-variant-numeric: tabular-nums;
 }
 
+.product-savings {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--success);
+    background: rgba(34, 197, 94, 0.1);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.product-vendor-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
 .product-card .btn {
     margin-top: auto;
+}
+
+/* Best Price Label */
+.best-label {
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--success);
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
 }
 
 /* Modal Specs */
@@ -148,7 +242,8 @@
     gap: var(--space-2);
 }
 
-.vendor-list li {
+.vendor-list li,
+.vendor-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -159,16 +254,26 @@
     font-size: 0.875rem;
 }
 
-.vendor-list li span:first-child {
+.vendor-list li span:first-child,
+.vendor-row span:first-child {
     color: var(--text-secondary);
 }
 
-.vendor-list li span:nth-child(2) {
+.vendor-list li span:nth-child(2),
+.vendor-row span:nth-child(2) {
     font-weight: 600;
     color: var(--text);
+    font-family: var(--font-mono);
 }
 
-.vendor-list li a {
+.vendor-list li a,
+.vendor-row a {
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.buy-link {
+    color: var(--accent);
     font-size: 0.8125rem;
     font-weight: 500;
 }
@@ -186,5 +291,11 @@
 
     .products-grid {
         grid-template-columns: 1fr;
+    }
+
+    .compare-bar {
+        flex-direction: column;
+        gap: var(--space-3);
+        padding: var(--space-3);
     }
 }

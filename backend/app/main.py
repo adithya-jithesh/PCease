@@ -1,30 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from mangum import Mangum
-from .database import engine, Base
-from .routers import auth, components, forum
-import os
-
-# Create database tables
-Base.metadata.create_all(bind=engine)
+from .routers import auth, components, forum, advisor
+from .config import settings
 
 app = FastAPI(
     title="PCease API",
-    description="India's #1 PC Building Platform - Backend API",
-    version="2.0.0"
+    description="India's #1 PC Building Platform — Compare prices, check compatibility, get AI recommendations.",
+    version="3.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# CORS middleware for frontend
+# CORS
 origins = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
 
-# Add production frontend URL if set
-frontend_url = os.getenv("FRONTEND_URL")
-if frontend_url:
-    origins.append(frontend_url)
+if settings.frontend_url:
+    origins.append(settings.frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,36 +29,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Routers
 app.include_router(auth.router)
 app.include_router(components.router)
 app.include_router(forum.router)
+app.include_router(advisor.router)
 
 
 @app.get("/")
 def root():
     return {
-        "message": "Welcome to PCease API",
+        "name": "PCease API",
+        "version": "3.0.0",
+        "status": "running",
         "docs": "/docs",
-        "version": "2.0.0"
+        "stack": "FastAPI + Supabase + Render",
     }
 
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy"}
-
-
-@app.get("/seed")
-def seed_data():
-    """Seed database with sample data"""
-    try:
-        from .seed import seed_database
-        seed_database()
-        return {"message": "Database seeded successfully!"}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-# Vercel serverless handler
-handler = Mangum(app)
+    return {"status": "healthy", "version": "3.0.0"}

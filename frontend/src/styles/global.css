@@ -546,6 +546,101 @@ label {
     margin-bottom: var(--space-2);
 }
 
+.empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: var(--space-4);
+}
+
+/* ========== Loading ========== */
+.loading {
+    text-align: center;
+    padding: var(--space-16);
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+/* ========== Form Groups ========== */
+.form-group {
+    margin-bottom: var(--space-5);
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-bottom: var(--space-2);
+    color: var(--text);
+}
+
+/* ========== Extra Buttons ========== */
+.btn-secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+}
+
+.btn-danger {
+    background: rgba(239,68,68,.15);
+    border-color: rgba(239,68,68,.3);
+    color: var(--error);
+}
+
+.btn-danger:hover {
+    background: rgba(239,68,68,.25);
+}
+
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.btn-google:hover {
+    background: var(--surface-hover);
+    border-color: var(--border-hover);
+}
+
+.btn-google:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ========== Modal Large ========== */
+.modal.modal-lg {
+    max-width: 780px;
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--surface-hover);
+    border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--surface-active);
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
     .container {

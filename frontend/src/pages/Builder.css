@@ -1,5 +1,5 @@
 /* =====================================================
-   Builder Page Styles - Clean Component Selection
+   Builder Page Styles - PCease v3.0 Enhanced Builder
    ===================================================== */
 
 .builder-page {
@@ -26,6 +26,20 @@
     display: flex;
     gap: var(--space-3);
     flex-shrink: 0;
+}
+
+/* Shared build notice */
+.shared-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    background: var(--accent-muted);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+    font-size: 0.875rem;
+    color: var(--accent);
 }
 
 /* Main Layout */
@@ -61,6 +75,11 @@
 .component-slot.filled {
     border-color: var(--border-accent);
     background: var(--accent-muted);
+}
+
+.slot-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
 }
 
 .slot-header {
@@ -128,7 +147,7 @@
     border-color: var(--border-accent);
 }
 
-/* Build Summary */
+/* Build Summary Sidebar */
 .build-summary {
     position: sticky;
     top: 100px;
@@ -192,7 +211,71 @@
     color: var(--accent);
 }
 
+/* Wattage Card */
+.wattage-card,
+.bottleneck-card {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.wattage-card h3,
+.bottleneck-card h3 {
+    font-size: 0.875rem;
+    margin-bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.wattage-value,
+.bottleneck-score {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+}
+
+.wattage-rec,
+.bottleneck-detail {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.bottleneck-card.good {
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.bottleneck-card.good .bottleneck-score {
+    color: var(--success);
+}
+
+.bottleneck-card.warning {
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.bottleneck-card.warning .bottleneck-score {
+    color: var(--warning);
+}
+
+.bottleneck-card.bad {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.bottleneck-card.bad .bottleneck-score {
+    color: var(--error);
+}
+
 /* Selection Modal */
+.modal-search {
+    margin-bottom: var(--space-4);
+}
+
 .selection-grid {
     display: grid;
     gap: var(--space-3);
@@ -263,9 +346,11 @@
 
     .builder-actions {
         width: 100%;
+        flex-wrap: wrap;
     }
 
     .builder-actions .btn {
         flex: 1;
+        min-width: 120px;
     }
 }

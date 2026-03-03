@@ -3,20 +3,38 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Navbar.css'
 
+const navItems = [
+    { to: '/', label: 'Home' },
+    { to: '/browse', label: 'Browse' },
+    { to: '/builder', label: 'Builder' },
+    { to: '/advisor', label: 'AI Advisor' },
+    { to: '/compare', label: 'Compare' },
+    { to: '/forum', label: 'Forum' },
+]
+
 export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [scrolled, setScrolled] = useState(false)
     const { user, logout } = useAuth()
     const location = useLocation()
 
+    useEffect(() => { setMobileOpen(false) }, [location])
+
     useEffect(() => {
-        setMobileOpen(false)
-    }, [location])
+        const onScroll = () => setScrolled(window.scrollY > 20)
+        window.addEventListener('scroll', onScroll)
+        return () => window.removeEventListener('scroll', onScroll)
+    }, [])
 
     return (
-        <nav className="navbar">
+        <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
             <div className="container navbar-inner">
                 <Link to="/" className="logo">
-                    <span className="logo-accent">PC</span>ease
+                    <span className="logo-icon">⚡</span>
+                    <span className="logo-text">
+                        <span className="logo-accent">PC</span>ease
+                    </span>
+                    <span className="logo-badge">IN</span>
                 </Link>
 
                 <button
@@ -24,22 +42,40 @@ export default function Navbar() {
                     onClick={() => setMobileOpen(!mobileOpen)}
                     aria-label="Toggle menu"
                 >
-                    {mobileOpen ? '✕' : '☰'}
+                    <span className={`hamburger ${mobileOpen ? 'open' : ''}`}>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
                 </button>
 
                 <ul className={`nav-links ${mobileOpen ? 'open' : ''}`}>
-                    <li><NavLink to="/" className={({ isActive }) => isActive ? 'active' : ''}>Home</NavLink></li>
-                    <li><NavLink to="/browse" className={({ isActive }) => isActive ? 'active' : ''}>Browse</NavLink></li>
-                    <li><NavLink to="/builder" className={({ isActive }) => isActive ? 'active' : ''}>Builder</NavLink></li>
-                    <li><NavLink to="/advisor" className={({ isActive }) => isActive ? 'active' : ''}>Advisor</NavLink></li>
-                    <li><NavLink to="/forum" className={({ isActive }) => isActive ? 'active' : ''}>Forum</NavLink></li>
-                    <li>
+                    {navItems.map(item => (
+                        <li key={item.to}>
+                            <NavLink
+                                to={item.to}
+                                className={({ isActive }) => isActive ? 'active' : ''}
+                                end={item.to === '/'}
+                            >
+                                {item.label}
+                            </NavLink>
+                        </li>
+                    ))}
+                    <li className="nav-auth">
                         {user ? (
-                            <button className="nav-user" onClick={logout}>
-                                {user.username} ↗
-                            </button>
+                            <div className="user-menu">
+                                <span className="user-avatar">
+                                    {user.username?.charAt(0).toUpperCase()}
+                                </span>
+                                <span className="user-name">{user.username}</span>
+                                <button className="btn-logout" onClick={logout}>
+                                    Logout
+                                </button>
+                            </div>
                         ) : (
-                            <NavLink to="/login" className="nav-login">Login</NavLink>
+                            <NavLink to="/login" className="nav-login-btn">
+                                Sign In
+                            </NavLink>
                         )}
                     </li>
                 </ul>

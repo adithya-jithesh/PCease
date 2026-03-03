@@ -1,5 +1,5 @@
 /* =====================================================
-   Footer Styles - Clean Minimal Design
+   Footer Styles - PCease v3.0 4-Column Footer
    ===================================================== */
 
 .footer {
@@ -11,12 +11,12 @@
 
 .footer-inner {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: var(--space-12);
+    grid-template-columns: 1.5fr repeat(3, 1fr);
+    gap: var(--space-10);
 }
 
 .footer-brand {
-    max-width: 280px;
+    max-width: 300px;
 }
 
 .footer-logo {
@@ -25,7 +25,7 @@
     color: var(--text);
     text-decoration: none;
     display: inline-block;
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
     letter-spacing: -0.02em;
 }
 
@@ -33,11 +33,26 @@
     color: var(--text-muted);
     font-size: 0.8125rem;
     line-height: 1.6;
+    margin-bottom: var(--space-4);
 }
 
-.footer-links {
+.footer-badges {
     display: flex;
-    gap: var(--space-12);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.footer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-muted);
 }
 
 .footer-col {
@@ -52,7 +67,7 @@
     letter-spacing: 0.08em;
     font-weight: 600;
     color: var(--text-muted);
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
 }
 
 .footer-col a {
@@ -60,6 +75,7 @@
     text-decoration: none;
     font-size: 0.875rem;
     transition: color var(--transition-fast);
+    padding: var(--space-1) 0;
 }
 
 .footer-col a:hover {
@@ -70,13 +86,20 @@
     grid-column: 1 / -1;
     border-top: 1px solid var(--border);
     padding-top: var(--space-5);
-    margin-top: var(--space-8);
+    margin-top: var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .footer-bottom p {
     color: var(--text-muted);
     font-size: 0.8125rem;
-    text-align: center;
+}
+
+.footer-bottom a {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
 }
 
 @media (max-width: 768px) {
@@ -85,17 +108,34 @@
     }
 
     .footer-inner {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: var(--space-8);
-        text-align: center;
     }
 
     .footer-brand {
+        grid-column: 1 / -1;
         max-width: none;
+        text-align: center;
     }
 
-    .footer-links {
+    .footer-badges {
         justify-content: center;
-        gap: var(--space-8);
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: var(--space-2);
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-inner {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .footer-col {
+        align-items: center;
     }
 }
