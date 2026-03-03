@@ -24,7 +24,7 @@ export default function Home() {
             <section className="hero">
                 <div className="container hero__inner">
                     <span className="hero__badge">India-focused PC building platform</span>
-                    <h1>Build smarter.<br /><span className="text-gradient">Compare prices across India.</span></h1>
+                    <h1>Build smarter.<br /><span className="text-accent">Compare prices across India.</span></h1>
                     <p className="hero__desc">Browse components, compare prices from 7+ retailers, get AI recommendations, and share your build — all free.</p>
                     <div className="hero__cta">
                         <Link to="/builder" className="btn btn-primary btn-lg">Start Building <FiArrowRight size={16} /></Link>
