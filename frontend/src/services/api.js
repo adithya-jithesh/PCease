@@ -1,28 +1,90 @@
-// =====================================================
-// PCease API Service — Centralized API layer
-// Backend: FastAPI on Render | DB: Supabase
-// =====================================================
+/**
+ * PCease API Service — Optimized with caching and request deduplication
+ * Backend: FastAPI on Render | DB: Supabase
+ */
 
-// In production VITE_API_URL should be the full base like "https://pcease-api.onrender.com/api"
-// In dev the Vite proxy handles /api → localhost:8000
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
-// ========== Core Fetch Helper ==========
+// ========== Request Cache ==========
+const cache = new Map()
+const CACHE_TTL = 60_000 // 1 minute
+const pendingRequests = new Map()
+
+function getCacheKey(endpoint, options = {}) {
+    return `${options.method || 'GET'}:${endpoint}:${JSON.stringify(options.body || '')}`
+}
+
+function getCached(key) {
+    const entry = cache.get(key)
+    if (!entry) return null
+    if (Date.now() > entry.expires) {
+        cache.delete(key)
+        return null
+    }
+    return entry.data
+}
+
+function setCache(key, data, ttl = CACHE_TTL) {
+    cache.set(key, { data, expires: Date.now() + ttl })
+}
+
+// ========== Core Fetch ==========
 async function request(endpoint, options = {}) {
     const token = localStorage.getItem('pcease_token')
     const headers = { 'Content-Type': 'application/json', ...options.headers }
     if (token) headers.Authorization = `Bearer ${token}`
 
     const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`
-    const res = await fetch(url, { ...options, headers })
+    const cacheKey = getCacheKey(endpoint, options)
 
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: 'Request failed' }))
-        throw new Error(err.detail || `Error ${res.status}`)
+    // Check cache for GET requests
+    if (!options.method || options.method === 'GET') {
+        const cached = getCached(cacheKey)
+        if (cached) return cached
+
+        // Deduplicate in-flight requests
+        if (pendingRequests.has(cacheKey)) {
+            return pendingRequests.get(cacheKey)
+        }
     }
 
-    if (res.status === 204) return null
-    return res.json()
+    const fetchPromise = (async () => {
+        const res = await fetch(url, { ...options, headers })
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ detail: 'Request failed' }))
+            throw new Error(err.detail || `Error ${res.status}`)
+        }
+
+        if (res.status === 204) return null
+        const data = await res.json()
+
+        // Cache GET responses
+        if (!options.method || options.method === 'GET') {
+            setCache(cacheKey, data)
+        }
+
+        return data
+    })()
+
+    // Track pending request for deduplication
+    if (!options.method || options.method === 'GET') {
+        pendingRequests.set(cacheKey, fetchPromise)
+        fetchPromise.finally(() => pendingRequests.delete(cacheKey))
+    }
+
+    return fetchPromise
+}
+
+// ========== Cache Invalidation ==========
+export function invalidateCache(pattern = '') {
+    if (!pattern) {
+        cache.clear()
+        return
+    }
+    for (const key of cache.keys()) {
+        if (key.includes(pattern)) cache.delete(key)
+    }
 }
 
 // ========== API Methods ==========
@@ -72,18 +134,21 @@ export const API = {
     // --- Builds ---
     getBuilds: () => request('/builds'),
 
-    saveBuild: (build) =>
-        request('/builds', { method: 'POST', body: JSON.stringify(build) }),
+    saveBuild: (build) => {
+        invalidateCache('/builds')
+        return request('/builds', { method: 'POST', body: JSON.stringify(build) })
+    },
 
-    deleteBuild: (id) =>
-        request(`/builds/${id}`, { method: 'DELETE' }),
+    deleteBuild: (id) => {
+        invalidateCache('/builds')
+        return request(`/builds/${id}`, { method: 'DELETE' })
+    },
 
     // --- Shareable Builds ---
     shareBuild: (build) =>
         request('/builds/share', { method: 'POST', body: JSON.stringify(build) }),
 
-    getSharedBuild: (shareId) =>
-        request(`/builds/shared/${shareId}`),
+    getSharedBuild: (shareId) => request(`/builds/shared/${shareId}`),
 
     // --- Compare ---
     compareComponents: (ids) =>
@@ -99,14 +164,18 @@ export const API = {
 
     getThread: (id) => request(`/forum/threads/${id}`),
 
-    createThread: (thread) =>
-        request('/forum/threads', { method: 'POST', body: JSON.stringify(thread) }),
+    createThread: (thread) => {
+        invalidateCache('/forum/threads')
+        return request('/forum/threads', { method: 'POST', body: JSON.stringify(thread) })
+    },
 
-    createReply: (threadId, content) =>
-        request(`/forum/threads/${threadId}/replies`, {
+    createReply: (threadId, content) => {
+        invalidateCache(`/forum/threads/${threadId}`)
+        return request(`/forum/threads/${threadId}/replies`, {
             method: 'POST',
             body: JSON.stringify({ content }),
-        }),
+        })
+    },
 
     voteThread: (threadId, vote) =>
         request(`/forum/threads/${threadId}/vote`, {
@@ -122,7 +191,6 @@ export const API = {
 
     // --- AI Advisor ---
     getTemplates: () => request('/advisor/templates'),
-
     getTemplate: (id) => request(`/advisor/templates/${id}`),
 
     getRecommendation: (budget, useCase, preferences = '') =>

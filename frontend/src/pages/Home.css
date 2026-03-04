@@ -63,10 +63,9 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
-    transition: border-color .2s;
 }
 .feature:hover {
-    border-color: var(--accent-border);
+    border-color: var(--border-hover);
 }
 .feature__icon {
     width: 40px;
@@ -107,11 +106,10 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     text-decoration: none;
-    transition: all .2s;
+    transition: border-color .2s;
 }
 .category:hover {
     border-color: var(--accent);
-    transform: translateY(-2px);
 }
 .category__abbr {
     font-size: .75rem;

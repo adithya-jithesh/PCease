@@ -155,6 +155,28 @@
 .bd-comp-opt__lowest { font-size: .9375rem; font-weight: 700; color: #22c55e; font-variant-numeric: tabular-nums; }
 .bd-comp-opt__vendor-count { font-size: .6875rem; color: var(--text-muted); }
 
+/* Incompatible component styling */
+.bd-comp-opt--incompatible {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.03);
+}
+.bd-comp-opt--incompatible:hover {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.03);
+}
+.bd-comp-opt--incompatible .bd-comp-opt__lowest {
+    color: var(--text-muted);
+}
+.bd-comp-opt__incompat {
+    display: block;
+    font-size: .6875rem;
+    color: #ef4444;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
 /* ── Modal: Retailer View (Step 2) ── */
 .bd-retailer-view { display: flex; flex-direction: column; gap: 16px; }
 .bd-retailer-comp {

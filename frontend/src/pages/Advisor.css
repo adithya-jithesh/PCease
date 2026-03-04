@@ -34,11 +34,20 @@ input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; background: v
 .ad-result__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .ad-result__head h2 { font-size: 1.125rem; }
 .ad-result__src { font-size: .75rem; font-weight: 600; padding: 3px 10px; background: var(--accent-subtle); border-radius: 9999px; color: var(--accent); }
-.ad-result__desc { font-size: .9375rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+.ad-result__src--smart { background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(6,182,212,.15)); color: #22c55e; }
+.ad-result__desc { font-size: .9375rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
+
+/* Budget Status */
+.ad-budget-status { padding: 10px 14px; border-radius: 8px; font-size: .875rem; font-weight: 500; margin-bottom: 16px; }
+.ad-budget-status--ok { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25); color: #22c55e; }
+.ad-budget-status--over { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.25); color: #ef4444; }
+
 .ad-rec-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
 .ad-rec-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,.02); border: 1px solid var(--border); border-radius: 8px; font-size: .875rem; }
 .ad-rec-cat { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); min-width: 70px; }
-.ad-rec-name { flex: 1; font-weight: 500; }
+.ad-rec-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ad-rec-name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ad-rec-vendor { font-size: .75rem; color: var(--text-muted); }
 .ad-rec-price { color: var(--accent); font-weight: 600; font-family: var(--font-mono); }
 .ad-rec-reason { width: 100%; font-size: .8125rem; color: var(--text-muted); margin-top: 2px; }
 .ad-rec-total { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--accent-subtle); border: 1px solid var(--accent-border); border-radius: 8px; margin-bottom: 16px; }

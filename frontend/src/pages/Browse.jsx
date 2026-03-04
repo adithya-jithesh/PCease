@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { API, formatPrice, getLowestPrice, getSavings, getBestVendor, CATEGORIES } from '../services/api'
 import { FiSearch, FiX, FiExternalLink, FiCheck, FiPlus, FiGrid, FiList, FiShoppingCart, FiInfo, FiChevronRight } from 'react-icons/fi'
@@ -18,7 +18,7 @@ const SPEC_PRIORITY = {
     fans: ['size', 'quantity', 'airflow', 'rpm'],
 }
 
-function getKeySpecs(item, maxCount = 4) {
+const getKeySpecs = (item, maxCount = 4) => {
     if (!item.specs || !Object.keys(item.specs).length) return []
     const priority = SPEC_PRIORITY[item.category?.slug] || []
     const allKeys = Object.keys(item.specs)
@@ -28,6 +28,40 @@ function getKeySpecs(item, maxCount = 4) {
         val: String(item.specs[k]),
     }))
 }
+
+// Extracted skeleton components for reuse
+const CardSkeleton = () => (
+    <div className="br-card br-card--skeleton">
+        <div className="skeleton" style={{ height: 14, width: '35%', marginBottom: 10 }} />
+        <div className="skeleton" style={{ height: 16, width: '85%', marginBottom: 6 }} />
+        <div className="skeleton" style={{ height: 12, width: '30%', marginBottom: 14 }} />
+        <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
+            <div className="skeleton" style={{ height: 22, width: '30%', borderRadius: 5 }} />
+            <div className="skeleton" style={{ height: 22, width: '35%', borderRadius: 5 }} />
+        </div>
+        <div className="skeleton" style={{ height: 20, width: '40%', marginBottom: 12 }} />
+        <div className="skeleton" style={{ height: 34, width: '100%', borderRadius: 8 }} />
+    </div>
+)
+
+const ListSkeleton = () => (
+    <div className="br-list-item br-list-item--skeleton">
+        <div style={{ flex: 1 }}><div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 8 }} /><div className="skeleton" style={{ height: 16, width: '75%' }} /></div>
+        <div style={{ flex: 1, display: 'flex', gap: 4, flexWrap: 'wrap' }}><div className="skeleton" style={{ height: 22, width: '28%', borderRadius: 5 }} /><div className="skeleton" style={{ height: 22, width: '32%', borderRadius: 5 }} /></div>
+        <div style={{ width: 100 }}><div className="skeleton" style={{ height: 20, width: '80%' }} /></div>
+        <div style={{ width: 80 }}><div className="skeleton" style={{ height: 30, width: '100%', borderRadius: 7 }} /></div>
+    </div>
+)
+
+const EmptyState = ({ error }) => (
+    <div className="br-empty">
+        <FiSearch size={32} />
+        <h3>No components found</h3>
+        {error
+            ? <p style={{ color: '#ef4444', fontFamily: 'monospace', fontSize: '0.8rem' }}>Error: {error}</p>
+            : <p>Try adjusting your filters or search term</p>}
+    </div>
+)
 
 export default function Browse() {
     const [searchParams, setSearchParams] = useSearchParams()
@@ -51,60 +85,30 @@ export default function Browse() {
             .finally(() => setLoading(false))
     }, [category, search, sort])
 
-    const handleCategoryChange = (cat) => {
+    const handleCategoryChange = useCallback((cat) => {
         setCategory(cat)
         const params = {}
         if (cat) params.category = cat
         if (search) params.search = search
         setSearchParams(params)
-    }
+    }, [search, setSearchParams])
 
-    const toggleCompare = (item) => {
+    const toggleCompare = useCallback((item) => {
         setCompareList(prev => {
             const exists = prev.find(c => c.id === item.id)
             if (exists) return prev.filter(c => c.id !== item.id)
             if (prev.length >= 4) { toast.error('Maximum 4 items'); return prev }
             return [...prev, item]
         })
-    }
+    }, [])
 
-    const goCompare = () => {
+    const goCompare = useCallback(() => {
         if (compareList.length < 2) { toast.error('Select at least 2 items'); return }
         navigate(`/compare?ids=${compareList.map(c => c.id).join(',')}`)
-    }
+    }, [compareList, navigate])
 
-    const CardSkeleton = () => (
-        <div className="br-card br-card--skeleton">
-            <div className="skeleton" style={{ height: 14, width: '35%', marginBottom: 10 }} />
-            <div className="skeleton" style={{ height: 16, width: '85%', marginBottom: 6 }} />
-            <div className="skeleton" style={{ height: 12, width: '30%', marginBottom: 14 }} />
-            <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
-                <div className="skeleton" style={{ height: 22, width: '30%', borderRadius: 5 }} />
-                <div className="skeleton" style={{ height: 22, width: '35%', borderRadius: 5 }} />
-            </div>
-            <div className="skeleton" style={{ height: 20, width: '40%', marginBottom: 12 }} />
-            <div className="skeleton" style={{ height: 34, width: '100%', borderRadius: 8 }} />
-        </div>
-    )
-
-    const ListSkeleton = () => (
-        <div className="br-list-item br-list-item--skeleton">
-            <div style={{ flex: 1 }}><div className="skeleton" style={{ height: 14, width: '40%', marginBottom: 8 }} /><div className="skeleton" style={{ height: 16, width: '75%' }} /></div>
-            <div style={{ flex: 1, display: 'flex', gap: 4, flexWrap: 'wrap' }}><div className="skeleton" style={{ height: 22, width: '28%', borderRadius: 5 }} /><div className="skeleton" style={{ height: 22, width: '32%', borderRadius: 5 }} /></div>
-            <div style={{ width: 100 }}><div className="skeleton" style={{ height: 20, width: '80%' }} /></div>
-            <div style={{ width: 80 }}><div className="skeleton" style={{ height: 30, width: '100%', borderRadius: 7 }} /></div>
-        </div>
-    )
-
-    const EmptyState = () => (
-        <div className="br-empty">
-            <FiSearch size={32} />
-            <h3>No components found</h3>
-            {error
-                ? <p style={{ color: '#ef4444', fontFamily: 'monospace', fontSize: '0.8rem' }}>Error: {error}</p>
-                : <p>Try adjusting your filters or search term</p>}
-        </div>
-    )
+    // Memoize compare list IDs for faster lookups
+    const compareIds = useMemo(() => new Set(compareList.map(c => c.id)), [compareList])
 
     return (
         <main className="page">
@@ -151,12 +155,12 @@ export default function Browse() {
                     <section className="br-grid">
                         {loading
                             ? Array(12).fill(0).map((_, i) => <CardSkeleton key={i} />)
-                            : components.length === 0 ? <EmptyState />
+                            : components.length === 0 ? <EmptyState error={error} />
                             : components.map(item => {
                                 const lowest = getLowestPrice(item)
                                 const savings = getSavings(item)
                                 const bestVendor = getBestVendor(item)
-                                const isComp = compareList.some(c => c.id === item.id)
+                                const isComp = compareIds.has(item.id)
                                 const vendorCount = (item.prices || []).length
                                 const keySpecs = getKeySpecs(item, 3)
 
@@ -219,12 +223,12 @@ export default function Browse() {
                     <section className="br-list">
                         {loading
                             ? Array(8).fill(0).map((_, i) => <ListSkeleton key={i} />)
-                            : components.length === 0 ? <EmptyState />
+                            : components.length === 0 ? <EmptyState error={error} />
                             : components.map(item => {
                                 const lowest = getLowestPrice(item)
                                 const savings = getSavings(item)
                                 const bestVendor = getBestVendor(item)
-                                const isComp = compareList.some(c => c.id === item.id)
+                                const isComp = compareIds.has(item.id)
                                 const vendorCount = (item.prices || []).length
                                 const keySpecs = getKeySpecs(item, 3)
 
@@ -322,10 +326,10 @@ export default function Browse() {
 
                                 <div className="br-detail__actions">
                                     <button
-                                        className={`btn ${compareList.some(c => c.id === detail.id) ? 'btn-primary' : ''}`}
+                                        className={`btn ${compareIds.has(detail.id) ? 'btn-primary' : ''}`}
                                         onClick={() => toggleCompare(detail)}
                                     >
-                                        {compareList.some(c => c.id === detail.id)
+                                        {compareIds.has(detail.id)
                                             ? <><FiCheck size={14} /> In Compare</>
                                             : <><FiPlus size={14} /> Add to Compare</>}
                                     </button>

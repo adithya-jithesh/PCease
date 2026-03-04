@@ -1,16 +1,12 @@
 """
-Comprehensive seed script with 100+ PC components
-Run with: python -m app.seed
+DEPRECATED: This file is no longer used.
+Run `python seed_supabase.py` from the backend folder instead.
+The database has been migrated to Supabase.
 """
-from .database import SessionLocal, engine, Base
-from .models.component import Category, Component, Vendor, ComponentPrice
-from .models.user import User
-from .models.forum import ForumThread
-from .utils.auth import get_password_hash
-import random
 
-# Create all tables
-Base.metadata.create_all(bind=engine)
+print("❌ This seed.py is deprecated.")
+print("   Run: python seed_supabase.py")
+
 
 
 # ==================== COMPONENT DATA ====================
@@ -23,6 +19,8 @@ CATEGORIES = [
     {"name": "Storage", "slug": "storage", "icon": "SSD", "description": "NVMe, SSD & HDD"},
     {"name": "Power Supply", "slug": "psu", "icon": "PSU", "description": "80+ Certified"},
     {"name": "Case", "slug": "pcCase", "icon": "CASE", "description": "ATX, mATX & ITX"},
+    {"name": "CPU Cooler", "slug": "cooler", "icon": "FAN", "description": "Air & AIO Liquid"},
+    {"name": "Case Fans", "slug": "fans", "icon": "FANS", "description": "RGB & High Airflow"},
     {"name": "Monitor", "slug": "monitor", "icon": "MON", "description": "Gaming & Professional"},
 ]
 
@@ -238,6 +236,55 @@ MONITORS = [
     {"name": "Acer K242HYL 24\" IPS", "brand": "Acer", "price": 8500, "specs": {"size": "24\"", "resolution": "1920x1080", "refresh_rate": "75Hz", "panel": "IPS"}},
 ]
 
+# CPU Coolers - 20+ items
+COOLERS = [
+    # Air Coolers - Budget
+    {"name": "Deepcool AK400", "brand": "Deepcool", "price": 1800, "specs": {"type": "Air", "height": "155mm", "tdp": 220, "fans": 1, "fan_size": "120mm", "noise": "28dB"}},
+    {"name": "Deepcool AK620", "brand": "Deepcool", "price": 4500, "specs": {"type": "Air", "height": "160mm", "tdp": 260, "fans": 2, "fan_size": "120mm", "noise": "28dB"}},
+    {"name": "Thermalright Peerless Assassin 120 SE", "brand": "Thermalright", "price": 2800, "specs": {"type": "Air", "height": "155mm", "tdp": 260, "fans": 2, "fan_size": "120mm", "noise": "25dB"}},
+    {"name": "Cooler Master Hyper 212", "brand": "Cooler Master", "price": 2500, "specs": {"type": "Air", "height": "159mm", "tdp": 180, "fans": 1, "fan_size": "120mm", "noise": "26dB"}},
+    {"name": "ID-Cooling SE-226-XT", "brand": "ID-Cooling", "price": 3200, "specs": {"type": "Air", "height": "154mm", "tdp": 250, "fans": 1, "fan_size": "120mm", "noise": "30dB"}},
+    {"name": "be quiet! Dark Rock 4", "brand": "be quiet!", "price": 6500, "specs": {"type": "Air", "height": "159mm", "tdp": 200, "fans": 1, "fan_size": "135mm", "noise": "21dB"}},
+    {"name": "be quiet! Dark Rock Pro 4", "brand": "be quiet!", "price": 8500, "specs": {"type": "Air", "height": "163mm", "tdp": 250, "fans": 2, "fan_size": "120/135mm", "noise": "24dB"}},
+    {"name": "Noctua NH-D15", "brand": "Noctua", "price": 9000, "specs": {"type": "Air", "height": "165mm", "tdp": 250, "fans": 2, "fan_size": "140mm", "noise": "24dB"}},
+    {"name": "Noctua NH-U12S", "brand": "Noctua", "price": 6500, "specs": {"type": "Air", "height": "158mm", "tdp": 180, "fans": 1, "fan_size": "120mm", "noise": "22dB"}},
+    {"name": "Noctua NH-L9i", "brand": "Noctua", "price": 4500, "specs": {"type": "Air", "height": "37mm", "tdp": 65, "fans": 1, "fan_size": "92mm", "noise": "23dB", "low_profile": True}},
+    # AIO Liquid Coolers - 240mm
+    {"name": "Deepcool LE500 Marrs 240mm", "brand": "Deepcool", "price": 6500, "specs": {"type": "AIO", "radiator": "240mm", "tdp": 280, "fans": 2, "pump_speed": "3100RPM", "rgb": True}},
+    {"name": "Cooler Master MasterLiquid ML240L V2 RGB", "brand": "Cooler Master", "price": 7000, "specs": {"type": "AIO", "radiator": "240mm", "tdp": 280, "fans": 2, "pump_speed": "2600RPM", "rgb": True}},
+    {"name": "NZXT Kraken 240", "brand": "NZXT", "price": 14000, "specs": {"type": "AIO", "radiator": "240mm", "tdp": 300, "fans": 2, "pump_speed": "2800RPM", "lcd_display": True}},
+    {"name": "Corsair iCUE H100i Elite Capellix", "brand": "Corsair", "price": 15000, "specs": {"type": "AIO", "radiator": "240mm", "tdp": 300, "fans": 2, "pump_speed": "2400RPM", "rgb": True}},
+    {"name": "Arctic Liquid Freezer II 240", "brand": "Arctic", "price": 8500, "specs": {"type": "AIO", "radiator": "240mm", "tdp": 300, "fans": 2, "pump_speed": "2200RPM"}},
+    # AIO Liquid Coolers - 360mm
+    {"name": "Deepcool LE720 360mm", "brand": "Deepcool", "price": 9500, "specs": {"type": "AIO", "radiator": "360mm", "tdp": 350, "fans": 3, "pump_speed": "3100RPM", "rgb": True}},
+    {"name": "Lian Li Galahad II Trinity 360", "brand": "Lian Li", "price": 16000, "specs": {"type": "AIO", "radiator": "360mm", "tdp": 350, "fans": 3, "pump_speed": "2900RPM", "rgb": True}},
+    {"name": "NZXT Kraken 360", "brand": "NZXT", "price": 22000, "specs": {"type": "AIO", "radiator": "360mm", "tdp": 350, "fans": 3, "pump_speed": "2800RPM", "lcd_display": True}},
+    {"name": "Corsair iCUE H150i Elite Capellix", "brand": "Corsair", "price": 18000, "specs": {"type": "AIO", "radiator": "360mm", "tdp": 350, "fans": 3, "pump_speed": "2400RPM", "rgb": True}},
+    {"name": "Arctic Liquid Freezer II 360", "brand": "Arctic", "price": 11000, "specs": {"type": "AIO", "radiator": "360mm", "tdp": 350, "fans": 3, "pump_speed": "2200RPM"}},
+    {"name": "ASUS ROG Ryuo III 360 ARGB", "brand": "ASUS", "price": 25000, "specs": {"type": "AIO", "radiator": "360mm", "tdp": 350, "fans": 3, "pump_speed": "2800RPM", "lcd_display": True}},
+]
+
+# Case Fans - 15+ items  
+FANS = [
+    # Single Fans
+    {"name": "Noctua NF-A12x25 PWM", "brand": "Noctua", "price": 2500, "specs": {"size": "120mm", "rpm": "2000", "airflow": "60CFM", "noise": "22dB", "quantity": 1}},
+    {"name": "Noctua NF-F12 industrialPPC-3000", "brand": "Noctua", "price": 2800, "specs": {"size": "120mm", "rpm": "3000", "airflow": "110CFM", "noise": "44dB", "quantity": 1, "high_performance": True}},
+    {"name": "Noctua NF-A14 PWM", "brand": "Noctua", "price": 2800, "specs": {"size": "140mm", "rpm": "1500", "airflow": "82CFM", "noise": "24dB", "quantity": 1}},
+    {"name": "be quiet! Silent Wings 4 120mm", "brand": "be quiet!", "price": 2000, "specs": {"size": "120mm", "rpm": "1600", "airflow": "53CFM", "noise": "22dB", "quantity": 1}},
+    {"name": "Arctic P12 PWM PST", "brand": "Arctic", "price": 450, "specs": {"size": "120mm", "rpm": "1800", "airflow": "56CFM", "noise": "22dB", "quantity": 1}},
+    # Fan Packs (3-pack)
+    {"name": "Arctic P12 PWM PST Value Pack (5-pack)", "brand": "Arctic", "price": 2000, "specs": {"size": "120mm", "rpm": "1800", "airflow": "56CFM", "noise": "22dB", "quantity": 5}},
+    {"name": "Corsair iCUE SP120 RGB Elite (3-pack)", "brand": "Corsair", "price": 4500, "specs": {"size": "120mm", "rpm": "1500", "airflow": "47CFM", "noise": "18dB", "quantity": 3, "rgb": True}},
+    {"name": "Lian Li UNI FAN SL120 V2 (3-pack)", "brand": "Lian Li", "price": 8500, "specs": {"size": "120mm", "rpm": "1900", "airflow": "58CFM", "noise": "28dB", "quantity": 3, "rgb": True, "daisy_chain": True}},
+    {"name": "NZXT F120 RGB Core (3-pack)", "brand": "NZXT", "price": 4000, "specs": {"size": "120mm", "rpm": "1800", "airflow": "78CFM", "noise": "28dB", "quantity": 3, "rgb": True}},
+    {"name": "Deepcool FK120 (3-pack)", "brand": "Deepcool", "price": 2500, "specs": {"size": "120mm", "rpm": "1850", "airflow": "68CFM", "noise": "28dB", "quantity": 3}},
+    {"name": "Phanteks T30-120 (3-pack)", "brand": "Phanteks", "price": 7500, "specs": {"size": "120mm", "rpm": "3000", "airflow": "77CFM", "noise": "36dB", "quantity": 3, "high_performance": True}},
+    {"name": "Corsair iCUE LL120 RGB (3-pack)", "brand": "Corsair", "price": 9000, "specs": {"size": "120mm", "rpm": "1500", "airflow": "43CFM", "noise": "25dB", "quantity": 3, "rgb": True}},
+    {"name": "Cooler Master SickleFlow 120 ARGB (3-pack)", "brand": "Cooler Master", "price": 3500, "specs": {"size": "120mm", "rpm": "1800", "airflow": "62CFM", "noise": "27dB", "quantity": 3, "rgb": True}},
+    {"name": "Thermaltake TOUGHFAN 12 Pro (3-pack)", "brand": "Thermaltake", "price": 5500, "specs": {"size": "120mm", "rpm": "2500", "airflow": "70CFM", "noise": "30dB", "quantity": 3}},
+    {"name": "EK-Loop Fan FPT 120 D-RGB (3-pack)", "brand": "EKWB", "price": 6000, "specs": {"size": "120mm", "rpm": "2200", "airflow": "68CFM", "noise": "30dB", "quantity": 3, "rgb": True}},
+]
+
 # Forum threads for demo
 FORUM_THREADS = [
     {"title": "Best budget GPU under ₹25,000?", "content": "Looking for a GPU that can handle 1080p gaming at high settings. Current options I'm considering are RX 6600 and GTX 1660 Super. Any suggestions?", "category": "Build Help"},
@@ -330,6 +377,12 @@ def seed_database():
         
         print("  → Creating Cases...")
         add_components(CASES, "pcCase")
+        
+        print("  → Creating CPU Coolers...")
+        add_components(COOLERS, "cooler")
+        
+        print("  → Creating Case Fans...")
+        add_components(FANS, "fans")
         
         print("  → Creating Monitors...")
         add_components(MONITORS, "monitor")

@@ -167,6 +167,16 @@ label { display: block; font-weight: 500; font-size: .8125rem; margin-bottom: 6p
 .empty-state h3 { color: var(--text-secondary); margin-bottom: 8px; }
 .loading { text-align: center; padding: 64px; color: var(--text-muted); }
 
+/* Spinner */
+.spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+}
+.spinner-sm { width: 16px; height: 16px; border-width: 2px; }
+
 /* ========== Skeleton ========== */
 .skeleton {
     background: linear-gradient(90deg, var(--surface) 0%, var(--surface-hover) 50%, var(--surface) 100%);

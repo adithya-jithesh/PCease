@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
 import { API, formatPrice, getLowestPrice, BUILD_SLOTS } from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -28,14 +28,110 @@ const ACCESSORY_DEFS = [
     { category: 'fans', name: 'Case Fan' },
 ]
 
-function getInlineSpecs(comp, maxCount = 3) {
-    if (!comp?.specs) return []
+// Helper to get specs from component (handles both 'specs' and 'specifications')
+const getSpecs = (comp) => comp?.specs || comp?.specifications || {}
+
+const getInlineSpecs = (comp, maxCount = 3) => {
+    const specs = getSpecs(comp)
+    if (!specs || !Object.keys(specs).length) return []
     const catSlug = comp.category?.slug
-    const keys = SPEC_KEYS[catSlug] || Object.keys(comp.specs).slice(0, 3)
+    const keys = SPEC_KEYS[catSlug] || Object.keys(specs).slice(0, 3)
     return keys
-        .filter(k => comp.specs[k] !== undefined)
+        .filter(k => specs[k] !== undefined)
         .slice(0, maxCount)
-        .map(k => `${k.replace(/_/g, ' ')}: ${comp.specs[k]}`)
+        .map(k => `${k.replace(/_/g, ' ')}: ${specs[k]}`)
+}
+
+// Motherboard form factor compatibility with case
+const FORM_FACTOR_COMPAT = {
+    'ATX': ['ATX', 'Micro-ATX', 'Mini-ITX'],
+    'Micro-ATX': ['Micro-ATX', 'Mini-ITX'],
+    'Mini-ITX': ['Mini-ITX'],
+    'Mid Tower': ['ATX', 'Micro-ATX', 'Mini-ITX'],
+    'Full Tower': ['E-ATX', 'ATX', 'Micro-ATX', 'Mini-ITX'],
+    'Mini Tower': ['Micro-ATX', 'Mini-ITX'],
+    'SFF': ['Mini-ITX'],
+}
+
+// Check compatibility between component and current build
+const checkCompatibility = (comp, build, slotKey) => {
+    const compSpecs = getSpecs(comp)
+    const catSlug = comp.category?.slug || slotKey
+
+    // Get specs from existing build components
+    const cpuSpecs = getSpecs(build.cpu)
+    const mbSpecs = getSpecs(build.motherboard)
+    const caseSpecs = getSpecs(build.case)
+
+    let compatible = true
+    let reason = ''
+
+    // CPU compatibility with motherboard
+    if (catSlug === 'cpu' && build.motherboard) {
+        if (compSpecs.socket && mbSpecs.socket && compSpecs.socket !== mbSpecs.socket) {
+            compatible = false
+            reason = `Socket ${compSpecs.socket} incompatible with motherboard (${mbSpecs.socket})`
+        }
+    }
+
+    // Motherboard compatibility with CPU and RAM
+    if (catSlug === 'motherboard') {
+        if (build.cpu && compSpecs.socket && cpuSpecs.socket && compSpecs.socket !== cpuSpecs.socket) {
+            compatible = false
+            reason = `Socket ${compSpecs.socket} incompatible with CPU (${cpuSpecs.socket})`
+        }
+        if (build.ram) {
+            const ramSpecs = getSpecs(build.ram)
+            if (compSpecs.ram_type && ramSpecs.type && compSpecs.ram_type !== ramSpecs.type) {
+                compatible = false
+                reason = `${compSpecs.ram_type} incompatible with RAM (${ramSpecs.type})`
+            }
+        }
+        if (build.case) {
+            const mbForm = compSpecs.form_factor
+            const caseSupport = caseSpecs.motherboard_support || caseSpecs.form_factor
+            if (mbForm && caseSupport) {
+                const supported = FORM_FACTOR_COMPAT[caseSupport] || [caseSupport]
+                if (!supported.includes(mbForm)) {
+                    compatible = false
+                    reason = `${mbForm} doesn't fit in ${caseSupport} case`
+                }
+            }
+        }
+    }
+
+    // RAM compatibility with motherboard
+    if ((catSlug === 'ram' || slotKey === 'extra_ram') && build.motherboard) {
+        if (compSpecs.type && mbSpecs.ram_type && compSpecs.type !== mbSpecs.ram_type) {
+            compatible = false
+            reason = `${compSpecs.type} incompatible with motherboard (${mbSpecs.ram_type})`
+        }
+    }
+
+    // Case compatibility with motherboard
+    if (catSlug === 'case' && build.motherboard) {
+        const mbForm = mbSpecs.form_factor
+        const caseSupport = compSpecs.motherboard_support || compSpecs.form_factor
+        if (mbForm && caseSupport) {
+            const supported = FORM_FACTOR_COMPAT[caseSupport] || [caseSupport]
+            if (!supported.includes(mbForm)) {
+                compatible = false
+                reason = `Doesn't support ${mbForm} motherboard`
+            }
+        }
+    }
+
+    // Cooler compatibility with CPU socket
+    if (catSlug === 'cooler' && build.cpu) {
+        const coolerSockets = compSpecs.sockets || compSpecs.socket_support || ''
+        const cpuSocket = cpuSpecs.socket
+        if (cpuSocket && coolerSockets && !coolerSockets.includes(cpuSocket)) {
+            compatible = false
+            reason = `Doesn't support ${cpuSocket} socket`
+        }
+    }
+
+    return { compatible, reason }
 }
 
 export default function Builder() {
@@ -67,23 +163,27 @@ export default function Builder() {
     const [bottleneck, setBottleneck] = useState(null)
     const [sharedView, setSharedView] = useState(false)
 
-    // Merge all component IDs for save/share (core + extras + accessories)
-    const allComponentIds = {
+    // Memoized: Merge all component IDs for save/share
+    const allComponentIds = useMemo(() => ({
         ...componentIds,
         ...extraRam.reduce((acc, comp, i) => ({ ...acc, [`ram_extra_${i}`]: comp.id }), {}),
         ...Object.entries(accessories).reduce((acc, [cat, items]) => {
             items.forEach((comp, i) => { acc[`${cat}_${i}`] = comp.id })
             return acc
         }, {}),
-    }
+    }), [componentIds, extraRam, accessories])
 
-    // All components flat for total price
-    const allComponents = [
+    // Memoized: All components flat for total price
+    const allComponents = useMemo(() => [
         ...Object.values(build),
         ...extraRam,
         ...Object.values(accessories).flat(),
-    ]
-    const totalPrice = allComponents.reduce((s, c) => s + (getLowestPrice(c) || 0), 0)
+    ], [build, extraRam, accessories])
+
+    const totalPrice = useMemo(() => 
+        allComponents.reduce((s, c) => s + (getLowestPrice(c) || 0), 0),
+        [allComponents]
+    )
 
     useEffect(() => { if (shareId) loadSharedBuild(shareId) }, [shareId])
 
@@ -179,16 +279,17 @@ export default function Builder() {
         setComponentIds(prev => { const n = { ...prev }; delete n[key]; return n })
     }
 
-    const removeExtraRam = (index) => setExtraRam(prev => prev.filter((_, i) => i !== index))
+    const removeExtraRam = useCallback((index) => 
+        setExtraRam(prev => prev.filter((_, i) => i !== index)), [])
 
-    const removeAccessory = (cat, index) => {
+    const removeAccessory = useCallback((cat, index) => {
         setAccessories(prev => ({
             ...prev,
             [cat]: prev[cat].filter((_, i) => i !== index),
         }))
-    }
+    }, [])
 
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
         if (!user) return toast.error('Please login to save')
         setSaving(true)
         try {
@@ -196,9 +297,9 @@ export default function Builder() {
             toast.success('Build saved!')
         } catch (e) { toast.error('Failed: ' + e.message) }
         finally { setSaving(false) }
-    }
+    }, [user, buildName, allComponentIds])
 
-    const handleShare = async () => {
+    const handleShare = useCallback(async () => {
         if (Object.keys(allComponentIds).length === 0) return toast.error('Add components first')
         setSharing(true)
         try {
@@ -207,20 +308,22 @@ export default function Builder() {
             toast.success('Share link copied!')
         } catch (e) { toast.error('Failed: ' + e.message) }
         finally { setSharing(false) }
-    }
+    }, [buildName, allComponentIds])
 
-    const filtered = slotComponents.filter(c =>
-        !searchFilter || c.name.toLowerCase().includes(searchFilter.toLowerCase())
-    )
+    // Memoized filtered list
+    const filtered = useMemo(() => 
+        slotComponents.filter(c =>
+            !searchFilter || c.name.toLowerCase().includes(searchFilter.toLowerCase())
+        ), [slotComponents, searchFilter])
 
-    const getModalTitle = () => {
+    const getModalTitle = useCallback(() => {
         if (activeSlot === 'extra_ram') return 'Add Extra RAM'
         if (activeSlot?.startsWith('accessory_')) {
             const def = ACCESSORY_DEFS.find(a => a.category === activeSlot.replace('accessory_', ''))
             return `Add ${def?.name || 'Accessory'}`
         }
         return `Select ${CORE_SLOTS.find(s => s.key === activeSlot)?.name || ''}`
-    }
+    }, [activeSlot])
 
     return (
         <main className="page">
@@ -510,15 +613,25 @@ export default function Builder() {
                                                     const lowestPrice = getLowestPrice(comp)
                                                     const vendorCount = (comp.prices || []).length
                                                     const specs = getInlineSpecs(comp, 4)
+                                                    const { compatible, reason } = checkCompatibility(comp, build, activeSlot)
 
                                                     return (
-                                                        <button key={comp.id} className="bd-comp-opt" onClick={() => pickComponent(comp)}>
+                                                        <button 
+                                                            key={comp.id} 
+                                                            className={`bd-comp-opt${!compatible ? ' bd-comp-opt--incompatible' : ''}`}
+                                                            onClick={() => compatible && pickComponent(comp)}
+                                                            disabled={!compatible}
+                                                            title={!compatible ? reason : ''}
+                                                        >
                                                             <div className="bd-comp-opt__main">
                                                                 <div className="bd-comp-opt__info">
                                                                     <strong>{comp.name}</strong>
                                                                     <span className="bd-comp-opt__brand">{comp.brand}</span>
                                                                     {specs.length > 0 && (
                                                                         <span className="bd-comp-opt__specs">{specs.join(' · ')}</span>
+                                                                    )}
+                                                                    {!compatible && (
+                                                                        <span className="bd-comp-opt__incompat">{reason}</span>
                                                                     )}
                                                                 </div>
                                                                 <div className="bd-comp-opt__right">

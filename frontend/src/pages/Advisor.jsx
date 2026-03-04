@@ -98,14 +98,27 @@ export default function Advisor() {
                             <section className="ad-result">
                                 <div className="ad-result__head">
                                     <h2>{recommendation.title || recommendation.name}</h2>
-                                    <span className="ad-result__src">{recommendation.source === 'template' ? 'Template' : 'AI'}</span>
+                                    <span className={`ad-result__src ad-result__src--${recommendation.source}`}>
+                                        {recommendation.source === 'smart' ? '✨ Smart Build' : recommendation.source === 'template' ? 'Template' : 'AI'}
+                                    </span>
                                 </div>
                                 <p className="ad-result__desc">{recommendation.description}</p>
+                                {recommendation.within_budget !== undefined && (
+                                    <div className={`ad-budget-status ${recommendation.within_budget ? 'ad-budget-status--ok' : 'ad-budget-status--over'}`}>
+                                        {recommendation.within_budget 
+                                            ? `✓ Within budget (₹${recommendation.savings?.toLocaleString('en-IN')} remaining)`
+                                            : `⚠ Over budget by ₹${(recommendation.total - recommendation.budget).toLocaleString('en-IN')}`
+                                        }
+                                    </div>
+                                )}
                                 <ul className="ad-rec-list">
                                     {(recommendation.components || []).map((comp, i) => (
                                         <li key={i}>
                                             <span className="ad-rec-cat">{comp.category}</span>
-                                            <span className="ad-rec-name">{comp.name || comp.suggestion}</span>
+                                            <div className="ad-rec-main">
+                                                <span className="ad-rec-name">{comp.name || comp.suggestion}</span>
+                                                {comp.vendor && <span className="ad-rec-vendor">{comp.vendor}</span>}
+                                            </div>
                                             <span className="ad-rec-price">{formatPrice(comp.price || comp.est_price)}</span>
                                             {comp.reason && <p className="ad-rec-reason">{comp.reason}</p>}
                                         </li>
@@ -160,11 +173,18 @@ export default function Advisor() {
                     <div className="ad-tmpl-grid">
                         {templates ? Object.entries(templates).map(([key, tmpl]) => (
                             <div key={key} className="ad-tmpl">
-                                <div className="ad-tmpl__head"><h3>{tmpl.name}</h3><span className="ad-tmpl__budget">{formatPrice(tmpl.budget)}</span></div>
+                                <div className="ad-tmpl__head">
+                                    <h3>{tmpl.name || tmpl.title}</h3>
+                                    <span className="ad-tmpl__budget">{formatPrice(tmpl.total || tmpl.budget)}</span>
+                                </div>
                                 <p className="ad-tmpl__desc">{tmpl.description}</p>
                                 <ul className="ad-tmpl__parts">
                                     {tmpl.components?.map((c, i) => (
-                                        <li key={i}><span>{c.category}</span><span>{c.suggestion}</span><span>{formatPrice(c.est_price)}</span></li>
+                                        <li key={i}>
+                                            <span>{c.category}</span>
+                                            <span>{c.name || c.suggestion}</span>
+                                            <span>{formatPrice(c.price || c.est_price)}</span>
+                                        </li>
                                     ))}
                                 </ul>
                                 <Link to="/builder" className="btn btn-primary btn-sm">Use Template <FiArrowRight size={12} /></Link>

@@ -1,18 +1,39 @@
-from typing import Optional, List
+"""
+Components Router — Optimized queries with batching and caching.
+"""
+from typing import Optional, List, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from pydantic import BaseModel
 from supabase import Client
 from ..database import get_db
-from ..utils.auth import get_current_user, get_current_user_optional
+from ..utils.auth import get_current_user
+from ..cache import get_cache
+import uuid
 
 router = APIRouter(prefix="/api", tags=["Components"])
 
 
-# ========== Categories ==========
+# ========== Request Schemas ==========
+class BuildCreate(BaseModel):
+    name: str = "My Build"
+    components: Dict[str, int]
+
+
+class ShareBuildCreate(BaseModel):
+    name: str = "My Build"
+    components: Dict[str, int]
+
+
+class CompareRequest(BaseModel):
+    ids: List[int]
+
+
+# ========== Categories (cached) ==========
 @router.get("/categories")
-def get_categories(db: Client = Depends(get_db)):
-    """Get all component categories"""
-    result = db.table("categories").select("*").order("name").execute()
-    return result.data
+def get_categories():
+    """Get all component categories (cached)."""
+    cache = get_cache()
+    return cache.get("categories", [])
 
 
 # ========== Components ==========
@@ -22,23 +43,27 @@ def get_components(
     brand: Optional[str] = None,
     search: Optional[str] = None,
     sort: str = Query("price-low", pattern="^(price-low|price-high|name)$"),
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: Client = Depends(get_db),
 ):
-    """Get components with filters. Returns components with nested category and prices."""
+    """Get components with filters. Optimized with single query and client-side price sort."""
     query = db.table("components").select(
         "*, category:categories(*), prices:component_prices(*, vendor:vendors(*))"
     )
 
     if category:
-        # Look up category id by slug; use maybe_single so unknown slugs return None instead of 500
-        cat = db.table("categories").select("id").eq("slug", category).maybe_single().execute()
-        if cat and cat.data:
-            query = query.eq("category_id", cat.data["id"])
+        # Use cached categories for lookup
+        cache = get_cache()
+        cat_data = next((c for c in cache.get("categories", []) if c["slug"] == category), None)
+        if cat_data:
+            query = query.eq("category_id", cat_data["id"])
         else:
-            # Unknown category slug — return empty list immediately
-            return []
+            # Fallback to DB lookup
+            cat = db.table("categories").select("id").eq("slug", category).maybe_single().execute()
+            if not (cat and cat.data):
+                return []
+            query = query.eq("category_id", cat.data["id"])
 
     if brand:
         query = query.ilike("brand", f"%{brand}%")
@@ -46,15 +71,12 @@ def get_components(
     if search:
         query = query.ilike("name", f"%{search}%")
 
-    if sort == "name":
-        query = query.order("name")
-    else:
-        query = query.order("name")  # price sorting done client-side due to join
-
+    # Always order by name for consistent pagination
+    query = query.order("name")
     result = query.range(skip, skip + limit - 1).execute()
     components = result.data or []
 
-    # Sort by price if needed
+    # Client-side price sorting (required due to join)
     if sort in ("price-low", "price-high"):
         def get_min_price(comp):
             prices = comp.get("prices", [])
@@ -69,27 +91,27 @@ def get_components(
 
 @router.get("/components/{component_id}")
 def get_component(component_id: int, db: Client = Depends(get_db)):
-    """Get component details with prices and vendor info"""
+    """Get single component with prices and vendor info."""
     result = (
         db.table("components")
         .select("*, category:categories(*), prices:component_prices(*, vendor:vendors(*))")
         .eq("id", component_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not result.data:
+    if not result or not result.data:
         raise HTTPException(status_code=404, detail="Component not found")
 
     return result.data
 
 
-# ========== Vendors ==========
+# ========== Vendors (cached) ==========
 @router.get("/vendors")
-def get_vendors(db: Client = Depends(get_db)):
-    """Get all vendors"""
-    result = db.table("vendors").select("*").order("name").execute()
-    return result.data
+def get_vendors():
+    """Get all vendors (cached)."""
+    cache = get_cache()
+    return cache.get("vendors", [])
 
 
 # ========== Builds ==========
@@ -98,37 +120,49 @@ async def get_builds(
     current_user: dict = Depends(get_current_user),
     db: Client = Depends(get_db),
 ):
-    """Get current user's saved builds"""
-    result = db.table("builds").select("*").eq("user_id", current_user["id"]).order("created_at", desc=True).execute()
-    return result.data
+    """Get current user's saved builds."""
+    result = (
+        db.table("builds")
+        .select("*")
+        .eq("user_id", current_user["id"])
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return result.data or []
 
 
 @router.post("/builds", status_code=status.HTTP_201_CREATED)
 async def create_build(
-    build: dict,
+    build: BuildCreate,
     current_user: dict = Depends(get_current_user),
     db: Client = Depends(get_db),
 ):
-    """Save a new build"""
-    # Calculate total price
-    total_price = 0
-    components = build.get("components", {})
-    for _cat, component_id in components.items():
+    """Save a new build. Batched price lookup."""
+    component_ids = list(build.components.values())
+    
+    # Single query for all prices
+    total_price = 0.0
+    if component_ids:
         prices = (
             db.table("component_prices")
-            .select("price")
-            .eq("component_id", component_id)
+            .select("component_id, price")
+            .in_("component_id", component_ids)
             .order("price")
-            .limit(1)
             .execute()
         )
-        if prices.data:
-            total_price += float(prices.data[0]["price"])
+        # Group by component_id and take minimum
+        min_prices: Dict[int, float] = {}
+        for p in prices.data or []:
+            cid = p["component_id"]
+            price = float(p["price"])
+            if cid not in min_prices or price < min_prices[cid]:
+                min_prices[cid] = price
+        total_price = sum(min_prices.values())
 
     result = db.table("builds").insert({
         "user_id": current_user["id"],
-        "name": build.get("name", "My Build"),
-        "components": components,
+        "name": build.name,
+        "components": build.components,
         "total_price": total_price,
     }).execute()
 
@@ -144,7 +178,7 @@ async def delete_build(
     current_user: dict = Depends(get_current_user),
     db: Client = Depends(get_db),
 ):
-    """Delete a build"""
+    """Delete a build."""
     result = (
         db.table("builds")
         .delete()
@@ -158,31 +192,33 @@ async def delete_build(
 
 # ========== Shareable Build ==========
 @router.post("/builds/share")
-def share_build(build: dict, db: Client = Depends(get_db)):
-    """Create a shareable build (no auth required). Returns share_id."""
-    import uuid
-
+def share_build(build: ShareBuildCreate, db: Client = Depends(get_db)):
+    """Create a shareable build (no auth). Returns share_id."""
     share_id = str(uuid.uuid4())[:8]
-    components = build.get("components", {})
+    component_ids = list(build.components.values())
 
-    # Calculate total price
-    total_price = 0
-    for _cat, component_id in components.items():
+    # Batched price lookup
+    total_price = 0.0
+    if component_ids:
         prices = (
             db.table("component_prices")
-            .select("price")
-            .eq("component_id", component_id)
+            .select("component_id, price")
+            .in_("component_id", component_ids)
             .order("price")
-            .limit(1)
             .execute()
         )
-        if prices.data:
-            total_price += float(prices.data[0]["price"])
+        min_prices: Dict[int, float] = {}
+        for p in prices.data or []:
+            cid = p["component_id"]
+            price = float(p["price"])
+            if cid not in min_prices or price < min_prices[cid]:
+                min_prices[cid] = price
+        total_price = sum(min_prices.values())
 
     result = db.table("shared_builds").insert({
         "share_id": share_id,
-        "name": build.get("name", "Shared Build"),
-        "components": components,
+        "name": build.name,
+        "components": build.components,
         "total_price": total_price,
     }).execute()
 
@@ -194,25 +230,31 @@ def share_build(build: dict, db: Client = Depends(get_db)):
 
 @router.get("/builds/shared/{share_id}")
 def get_shared_build(share_id: str, db: Client = Depends(get_db)):
-    """Get a shared build by share_id (no auth required)"""
-    result = db.table("shared_builds").select("*").eq("share_id", share_id).single().execute()
+    """Get a shared build by share_id with component details."""
+    result = db.table("shared_builds").select("*").eq("share_id", share_id).maybe_single().execute()
 
-    if not result.data:
+    if not result or not result.data:
         raise HTTPException(status_code=404, detail="Shared build not found")
 
     build_data = result.data
-    # Resolve component details
+    components = build_data.get("components") or {}
+    
+    # Batch fetch all components
+    component_ids = [int(cid) for cid in components.values()]
     components_detail = {}
-    for cat, component_id in (build_data.get("components") or {}).items():
-        comp = (
+    
+    if component_ids:
+        comp_results = (
             db.table("components")
             .select("*, category:categories(*), prices:component_prices(*, vendor:vendors(*))")
-            .eq("id", component_id)
-            .single()
+            .in_("id", component_ids)
             .execute()
         )
-        if comp.data:
-            components_detail[cat] = comp.data
+        # Map by ID
+        comp_map = {c["id"]: c for c in (comp_results.data or [])}
+        for key, cid in components.items():
+            if int(cid) in comp_map:
+                components_detail[key] = comp_map[int(cid)]
 
     build_data["components_detail"] = components_detail
     return build_data
@@ -221,7 +263,7 @@ def get_shared_build(share_id: str, db: Client = Depends(get_db)):
 # ========== Statistics ==========
 @router.get("/stats")
 def get_stats(db: Client = Depends(get_db)):
-    """Get platform statistics"""
+    """Get platform statistics."""
     categories = db.table("categories").select("id", count="exact").execute()
     components = db.table("components").select("id", count="exact").execute()
     vendors = db.table("vendors").select("id", count="exact").execute()
@@ -237,22 +279,17 @@ def get_stats(db: Client = Depends(get_db)):
 
 # ========== Compare ==========
 @router.post("/compare")
-def compare_components(body: dict, db: Client = Depends(get_db)):
-    """Compare multiple components side by side"""
-    ids = body.get("ids", [])
-    if not ids or len(ids) > 4:
+def compare_components(body: CompareRequest, db: Client = Depends(get_db)):
+    """Compare multiple components side by side (batched query)."""
+    if not body.ids or len(body.ids) > 4:
         raise HTTPException(status_code=400, detail="Provide 1-4 component IDs")
 
-    results = []
-    for cid in ids:
-        comp = (
-            db.table("components")
-            .select("*, category:categories(*), prices:component_prices(*, vendor:vendors(*))")
-            .eq("id", cid)
-            .single()
-            .execute()
-        )
-        if comp.data:
-            results.append(comp.data)
+    # Single batch query
+    result = (
+        db.table("components")
+        .select("*, category:categories(*), prices:component_prices(*, vendor:vendors(*))")
+        .in_("id", body.ids)
+        .execute()
+    )
 
-    return results
+    return result.data or []

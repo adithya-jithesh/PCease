@@ -2,117 +2,341 @@ from fastapi import APIRouter, Depends, HTTPException
 from supabase import Client
 from ..database import get_db
 from ..config import settings
+from typing import Dict, List, Optional
 
 router = APIRouter(prefix="/api/advisor", tags=["AI Advisor"])
 
 
-# ========== Pre-built Templates ==========
-TEMPLATES = {
-    "gaming-budget": {
-        "name": "Budget Gaming Build",
-        "budget": 40000,
-        "use_case": "gaming",
-        "description": "Solid 1080p gaming at 60+ FPS. Great for esports titles and casual gaming.",
-        "components": [
-            {"category": "CPU", "suggestion": "AMD Ryzen 5 5600", "est_price": 10500},
-            {"category": "GPU", "suggestion": "AMD RX 6600", "est_price": 16000},
-            {"category": "RAM", "suggestion": "16GB DDR4 3200MHz", "est_price": 2800},
-            {"category": "Motherboard", "suggestion": "B550M Pro-VDH", "est_price": 7500},
-            {"category": "Storage", "suggestion": "500GB NVMe SSD", "est_price": 3000},
-            {"category": "PSU", "suggestion": "500W 80+ Bronze", "est_price": 3200},
-            {"category": "Case", "suggestion": "Ant Esports ICE-100", "est_price": 2500},
-        ],
+# ========== Budget Allocation by Use Case ==========
+# Percentages for each category based on use case
+BUDGET_ALLOCATION = {
+    "gaming": {
+        "gpu": 0.38,       # Gaming prioritizes GPU
+        "cpu": 0.18,
+        "motherboard": 0.12,
+        "ram": 0.08,
+        "storage": 0.08,
+        "psu": 0.08,
+        "case": 0.05,
+        "cooler": 0.03,
     },
-    "gaming-mid": {
-        "name": "Mid-Range Gaming Build",
-        "budget": 75000,
-        "use_case": "gaming",
-        "description": "1080p Ultra / 1440p High gaming. Handles AAA titles with ease.",
-        "components": [
-            {"category": "CPU", "suggestion": "AMD Ryzen 5 7600", "est_price": 16000},
-            {"category": "GPU", "suggestion": "NVIDIA RTX 4060 Ti", "est_price": 33000},
-            {"category": "RAM", "suggestion": "16GB DDR5 5600MHz", "est_price": 4500},
-            {"category": "Motherboard", "suggestion": "B650 Gaming Plus", "est_price": 14000},
-            {"category": "Storage", "suggestion": "1TB NVMe Gen4 SSD", "est_price": 5500},
-            {"category": "PSU", "suggestion": "650W 80+ Gold", "est_price": 5500},
-            {"category": "Case", "suggestion": "Deepcool CH510", "est_price": 4500},
-        ],
-    },
-    "gaming-high": {
-        "name": "High-End Gaming Build",
-        "budget": 150000,
-        "use_case": "gaming",
-        "description": "1440p Ultra / 4K gaming with ray tracing. Future-proof performance.",
-        "components": [
-            {"category": "CPU", "suggestion": "AMD Ryzen 7 7800X3D", "est_price": 30000},
-            {"category": "GPU", "suggestion": "NVIDIA RTX 4070 Ti Super", "est_price": 62000},
-            {"category": "RAM", "suggestion": "32GB DDR5 6000MHz", "est_price": 9000},
-            {"category": "Motherboard", "suggestion": "X670E Gaming WiFi", "est_price": 22000},
-            {"category": "Storage", "suggestion": "2TB NVMe Gen4 SSD", "est_price": 10000},
-            {"category": "PSU", "suggestion": "850W 80+ Gold", "est_price": 8000},
-            {"category": "Case", "suggestion": "Lian Li Lancool III", "est_price": 9000},
-        ],
-    },
-    "editing": {
-        "name": "Content Creation Build",
-        "budget": 100000,
-        "use_case": "content",
-        "description": "Video editing, 3D rendering, and streaming. High core count and RAM.",
-        "components": [
-            {"category": "CPU", "suggestion": "AMD Ryzen 9 7900X", "est_price": 32000},
-            {"category": "GPU", "suggestion": "NVIDIA RTX 4060 Ti", "est_price": 33000},
-            {"category": "RAM", "suggestion": "64GB DDR5 5200MHz", "est_price": 14000},
-            {"category": "Motherboard", "suggestion": "B650 Aorus Elite", "est_price": 16000},
-            {"category": "Storage", "suggestion": "2TB NVMe Gen4 SSD", "est_price": 10000},
-            {"category": "PSU", "suggestion": "750W 80+ Gold", "est_price": 7000},
-            {"category": "Case", "suggestion": "Fractal Design Pop Air", "est_price": 6000},
-        ],
+    "content": {
+        "cpu": 0.28,       # Content creation prioritizes CPU
+        "gpu": 0.25,
+        "ram": 0.15,
+        "motherboard": 0.12,
+        "storage": 0.10,
+        "psu": 0.05,
+        "case": 0.03,
+        "cooler": 0.02,
     },
     "productivity": {
-        "name": "Productivity Build",
-        "budget": 45000,
-        "use_case": "productivity",
-        "description": "Office work, multitasking, coding. Reliable and efficient.",
-        "components": [
-            {"category": "CPU", "suggestion": "Intel Core i5-12400", "est_price": 12000},
-            {"category": "GPU", "suggestion": "Integrated UHD 730", "est_price": 0},
-            {"category": "RAM", "suggestion": "16GB DDR4 3200MHz", "est_price": 2800},
-            {"category": "Motherboard", "suggestion": "B660M DS3H", "est_price": 8000},
-            {"category": "Storage", "suggestion": "512GB NVMe SSD + 1TB HDD", "est_price": 5000},
-            {"category": "PSU", "suggestion": "450W 80+ Bronze", "est_price": 2800},
-            {"category": "Case", "suggestion": "Ant Esports Elite 1000", "est_price": 2200},
-        ],
+        "cpu": 0.25,
+        "motherboard": 0.18,
+        "ram": 0.15,
+        "storage": 0.18,
+        "gpu": 0.10,       # Light GPU needs
+        "psu": 0.07,
+        "case": 0.05,
+        "cooler": 0.02,
     },
     "streaming": {
-        "name": "Streaming Build",
-        "budget": 120000,
-        "use_case": "streaming",
-        "description": "Game and stream simultaneously. NVENC encoder for smooth streaming.",
-        "components": [
-            {"category": "CPU", "suggestion": "AMD Ryzen 7 7700X", "est_price": 24000},
-            {"category": "GPU", "suggestion": "NVIDIA RTX 4070 Super", "est_price": 50000},
-            {"category": "RAM", "suggestion": "32GB DDR5 5600MHz", "est_price": 8000},
-            {"category": "Motherboard", "suggestion": "B650 Tomahawk WiFi", "est_price": 18000},
-            {"category": "Storage", "suggestion": "1TB NVMe Gen4 SSD", "est_price": 5500},
-            {"category": "PSU", "suggestion": "750W 80+ Gold", "est_price": 7000},
-            {"category": "Case", "suggestion": "NZXT H5 Flow", "est_price": 7500},
-        ],
+        "gpu": 0.35,       # Good GPU for encoding
+        "cpu": 0.22,
+        "ram": 0.12,
+        "motherboard": 0.12,
+        "storage": 0.08,
+        "psu": 0.06,
+        "case": 0.03,
+        "cooler": 0.02,
     },
 }
 
+# Category IDs mapping
+CATEGORY_IDS = {
+    "cpu": 1,
+    "gpu": 2,
+    "motherboard": 3,
+    "ram": 4,
+    "storage": 5,
+    "psu": 6,
+    "case": 7,
+    "cooler": 8,
+}
+
+# Essential categories (must have)
+ESSENTIAL_CATEGORIES = ["cpu", "gpu", "motherboard", "ram", "storage", "psu", "case"]
+
+
+def _get_lowest_price(component: dict) -> float:
+    """Get lowest price from component's prices"""
+    prices = component.get("prices", [])
+    if not prices:
+        return float("inf")
+    return min(float(p["price"]) for p in prices)
+
+
+def _score_component(component: dict, category: str, use_case: str) -> float:
+    """Score a component based on specs for ranking (higher = better)"""
+    specs = component.get("specifications", {}) or {}
+    score = 0.0
+    
+    if category == "cpu":
+        cores = specs.get("cores", 4)
+        score = cores * 10
+        boost = specs.get("boost_clock", "")
+        if "5." in str(boost): score += 50
+        elif "4." in str(boost): score += 30
+        
+    elif category == "gpu":
+        memory = str(specs.get("memory", specs.get("vram", "4")))
+        try:
+            mem_gb = int(''.join(c for c in memory if c.isdigit())[:2])
+            score = mem_gb * 20
+        except:
+            score = 40
+            
+    elif category == "ram":
+        capacity = str(specs.get("capacity", "8"))
+        try:
+            cap_gb = int(''.join(c for c in capacity if c.isdigit())[:2])
+            score = cap_gb * 5
+        except:
+            score = 20
+        if "DDR5" in str(specs.get("type", "")):
+            score += 30
+            
+    elif category == "storage":
+        capacity = str(specs.get("capacity", "256"))
+        if "TB" in capacity.upper() or "1000" in capacity or "2000" in capacity:
+            score = 100
+        elif "512" in capacity or "500" in capacity:
+            score = 60
+        else:
+            score = 30
+        if "NVMe" in str(specs.get("type", "")):
+            score += 20
+            
+    elif category == "psu":
+        wattage = specs.get("wattage", 500)
+        try:
+            watts = int(str(wattage).replace("W", "").strip())
+            score = watts / 10
+        except:
+            score = 50
+        if "Gold" in str(specs.get("efficiency", "")):
+            score += 20
+            
+    elif category == "motherboard":
+        if specs.get("wifi"): score += 20
+        if "ATX" in str(specs.get("form_factor", "")):
+            score += 15
+        ram_slots = specs.get("ram_slots", 2)
+        score += ram_slots * 5
+        
+    elif category == "case":
+        fans = specs.get("fans_included", 0)
+        score = fans * 10 + 20
+        
+    elif category == "cooler":
+        tdp = specs.get("tdp_rating", 150)
+        try:
+            tdp_val = int(str(tdp).replace("W", "").strip())
+            score = tdp_val / 5
+        except:
+            score = 30
+    
+    return score
+
+
+def _build_smart_recommendation(budget: int, use_case: str, db: Client) -> dict:
+    """Build a smart recommendation from actual database components"""
+    allocation = BUDGET_ALLOCATION.get(use_case, BUDGET_ALLOCATION["gaming"])
+    
+    selected_components = []
+    total_price = 0
+    
+    # Calculate budget for each category upfront
+    category_budgets = {cat: int(budget * pct) for cat, pct in allocation.items()}
+    
+    # First pass: select best component within allocated budget for each category
+    for category in ESSENTIAL_CATEGORIES + ["cooler"]:
+        cat_id = CATEGORY_IDS.get(category)
+        if not cat_id:
+            continue
+        
+        cat_budget = category_budgets.get(category, int(budget * 0.05))
+        
+        # Fetch components in this category with prices
+        result = db.table("components").select(
+            "id, name, brand, specifications, prices:component_prices(price, vendor:vendors(name))"
+        ).eq("category_id", cat_id).execute()
+        
+        components = result.data or []
+        
+        # Filter to components within budget and sort by score
+        affordable = []
+        for comp in components:
+            lowest = _get_lowest_price(comp)
+            if lowest <= cat_budget and lowest < float("inf"):
+                score = _score_component(comp, category, use_case)
+                affordable.append((comp, lowest, score))
+        
+        # If nothing affordable, try to find the cheapest option regardless of allocation
+        if not affordable:
+            for comp in components:
+                lowest = _get_lowest_price(comp)
+                if lowest < float("inf") and (total_price + lowest) <= budget:
+                    score = _score_component(comp, category, use_case)
+                    affordable.append((comp, lowest, score))
+        
+        # Sort by score descending, then by price ascending for same score
+        affordable.sort(key=lambda x: (-x[2], x[1]))
+        
+        if affordable:
+            best_comp, price, score = affordable[0]
+            specs = best_comp.get("specifications", {}) or {}
+            
+            # Get best vendor info
+            prices = best_comp.get("prices", [])
+            vendor_name = "Various"
+            if prices:
+                sorted_prices = sorted(prices, key=lambda p: float(p["price"]))
+                vendor_name = sorted_prices[0].get("vendor", {}).get("name", "Various")
+            
+            selected_components.append({
+                "category": category.upper(),
+                "name": best_comp["name"],
+                "brand": best_comp.get("brand", ""),
+                "price": int(price),
+                "vendor": vendor_name,
+                "specs": specs,
+                "component_id": best_comp["id"],
+            })
+            total_price += int(price)
+    
+    # Second pass: if we have budget left, try to upgrade components
+    remaining = budget - total_price
+    if remaining > 5000:  # Only upgrade if significant budget remains
+        for i, comp in enumerate(selected_components):
+            if remaining <= 2000:
+                break
+                
+            cat = comp["category"].lower()
+            cat_id = CATEGORY_IDS.get(cat)
+            if not cat_id:
+                continue
+            
+            current_price = comp["price"]
+            max_upgrade_price = current_price + remaining - 1000  # Keep some buffer
+            
+            # Find better component within upgrade budget
+            result = db.table("components").select(
+                "id, name, brand, specifications, prices:component_prices(price, vendor:vendors(name))"
+            ).eq("category_id", cat_id).execute()
+            
+            best_upgrade = None
+            best_upgrade_score = _score_component({"specifications": comp["specs"]}, cat, use_case)
+            
+            for candidate in result.data or []:
+                cand_price = _get_lowest_price(candidate)
+                if current_price < cand_price <= max_upgrade_price:
+                    cand_score = _score_component(candidate, cat, use_case)
+                    if cand_score > best_upgrade_score:
+                        best_upgrade = (candidate, cand_price, cand_score)
+                        best_upgrade_score = cand_score
+            
+            if best_upgrade:
+                new_comp, new_price, _ = best_upgrade
+                specs = new_comp.get("specifications", {}) or {}
+                prices = new_comp.get("prices", [])
+                vendor_name = "Various"
+                if prices:
+                    sorted_prices = sorted(prices, key=lambda p: float(p["price"]))
+                    vendor_name = sorted_prices[0].get("vendor", {}).get("name", "Various")
+                
+                price_diff = int(new_price) - current_price
+                total_price += price_diff
+                remaining -= price_diff
+                
+                selected_components[i] = {
+                    "category": cat.upper(),
+                    "name": new_comp["name"],
+                    "brand": new_comp.get("brand", ""),
+                    "price": int(new_price),
+                    "vendor": vendor_name,
+                    "specs": specs,
+                    "component_id": new_comp["id"],
+                }
+    
+    # Build description based on use case
+    descriptions = {
+        "gaming": f"Optimized for gaming within ₹{budget:,}. Prioritizes GPU and CPU performance.",
+        "content": f"Built for content creation within ₹{budget:,}. Strong CPU and ample RAM for editing.",
+        "productivity": f"Productivity-focused build within ₹{budget:,}. Reliable and efficient.",
+        "streaming": f"Streaming-ready build within ₹{budget:,}. Great for gaming and broadcasting.",
+    }
+    
+    return {
+        "title": f"Smart {use_case.title()} Build",
+        "description": descriptions.get(use_case, f"Custom build within ₹{budget:,}"),
+        "budget": budget,
+        "total": total_price,
+        "within_budget": total_price <= budget,
+        "savings": max(0, budget - total_price),
+        "components": selected_components,
+        "source": "smart",
+        "tips": [
+            "Prices may vary. Check individual retailers for current offers.",
+            "Consider adding a CPU cooler if not included or for better thermals.",
+            "You can upgrade individual components later as budget allows.",
+        ],
+    }
+
 
 @router.get("/templates")
-def get_templates():
-    """Get all pre-built PC templates"""
-    return TEMPLATES
+def get_templates(db: Client = Depends(get_db)):
+    """Get pre-built PC templates for common budget ranges"""
+    # Generate templates dynamically from database
+    templates = {}
+    budgets = [
+        ("gaming-budget", 40000, "gaming", "Budget Gaming Build"),
+        ("gaming-mid", 75000, "gaming", "Mid-Range Gaming Build"),
+        ("gaming-high", 150000, "gaming", "High-End Gaming Build"),
+        ("content", 100000, "content", "Content Creation Build"),
+        ("productivity", 45000, "productivity", "Productivity Build"),
+        ("streaming", 120000, "streaming", "Streaming Build"),
+    ]
+    
+    for template_id, budget, use_case, name in budgets:
+        result = _build_smart_recommendation(budget, use_case, db)
+        result["name"] = name
+        result["template_id"] = template_id
+        templates[template_id] = result
+    
+    return templates
 
 
 @router.get("/templates/{template_id}")
-def get_template(template_id: str):
+def get_template(template_id: str, db: Client = Depends(get_db)):
     """Get a specific template"""
-    if template_id not in TEMPLATES:
+    template_map = {
+        "gaming-budget": (40000, "gaming", "Budget Gaming Build"),
+        "gaming-mid": (75000, "gaming", "Mid-Range Gaming Build"),
+        "gaming-high": (150000, "gaming", "High-End Gaming Build"),
+        "content": (100000, "content", "Content Creation Build"),
+        "productivity": (45000, "productivity", "Productivity Build"),
+        "streaming": (120000, "streaming", "Streaming Build"),
+    }
+    
+    if template_id not in template_map:
         raise HTTPException(status_code=404, detail="Template not found")
-    return TEMPLATES[template_id]
+    
+    budget, use_case, name = template_map[template_id]
+    result = _build_smart_recommendation(budget, use_case, db)
+    result["name"] = name
+    result["template_id"] = template_id
+    return result
 
 
 # ========== AI Recommendation ==========
@@ -174,11 +398,11 @@ Use real Indian market prices (2025-2026). Stay within budget. Include only comp
             import json
             return json.loads(text.strip())
         except Exception as e:
-            # Fall back to template-based recommendation
+            # Fall back to smart database-based recommendation
             pass
 
-    # Fallback: template-based recommendation
-    return _get_template_recommendation(budget, use_case)
+    # Fallback: smart database-based recommendation
+    return _build_smart_recommendation(budget, use_case, db)
 
 
 @router.post("/ask")
@@ -224,9 +448,8 @@ def calculate_wattage(body: dict, db: Client = Depends(get_db)):
     body: { components: { category: component_id } }
     """
     components = body.get("components", {})
-    total_tdp = 0
-    breakdown = []
-
+    component_ids = [int(cid) for cid in components.values() if cid]
+    
     # TDP estimates by category (in watts)
     default_tdp = {
         "cpu": 65,
@@ -236,14 +459,28 @@ def calculate_wattage(body: dict, db: Client = Depends(get_db)):
         "storage": 10,
         "pcCase": 0,
         "monitor": 0,
+        "case": 0,
+        "cooler": 15,
+        "fans": 5,
     }
 
-    for cat, comp_id in components.items():
-        comp = db.table("components").select("name, specs").eq("id", comp_id).single().execute()
-        tdp = default_tdp.get(cat, 10)
+    # Batch fetch all components
+    comp_map = {}
+    if component_ids:
+        result = db.table("components").select("id, name, specs").in_("id", component_ids).execute()
+        comp_map = {c["id"]: c for c in (result.data or [])}
 
-        if comp.data and comp.data.get("specs"):
-            specs = comp.data["specs"]
+    total_tdp = 0
+    breakdown = []
+
+    for cat, comp_id in components.items():
+        comp_data = comp_map.get(int(comp_id)) if comp_id else None
+        # Normalize category key (e.g., ram_extra_0 -> ram)
+        base_cat = cat.split('_')[0] if '_' in cat else cat
+        tdp = default_tdp.get(base_cat, 10)
+
+        if comp_data and comp_data.get("specs"):
+            specs = comp_data["specs"]
             if "tdp" in specs:
                 try:
                     tdp = int(str(specs["tdp"]).replace("W", "").strip())
@@ -253,14 +490,12 @@ def calculate_wattage(body: dict, db: Client = Depends(get_db)):
         total_tdp += tdp
         breakdown.append({
             "category": cat,
-            "name": comp.data["name"] if comp.data else "Unknown",
+            "name": comp_data["name"] if comp_data else "Unknown",
             "wattage": tdp,
         })
 
-    # Add 20% headroom
-    recommended_psu = int(total_tdp * 1.2)
-    # Round up to nearest 50W
-    recommended_psu = ((recommended_psu + 49) // 50) * 50
+    # Add 20% headroom and round to nearest 50W
+    recommended_psu = ((int(total_tdp * 1.2) + 49) // 50) * 50
 
     return {
         "total_tdp": total_tdp,
@@ -343,19 +578,3 @@ def _get_gpu_tier(gpu: dict) -> int:
         return 2
     return 1
 
-
-def _get_template_recommendation(budget: int, use_case: str) -> dict:
-    """Fallback template-based recommendation"""
-    if use_case == "gaming":
-        if budget <= 50000:
-            return {**TEMPLATES["gaming-budget"], "source": "template"}
-        elif budget <= 100000:
-            return {**TEMPLATES["gaming-mid"], "source": "template"}
-        else:
-            return {**TEMPLATES["gaming-high"], "source": "template"}
-    elif use_case == "content":
-        return {**TEMPLATES["editing"], "source": "template"}
-    elif use_case == "streaming":
-        return {**TEMPLATES["streaming"], "source": "template"}
-    else:
-        return {**TEMPLATES["productivity"], "source": "template"}
