@@ -44,7 +44,7 @@ def get_components(
     search: Optional[str] = None,
     sort: str = Query("price-low", pattern="^(price-low|price-high|name)$"),
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    limit: int = Query(500, ge=1, le=2000),
     db: Client = Depends(get_db),
 ):
     """Get components with filters. Optimized with single query and client-side price sort."""
@@ -194,7 +194,8 @@ async def delete_build(
 @router.post("/builds/share")
 def share_build(build: ShareBuildCreate, db: Client = Depends(get_db)):
     """Create a shareable build (no auth). Returns share_id."""
-    share_id = str(uuid.uuid4())[:8]
+    share_uuid = str(uuid.uuid4())
+    share_id = share_uuid[:8]  # Short display ID
     component_ids = list(build.components.values())
 
     # Batched price lookup
@@ -215,28 +216,47 @@ def share_build(build: ShareBuildCreate, db: Client = Depends(get_db)):
                 min_prices[cid] = price
         total_price = sum(min_prices.values())
 
-    result = db.table("shared_builds").insert({
-        "share_id": share_id,
+    # Store build data as JSONB
+    build_data = {
         "name": build.name,
         "components": build.components,
         "total_price": total_price,
+        "short_id": share_id,
+    }
+    
+    result = db.table("shared_builds").insert({
+        "share_id": share_uuid,
+        "build_data": build_data,
     }).execute()
 
     if not result.data:
         raise HTTPException(status_code=500, detail="Failed to create shared build")
 
-    return {"share_id": share_id, "build": result.data[0]}
+    return {"share_id": share_id, "build": build_data}
 
 
 @router.get("/builds/shared/{share_id}")
 def get_shared_build(share_id: str, db: Client = Depends(get_db)):
     """Get a shared build by share_id with component details."""
-    result = db.table("shared_builds").select("*").eq("share_id", share_id).maybe_single().execute()
+    # Try finding by short_id in build_data first, then by full UUID
+    # Check if it's a short ID (8 chars) vs full UUID
+    if len(share_id) <= 8:
+        # Search by short_id in build_data
+        all_builds = db.table("shared_builds").select("*").execute()
+        row_data = None
+        for row in (all_builds.data or []):
+            bd = row.get("build_data") or {}
+            if bd.get("short_id") == share_id:
+                row_data = row
+                break
+    else:
+        result = db.table("shared_builds").select("*").eq("share_id", share_id).maybe_single().execute()
+        row_data = result.data if result else None
 
-    if not result or not result.data:
+    if not row_data:
         raise HTTPException(status_code=404, detail="Shared build not found")
 
-    build_data = result.data
+    build_data = row_data.get("build_data") or {}
     components = build_data.get("components") or {}
     
     # Batch fetch all components

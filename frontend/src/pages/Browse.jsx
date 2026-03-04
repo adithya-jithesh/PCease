@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { API, formatPrice, getLowestPrice, getSavings, getBestVendor, CATEGORIES } from '../services/api'
-import { FiSearch, FiX, FiExternalLink, FiCheck, FiPlus, FiGrid, FiList, FiShoppingCart, FiInfo, FiChevronRight } from 'react-icons/fi'
+import { FiSearch, FiX, FiExternalLink, FiCheck, FiPlus, FiGrid, FiList, FiShoppingCart, FiInfo, FiChevronRight, FiSliders, FiChevronDown } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import './Browse.css'
 
@@ -74,7 +74,13 @@ export default function Browse() {
     const [sort, setSort] = useState('price-low')
     const [detail, setDetail] = useState(null)
     const [compareList, setCompareList] = useState([])
-    const [viewMode, setViewMode] = useState('grid')
+    const [viewMode, setViewMode] = useState('list')
+    
+    // Advanced filters
+    const [showFilters, setShowFilters] = useState(false)
+    const [brandFilter, setBrandFilter] = useState('')
+    const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+    const [inStockOnly, setInStockOnly] = useState(false)
 
     useEffect(() => {
         setLoading(true)
@@ -84,6 +90,46 @@ export default function Browse() {
             .catch(e => { setError(e.message || 'Failed to load'); setComponents([]) })
             .finally(() => setLoading(false))
     }, [category, search, sort])
+
+    // Get unique brands from loaded components
+    const availableBrands = useMemo(() => {
+        const brands = new Set(components.map(c => c.brand).filter(Boolean))
+        return Array.from(brands).sort()
+    }, [components])
+
+    // Apply client-side filters
+    const filteredComponents = useMemo(() => {
+        let list = components
+        
+        // Brand filter
+        if (brandFilter) {
+            list = list.filter(c => c.brand === brandFilter)
+        }
+        
+        // Price range filter
+        if (priceRange.min || priceRange.max) {
+            list = list.filter(c => {
+                const price = getLowestPrice(c)
+                if (!price) return false
+                if (priceRange.min && price < parseFloat(priceRange.min)) return false
+                if (priceRange.max && price > parseFloat(priceRange.max)) return false
+                return true
+            })
+        }
+        
+        // In stock filter
+        if (inStockOnly) {
+            list = list.filter(c => (c.prices || []).length > 0)
+        }
+        
+        return list
+    }, [components, brandFilter, priceRange, inStockOnly])
+
+    const clearAllFilters = useCallback(() => {
+        setBrandFilter('')
+        setPriceRange({ min: '', max: '' })
+        setInStockOnly(false)
+    }, [])
 
     const handleCategoryChange = useCallback((cat) => {
         setCategory(cat)
@@ -126,10 +172,65 @@ export default function Browse() {
                 </header>
 
                 <section className="br-filters">
-                    <div className="br-search">
-                        <FiSearch className="br-search__icon" />
-                        <input type="search" placeholder="Search components..." value={search} onChange={e => setSearch(e.target.value)} />
+                    <div className="br-search-row">
+                        <div className="br-search">
+                            <FiSearch className="br-search__icon" />
+                            <input type="search" placeholder="Search components..." value={search} onChange={e => setSearch(e.target.value)} />
+                        </div>
+                        <button 
+                            className={`btn br-filter-toggle${showFilters ? ' active' : ''}`}
+                            onClick={() => setShowFilters(!showFilters)}
+                        >
+                            <FiSliders size={14} /> Filters {(brandFilter || priceRange.min || priceRange.max || inStockOnly) && <span className="br-filter-badge">!</span>}
+                        </button>
                     </div>
+                    
+                    {/* Advanced Filters Panel */}
+                    {showFilters && (
+                        <div className="br-advanced-filters">
+                            <div className="br-filter-group">
+                                <label>Brand</label>
+                                <select value={brandFilter} onChange={e => setBrandFilter(e.target.value)}>
+                                    <option value="">All Brands ({availableBrands.length})</option>
+                                    {availableBrands.map(b => (
+                                        <option key={b} value={b}>{b}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="br-filter-group br-filter-group--price">
+                                <label>Price Range (₹)</label>
+                                <div className="br-price-inputs">
+                                    <input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={priceRange.min}
+                                        onChange={e => setPriceRange(p => ({ ...p, min: e.target.value }))}
+                                    />
+                                    <span>–</span>
+                                    <input
+                                        type="number"
+                                        placeholder="Max"
+                                        value={priceRange.max}
+                                        onChange={e => setPriceRange(p => ({ ...p, max: e.target.value }))}
+                                    />
+                                </div>
+                            </div>
+                            <div className="br-filter-group br-filter-group--checkbox">
+                                <label className="br-checkbox">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={inStockOnly} 
+                                        onChange={e => setInStockOnly(e.target.checked)} 
+                                    />
+                                    <span>In Stock Only</span>
+                                </label>
+                            </div>
+                            <button className="btn btn-sm br-clear-filters" onClick={clearAllFilters}>
+                                Clear All
+                            </button>
+                        </div>
+                    )}
+                    
                     <div className="br-chips">
                         <button className={`chip ${!category ? 'active' : ''}`} onClick={() => handleCategoryChange('')}>All</button>
                         {Object.entries(CATEGORIES).map(([key, cat]) => (
@@ -142,7 +243,11 @@ export default function Browse() {
                             <option value="price-high">Price: High to Low</option>
                             <option value="name">Name: A-Z</option>
                         </select>
-                        <span className="br-meta__count">{loading ? 'Loading...' : `${components.length} results`}</span>
+                        <span className="br-meta__count">
+                            {loading ? 'Loading...' : filteredComponents.length !== components.length 
+                                ? `${filteredComponents.length} of ${components.length} results` 
+                                : `${components.length} results`}
+                        </span>
                         <div className="br-view-toggle">
                             <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')} title="Grid view"><FiGrid size={15} /></button>
                             <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')} title="List view"><FiList size={15} /></button>
@@ -155,8 +260,8 @@ export default function Browse() {
                     <section className="br-grid">
                         {loading
                             ? Array(12).fill(0).map((_, i) => <CardSkeleton key={i} />)
-                            : components.length === 0 ? <EmptyState error={error} />
-                            : components.map(item => {
+                            : filteredComponents.length === 0 ? <EmptyState error={error} />
+                            : filteredComponents.map(item => {
                                 const lowest = getLowestPrice(item)
                                 const savings = getSavings(item)
                                 const bestVendor = getBestVendor(item)
@@ -223,49 +328,70 @@ export default function Browse() {
                     <section className="br-list">
                         {loading
                             ? Array(8).fill(0).map((_, i) => <ListSkeleton key={i} />)
-                            : components.length === 0 ? <EmptyState error={error} />
-                            : components.map(item => {
+                            : filteredComponents.length === 0 ? <EmptyState error={error} />
+                            : filteredComponents.map(item => {
                                 const lowest = getLowestPrice(item)
                                 const savings = getSavings(item)
                                 const bestVendor = getBestVendor(item)
                                 const isComp = compareIds.has(item.id)
                                 const vendorCount = (item.prices || []).length
-                                const keySpecs = getKeySpecs(item, 3)
+                                const keySpecs = getKeySpecs(item, 4)
 
                                 return (
-                                    <article key={item.id} className={`br-list-item${isComp ? ' br-list-item--selected' : ''}`} onClick={() => setDetail(item)}>
-                                        <div className="br-list-item__left">
-                                            <span className="br-card__badge">{CATEGORIES[item.category?.slug]?.name || 'Part'}</span>
-                                            <h3 className="br-list-item__name">{item.name}</h3>
-                                            <span className="br-card__brand">{item.brand}</span>
-                                        </div>
+                                    <article key={item.id} className={`br-list-item${isComp ? ' br-list-item--selected' : ''}`}>
+                                        <div className="br-list-item__main" onClick={() => setDetail(item)}>
+                                            <div className="br-list-item__left">
+                                                <div className="br-list-item__meta">
+                                                    <span className="br-card__badge">{CATEGORIES[item.category?.slug]?.name || 'Part'}</span>
+                                                    <span className="br-list-item__brand">{item.brand}</span>
+                                                </div>
+                                                <h3 className="br-list-item__name">{item.name}</h3>
+                                                <div className="br-list-item__specs">
+                                                    {keySpecs.map(s => (
+                                                        <span key={s.key} className="br-spec-chip">
+                                                            <span className="br-spec-chip__k">{s.key}</span>{s.val}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
 
-                                        <div className="br-list-item__specs">
-                                            {keySpecs.map(s => (
-                                                <span key={s.key} className="br-spec-chip">
-                                                    <span className="br-spec-chip__k">{s.key}</span>{s.val}
-                                                </span>
-                                            ))}
-                                        </div>
-
-                                        <div className="br-list-item__price-col">
-                                            <span className="br-card__amount">{lowest ? formatPrice(lowest) : 'N/A'}</span>
-                                            {savings > 0 && <span className="br-card__save">-{formatPrice(savings)}</span>}
-                                            {bestVendor && (
-                                                <span className="br-list-item__store">
-                                                    at {bestVendor.vendor?.name} {vendorCount > 1 && `+${vendorCount - 1}`}
-                                                </span>
-                                            )}
+                                            <div className="br-list-item__price-col">
+                                                <span className="br-list-item__price">{lowest ? formatPrice(lowest) : 'N/A'}</span>
+                                                {savings > 0 && <span className="br-list-item__save">Save {formatPrice(savings)}</span>}
+                                                {bestVendor && (
+                                                    <span className="br-list-item__store">
+                                                        {vendorCount > 1 ? `${vendorCount} stores` : bestVendor.vendor?.name}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="br-list-item__actions">
+                                            {bestVendor?.url ? (
+                                                <a 
+                                                    href={bestVendor.url} 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="btn btn-sm btn-primary"
+                                                    onClick={e => e.stopPropagation()}
+                                                >
+                                                    <FiExternalLink size={12} /> Buy
+                                                </a>
+                                            ) : (
+                                                <button 
+                                                    className="btn btn-sm"
+                                                    onClick={() => setDetail(item)}
+                                                >
+                                                    View
+                                                </button>
+                                            )}
                                             <button
                                                 className={`br-card__cmp ${isComp ? 'active' : ''}`}
                                                 onClick={e => { e.stopPropagation(); toggleCompare(item) }}
+                                                title={isComp ? 'Remove from compare' : 'Add to compare'}
                                             >
                                                 {isComp ? <FiCheck size={12} /> : <FiPlus size={12} />}
                                             </button>
-                                            <span className="br-list-item__arrow"><FiChevronRight size={16} /></span>
                                         </div>
                                     </article>
                                 )

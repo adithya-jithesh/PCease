@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { API, formatPrice } from '../services/api'
 import { FiCpu, FiSend, FiArrowRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
@@ -13,6 +13,7 @@ const useCases = [
 ]
 
 export default function Advisor() {
+    const navigate = useNavigate()
     const [tab, setTab] = useState('recommend')
     const [budget, setBudget] = useState(60000)
     const [useCase, setUseCase] = useState('gaming')
@@ -135,7 +136,12 @@ export default function Advisor() {
                                     </div>
                                 )}
                                 {recommendation.performance_notes && <p className="ad-perf"><strong>Performance:</strong> {recommendation.performance_notes}</p>}
-                                <Link to="/builder" className="btn btn-primary">Open in Builder <FiArrowRight size={14} /></Link>
+                                <button 
+                                    className="btn btn-primary" 
+                                    onClick={() => navigate('/builder', { state: { recommendation } })}
+                                >
+                                    Open in Builder <FiArrowRight size={14} />
+                                </button>
                             </section>
                         )}
                     </div>
@@ -187,7 +193,12 @@ export default function Advisor() {
                                         </li>
                                     ))}
                                 </ul>
-                                <Link to="/builder" className="btn btn-primary btn-sm">Use Template <FiArrowRight size={12} /></Link>
+                                <button 
+                                    className="btn btn-primary btn-sm" 
+                                    onClick={() => navigate('/builder', { state: { recommendation: tmpl } })}
+                                >
+                                    Use Template <FiArrowRight size={12} />
+                                </button>
                             </div>
                         )) : <p className="text-muted">Loading templates...</p>}
                     </div>

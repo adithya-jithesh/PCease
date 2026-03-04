@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { API, formatPrice, getLowestPrice, BUILD_SLOTS } from '../services/api'
 import { useAuth } from '../context/AuthContext'
-import { FiLink, FiSave, FiX, FiPlus, FiZap, FiActivity, FiSearch, FiExternalLink, FiChevronLeft, FiShoppingCart } from 'react-icons/fi'
+import { FiLink, FiSave, FiX, FiPlus, FiZap, FiActivity, FiSearch, FiExternalLink, FiChevronLeft, FiShoppingCart, FiHelpCircle, FiArrowRight, FiFilter, FiSliders } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import './Builder.css'
 
@@ -18,14 +18,22 @@ const SPEC_KEYS = {
     cooler: ['type', 'fan_size'],
     monitor: ['resolution', 'refresh_rate', 'panel_type'],
     fans: ['size', 'quantity', 'airflow'],
+    keyboard: ['type', 'switch', 'layout'],
+    mouse: ['dpi', 'connection', 'weight'],
+    mousepad: ['size', 'surface'],
+    headset: ['driver', 'connection', 'microphone'],
 }
 
 // Core slots — ram2 and fans handled separately
 const CORE_SLOTS = BUILD_SLOTS.filter(s => s.key !== 'ram2' && s.key !== 'fans')
 
-// Accessory categories — infinite add
-const ACCESSORY_DEFS = [
-    { category: 'fans', name: 'Case Fan' },
+// All accessory categories
+const ACCESSORY_CATEGORIES = [
+    { slug: 'fans', name: 'Case Fan' },
+    { slug: 'keyboard', name: 'Keyboard' },
+    { slug: 'mouse', name: 'Mouse' },
+    { slug: 'mousepad', name: 'Mousepad' },
+    { slug: 'headset', name: 'Headset' },
 ]
 
 // Helper to get specs from component (handles both 'specs' and 'specifications')
@@ -136,6 +144,7 @@ const checkCompatibility = (comp, build, slotKey) => {
 
 export default function Builder() {
     const { shareId } = useParams()
+    const location = useLocation()
     const { user } = useAuth()
 
     // Core build state
@@ -154,6 +163,13 @@ export default function Builder() {
     const [selectedComp, setSelectedComp] = useState(null) // step 2: retailer view
     const [loading, setLoading] = useState(false)
     const [searchFilter, setSearchFilter] = useState('')
+    const [accessoryCatFilter, setAccessoryCatFilter] = useState('all') // for accessory modal filtering
+    
+    // Advanced filters
+    const [brandFilter, setBrandFilter] = useState('')
+    const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+    const [sortBy, setSortBy] = useState('price-low')
+    const [showFilters, setShowFilters] = useState(false)
 
     // UI state
     const [saving, setSaving] = useState(false)
@@ -162,6 +178,7 @@ export default function Builder() {
     const [wattage, setWattage] = useState(null)
     const [bottleneck, setBottleneck] = useState(null)
     const [sharedView, setSharedView] = useState(false)
+    const [showGuide, setShowGuide] = useState(false)
 
     // Memoized: Merge all component IDs for save/share
     const allComponentIds = useMemo(() => ({
@@ -186,6 +203,72 @@ export default function Builder() {
     )
 
     useEffect(() => { if (shareId) loadSharedBuild(shareId) }, [shareId])
+
+    // Load recommendation components from Advisor page
+    useEffect(() => {
+        const recommendation = location.state?.recommendation
+        if (!recommendation?.components?.length) return
+        
+        const loadRecommendation = async () => {
+            setLoading(true)
+            setBuildName(recommendation.title || recommendation.name || 'AI Recommended Build')
+            
+            const newBuild = {}
+            const newIds = {}
+            
+            // Map category names to slot keys
+            const catToSlot = {
+                'CPU': 'cpu',
+                'GPU': 'gpu',
+                'MOTHERBOARD': 'motherboard',
+                'RAM': 'ram',
+                'STORAGE': 'storage',
+                'PSU': 'psu',
+                'CASE': 'case',
+                'COOLER': 'cooler',
+            }
+            
+            for (const comp of recommendation.components) {
+                const slotKey = catToSlot[comp.category?.toUpperCase()] || comp.category?.toLowerCase()
+                if (!slotKey) continue
+                
+                // If we have component_id, fetch the full component
+                if (comp.component_id) {
+                    try {
+                        const fullComp = await API.getComponent(comp.component_id)
+                        if (fullComp) {
+                            newBuild[slotKey] = fullComp
+                            newIds[slotKey] = fullComp.id
+                        }
+                    } catch (e) {
+                        // Fallback: use the recommendation data directly
+                        newBuild[slotKey] = {
+                            id: comp.component_id,
+                            name: comp.name,
+                            brand: comp.brand,
+                            specs: comp.specs,
+                            prices: [{ price: comp.price, vendor: { name: comp.vendor } }]
+                        }
+                        newIds[slotKey] = comp.component_id
+                    }
+                } else {
+                    // No component_id - create a placeholder from recommendation
+                    newBuild[slotKey] = {
+                        name: comp.name || comp.suggestion,
+                        brand: comp.brand || '',
+                        specs: comp.specs || {},
+                        prices: comp.price ? [{ price: comp.price, vendor: { name: comp.vendor || 'Estimated' } }] : []
+                    }
+                }
+            }
+            
+            setBuild(newBuild)
+            setComponentIds(newIds)
+            setLoading(false)
+        }
+        
+        loadRecommendation()
+    }, [location.state])
 
     useEffect(() => {
         const ids = allComponentIds
@@ -231,11 +314,31 @@ export default function Builder() {
         setActiveSlot(slotKey)
         setSearchFilter('')
         setSelectedComp(null)
+        setAccessoryCatFilter('all')
+        setBrandFilter('')
+        setPriceRange({ min: '', max: '' })
+        setSortBy('price-low')
+        setShowFilters(false)
         setLoading(true)
 
         // Determine the API category from slot key
         let categoryKey = slotKey
         if (slotKey === 'extra_ram') categoryKey = 'ram'
+        else if (slotKey === 'accessories') {
+            // Unified accessories modal - fetch all accessory categories
+            try {
+                const allAccessories = await Promise.all(
+                    ACCESSORY_CATEGORIES.map(cat => API.getComponents({ category: cat.slug }))
+                )
+                // Flatten and tag with category
+                const tagged = allAccessories.flatMap((items, i) => 
+                    items.map(item => ({ ...item, _accessoryCat: ACCESSORY_CATEGORIES[i].slug }))
+                )
+                setSlotComponents(tagged)
+            } catch { setSlotComponents([]) }
+            finally { setLoading(false) }
+            return
+        }
         else if (slotKey.startsWith('accessory_')) categoryKey = slotKey.replace('accessory_', '')
         else {
             const slotDef = CORE_SLOTS.find(s => s.key === slotKey)
@@ -258,6 +361,13 @@ export default function Builder() {
 
         if (activeSlot === 'extra_ram') {
             setExtraRam(prev => [...prev, compWithVendor])
+        } else if (activeSlot === 'accessories') {
+            // Unified accessories mode - determine category from component
+            const cat = comp._accessoryCat || comp.category?.slug || 'fans'
+            setAccessories(prev => ({
+                ...prev,
+                [cat]: [...(prev[cat] || []), compWithVendor],
+            }))
         } else if (activeSlot?.startsWith('accessory_')) {
             const cat = activeSlot.replace('accessory_', '')
             setAccessories(prev => ({
@@ -310,16 +420,61 @@ export default function Builder() {
         finally { setSharing(false) }
     }, [buildName, allComponentIds])
 
-    // Memoized filtered list
-    const filtered = useMemo(() => 
-        slotComponents.filter(c =>
-            !searchFilter || c.name.toLowerCase().includes(searchFilter.toLowerCase())
-        ), [slotComponents, searchFilter])
+    // Get unique brands from components
+    const availableBrands = useMemo(() => {
+        const brands = new Set(slotComponents.map(c => c.brand).filter(Boolean))
+        return Array.from(brands).sort()
+    }, [slotComponents])
+
+    // Memoized filtered list (with accessory category filter)
+    const filtered = useMemo(() => {
+        let list = slotComponents
+        
+        // Apply accessory category filter for unified accessories modal
+        if (activeSlot === 'accessories' && accessoryCatFilter !== 'all') {
+            list = list.filter(c => c._accessoryCat === accessoryCatFilter || c.category?.slug === accessoryCatFilter)
+        }
+        
+        // Apply search filter
+        if (searchFilter) {
+            list = list.filter(c => c.name.toLowerCase().includes(searchFilter.toLowerCase()))
+        }
+        
+        // Apply brand filter
+        if (brandFilter) {
+            list = list.filter(c => c.brand === brandFilter)
+        }
+        
+        // Apply price range filter
+        if (priceRange.min || priceRange.max) {
+            list = list.filter(c => {
+                const price = getLowestPrice(c)
+                if (!price) return false
+                if (priceRange.min && price < parseFloat(priceRange.min)) return false
+                if (priceRange.max && price > parseFloat(priceRange.max)) return false
+                return true
+            })
+        }
+        
+        // Apply sorting
+        list = [...list].sort((a, b) => {
+            const priceA = getLowestPrice(a) || 0
+            const priceB = getLowestPrice(b) || 0
+            if (sortBy === 'price-low') return priceA - priceB
+            if (sortBy === 'price-high') return priceB - priceA
+            if (sortBy === 'name') return a.name.localeCompare(b.name)
+            return 0
+        })
+        
+        return list
+    }, [slotComponents, searchFilter, activeSlot, accessoryCatFilter, brandFilter, priceRange, sortBy])
 
     const getModalTitle = useCallback(() => {
         if (activeSlot === 'extra_ram') return 'Add Extra RAM'
+        if (activeSlot === 'accessories') return 'Add Accessory'
         if (activeSlot?.startsWith('accessory_')) {
-            const def = ACCESSORY_DEFS.find(a => a.category === activeSlot.replace('accessory_', ''))
+            const catSlug = activeSlot.replace('accessory_', '')
+            const def = ACCESSORY_CATEGORIES.find(a => a.slug === catSlug)
             return `Add ${def?.name || 'Accessory'}`
         }
         return `Select ${CORE_SLOTS.find(s => s.key === activeSlot)?.name || ''}`
@@ -338,6 +493,9 @@ export default function Builder() {
                         </p>
                     </div>
                     <div className="bd-actions">
+                        <button className="btn btn-secondary" onClick={() => setShowGuide(true)}>
+                            <FiHelpCircle size={14} /> Guide Me
+                        </button>
                         <input type="text" value={buildName} onChange={e => setBuildName(e.target.value)} placeholder="Build name" className="bd-name" />
                         <button className="btn" onClick={handleShare} disabled={sharing}>
                             <FiLink size={14} /> {sharing ? '...' : 'Share'}
@@ -360,7 +518,6 @@ export default function Builder() {
                                     <div className={`bd-slot${sel ? ' bd-slot--filled' : ''}`}>
                                         <div className="bd-slot__head">
                                             <span className="bd-slot__name">{slot.name}</span>
-                                            {slot.required && <span className="bd-slot__req">Required</span>}
                                         </div>
 
                                         {sel ? (
@@ -416,40 +573,42 @@ export default function Builder() {
                             )
                         })}
 
-                        {/* ── Accessories Section — infinite add ── */}
+                        {/* ── Accessories Section — unified with filter tabs ── */}
                         <div className="bd-accessories">
                             <h3 className="bd-accessories__title">Accessories</h3>
                             <p className="bd-accessories__sub">Add as many as you need — a new slot appears each time.</p>
 
-                            {ACCESSORY_DEFS.map(def => {
-                                const items = accessories[def.category] || []
-                                return (
-                                    <div key={def.category} className="bd-accessory-group">
-                                        {items.map((comp, i) => (
-                                            <div key={`${def.category}_${i}`} className="bd-slot bd-slot--filled bd-slot--accessory">
-                                                <div className="bd-slot__head">
-                                                    <span className="bd-slot__name">{def.name} #{i + 1}</span>
+                            {/* Show all added accessories across all categories */}
+                            <div className="bd-accessory-list">
+                                {ACCESSORY_CATEGORIES.flatMap(cat => {
+                                    const items = accessories[cat.slug] || []
+                                    return items.map((comp, i) => (
+                                        <div key={`${cat.slug}_${i}`} className="bd-slot bd-slot--filled bd-slot--accessory">
+                                            <div className="bd-slot__head">
+                                                <span className="bd-slot__name">
+                                                    {cat.name} #{i + 1}
+                                                </span>
+                                            </div>
+                                            <div className="bd-slot__sel">
+                                                <div className="bd-slot__info">
+                                                    <strong>{comp.name}</strong>
+                                                    <span className="bd-slot__meta">{comp.brand} · {formatPrice(getLowestPrice(comp))}</span>
                                                 </div>
-                                                <div className="bd-slot__sel">
-                                                    <div className="bd-slot__info">
-                                                        <strong>{comp.name}</strong>
-                                                        <span className="bd-slot__meta">{comp.brand} · {formatPrice(getLowestPrice(comp))}</span>
-                                                    </div>
-                                                    <div className="bd-slot__btns">
-                                                        <button className="btn btn-sm" onClick={() => removeAccessory(def.category, i)}>
-                                                            <FiX size={14} />
-                                                        </button>
-                                                    </div>
+                                                <div className="bd-slot__btns">
+                                                    <button className="btn btn-sm" onClick={() => removeAccessory(cat.slug, i)}>
+                                                        <FiX size={14} />
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ))}
+                                        </div>
+                                    ))
+                                })}
+                            </div>
 
-                                        <button className="bd-slot__add" onClick={() => openSlotModal(`accessory_${def.category}`)}>
-                                            <FiPlus size={14} /> Add {def.name}
-                                        </button>
-                                    </div>
-                                )
-                            })}
+                            {/* Single "Add" button that opens unified modal */}
+                            <button className="bd-slot__add" onClick={() => openSlotModal('accessories')}>
+                                <FiPlus size={14} /> Add
+                            </button>
                         </div>
                     </section>
 
@@ -557,27 +716,32 @@ export default function Builder() {
                                         <div className="bd-retailer-list">
                                             {[...(selectedComp.prices || [])]
                                                 .sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
-                                                .map((p, i) => (
-                                                    <div key={i} className={`bd-retailer-row${i === 0 ? ' bd-retailer-row--best' : ''}`}>
-                                                        <div className="bd-retailer-row__info">
-                                                            <span className="bd-retailer-row__name">
-                                                                {p.vendor?.name || 'Store'}
-                                                                {i === 0 && <span className="bd-retailer-badge">Best Price</span>}
-                                                            </span>
-                                                            <span className="bd-retailer-row__price">{formatPrice(p.price)}</span>
+                                                .map((p, i) => {
+                                                    const vendorUrl = p.url || p.vendor?.website_url
+                                                    return (
+                                                        <div key={i} className={`bd-retailer-row${i === 0 ? ' bd-retailer-row--best' : ''}`}>
+                                                            <div className="bd-retailer-row__info">
+                                                                <span className="bd-retailer-row__name">
+                                                                    {vendorUrl ? (
+                                                                        <a href={vendorUrl} target="_blank" rel="noreferrer" className="bd-retailer-link">
+                                                                            {p.vendor?.name || 'Store'}
+                                                                            <FiExternalLink size={11} />
+                                                                        </a>
+                                                                    ) : (
+                                                                        p.vendor?.name || 'Store'
+                                                                    )}
+                                                                    {i === 0 && <span className="bd-retailer-badge">Best Price</span>}
+                                                                </span>
+                                                                <span className="bd-retailer-row__price">{formatPrice(p.price)}</span>
+                                                            </div>
+                                                            <div className="bd-retailer-row__actions">
+                                                                <button className="btn btn-sm btn-primary" onClick={() => confirmSelection(selectedComp, p)}>
+                                                                    Select
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div className="bd-retailer-row__actions">
-                                                            {p.url && (
-                                                                <a href={p.url} target="_blank" rel="noreferrer" className="btn btn-sm bd-retailer-visit">
-                                                                    <FiExternalLink size={12} /> Visit Site
-                                                                </a>
-                                                            )}
-                                                            <button className="btn btn-sm btn-primary" onClick={() => confirmSelection(selectedComp, p)}>
-                                                                Select
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))
+                                                    )
+                                                })
                                             }
                                         </div>
 
@@ -588,15 +752,100 @@ export default function Builder() {
                                 ) : (
                                     /* ── Step 1: Component List ── */
                                     <>
-                                        <div className="bd-modal-search">
-                                            <FiSearch className="bd-modal-search__icon" />
-                                            <input
-                                                type="search"
-                                                placeholder="Search components..."
-                                                value={searchFilter}
-                                                onChange={e => setSearchFilter(e.target.value)}
-                                            />
+                                        <div className="bd-modal-search-row">
+                                            <div className="bd-modal-search">
+                                                <FiSearch className="bd-modal-search__icon" />
+                                                <input
+                                                    type="search"
+                                                    placeholder="Search components..."
+                                                    value={searchFilter}
+                                                    onChange={e => setSearchFilter(e.target.value)}
+                                                />
+                                            </div>
+                                            <button 
+                                                className={`btn btn-icon bd-filter-toggle${showFilters ? ' active' : ''}`}
+                                                onClick={() => setShowFilters(!showFilters)}
+                                                title="Toggle filters"
+                                            >
+                                                <FiSliders size={16} />
+                                            </button>
                                         </div>
+
+                                        {/* Advanced Filters Panel */}
+                                        {showFilters && (
+                                            <div className="bd-filters-panel">
+                                                <div className="bd-filters-row">
+                                                    <div className="bd-filter-group">
+                                                        <label>Brand</label>
+                                                        <select value={brandFilter} onChange={e => setBrandFilter(e.target.value)}>
+                                                            <option value="">All Brands</option>
+                                                            {availableBrands.map(b => (
+                                                                <option key={b} value={b}>{b}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="bd-filter-group">
+                                                        <label>Sort By</label>
+                                                        <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                                            <option value="price-low">Price: Low to High</option>
+                                                            <option value="price-high">Price: High to Low</option>
+                                                            <option value="name">Name: A-Z</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div className="bd-filters-row">
+                                                    <div className="bd-filter-group bd-filter-group--price">
+                                                        <label>Price Range</label>
+                                                        <div className="bd-price-inputs">
+                                                            <input
+                                                                type="number"
+                                                                placeholder="Min"
+                                                                value={priceRange.min}
+                                                                onChange={e => setPriceRange(p => ({ ...p, min: e.target.value }))}
+                                                            />
+                                                            <span>to</span>
+                                                            <input
+                                                                type="number"
+                                                                placeholder="Max"
+                                                                value={priceRange.max}
+                                                                onChange={e => setPriceRange(p => ({ ...p, max: e.target.value }))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <button 
+                                                        className="btn btn-sm bd-clear-filters"
+                                                        onClick={() => {
+                                                            setBrandFilter('')
+                                                            setPriceRange({ min: '', max: '' })
+                                                            setSortBy('price-low')
+                                                        }}
+                                                    >
+                                                        Clear Filters
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Category filter tabs for accessories modal */}
+                                        {activeSlot === 'accessories' && (
+                                            <div className="bd-acc-filter">
+                                                <button 
+                                                    className={`bd-acc-filter__tab${accessoryCatFilter === 'all' ? ' active' : ''}`}
+                                                    onClick={() => setAccessoryCatFilter('all')}
+                                                >
+                                                    All
+                                                </button>
+                                                {ACCESSORY_CATEGORIES.map(cat => (
+                                                    <button 
+                                                        key={cat.slug}
+                                                        className={`bd-acc-filter__tab${accessoryCatFilter === cat.slug ? ' active' : ''}`}
+                                                        onClick={() => setAccessoryCatFilter(cat.slug)}
+                                                    >
+                                                        {cat.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
 
                                         {loading ? (
                                             <div className="bd-modal-loading">
@@ -648,6 +897,60 @@ export default function Builder() {
                                         )}
                                     </>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Guide Me Modal */}
+                {showGuide && (
+                    <div className="modal-overlay" onClick={() => setShowGuide(false)}>
+                        <div className="modal bd-guide-modal" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>How to Build Your PC</h2>
+                                <button className="modal-close" onClick={() => setShowGuide(false)}><FiX size={18} /></button>
+                            </div>
+                            <div className="modal-body bd-guide-steps">
+                                <div className="bd-guide-step">
+                                    <span className="bd-guide-step__num">1</span>
+                                    <div className="bd-guide-step__content">
+                                        <h4>Choose Your Components</h4>
+                                        <p>Click "Add" on any slot to browse and select components. Start with CPU or GPU based on your priorities (gaming vs productivity).</p>
+                                    </div>
+                                </div>
+                                <div className="bd-guide-step">
+                                    <span className="bd-guide-step__num">2</span>
+                                    <div className="bd-guide-step__content">
+                                        <h4>Check Compatibility</h4>
+                                        <p>The system automatically dims incompatible parts (e.g., wrong CPU socket for motherboard). Greyed-out items won't fit your build.</p>
+                                    </div>
+                                </div>
+                                <div className="bd-guide-step">
+                                    <span className="bd-guide-step__num">3</span>
+                                    <div className="bd-guide-step__content">
+                                        <h4>Compare Prices</h4>
+                                        <p>After selecting a component, choose your preferred retailer. We show prices from 9 Indian vendors to find you the best deal.</p>
+                                    </div>
+                                </div>
+                                <div className="bd-guide-step">
+                                    <span className="bd-guide-step__num">4</span>
+                                    <div className="bd-guide-step__content">
+                                        <h4>Add Accessories</h4>
+                                        <p>Expand the Accessories section to add peripherals like keyboard, mouse, headset, or extra case fans.</p>
+                                    </div>
+                                </div>
+                                <div className="bd-guide-step">
+                                    <span className="bd-guide-step__num">5</span>
+                                    <div className="bd-guide-step__content">
+                                        <h4>Save & Share</h4>
+                                        <p>Name your build, then Save to your account or Share a link with friends. The summary panel shows total cost and power requirements.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-primary" onClick={() => setShowGuide(false)}>
+                                    Start Building <FiArrowRight size={14} />
+                                </button>
                             </div>
                         </div>
                     </div>

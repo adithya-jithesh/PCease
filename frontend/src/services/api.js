@@ -123,6 +123,7 @@ export const API = {
         if (params.brand) q.append('brand', params.brand)
         if (params.search) q.append('search', params.search)
         if (params.sort) q.append('sort', params.sort)
+        q.append('limit', params.limit || '500')
         return request(`/components?${q}`)
     },
 

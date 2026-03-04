@@ -4,7 +4,7 @@ Run from the backend folder:  python seed_supabase.py
 Populates categories, vendors, components (100+), and realistic Indian retail prices.
 """
 
-import os, random, sys
+import os, random, sys, re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,20 +19,48 @@ if not url or not key:
 
 db = create_client(url, key)
 
+
+def generate_product_url(vendor_slug: str, product_name: str) -> str:
+    """Generate realistic product URL for a vendor"""
+    # Normalize product name to URL-friendly slug
+    slug = product_name.lower()
+    slug = re.sub(r'[^\w\s-]', '', slug)  # Remove special chars
+    slug = re.sub(r'\s+', '-', slug)       # Spaces to hyphens
+    slug = re.sub(r'-+', '-', slug)        # Multiple hyphens to single
+    slug = slug.strip('-')
+    
+    # URL patterns for known vendors
+    url_patterns = {
+        "amazon-in": f"https://www.amazon.in/dp/{slug}",
+        "flipkart": f"https://www.flipkart.com/{slug}/p/item",
+        "mdcomputers": f"https://www.mdcomputers.in/product/{slug}",
+        "primeabgb": f"https://www.primeabgb.com/{slug}",
+        "pcstudio": f"https://www.pcstudio.in/product/{slug}",
+        "vedant": f"https://www.vedantcomputers.com/product/{slug}",
+        "itdepot": f"https://www.theitdepot.com/{slug}",
+        "compify": f"https://www.compify.in/product/{slug}",
+        "elitehubs": f"https://www.elitehubs.com/product/{slug}",
+    }
+    return url_patterns.get(vendor_slug, f"https://example.com/product/{slug}")
+
 # ──────────────────────────────────────────────
 # CATEGORIES
 # ──────────────────────────────────────────────
 CATEGORIES = [
-    {"name": "Processors",     "slug": "cpu",         "icon": "🔧", "display_order": 1},
-    {"name": "Graphics Cards", "slug": "gpu",         "icon": "🎮", "display_order": 2},
-    {"name": "Motherboards",   "slug": "motherboard", "icon": "🔌", "display_order": 3},
-    {"name": "Memory (RAM)",   "slug": "ram",         "icon": "💾", "display_order": 4},
-    {"name": "Storage",        "slug": "storage",     "icon": "💿", "display_order": 5},
-    {"name": "Power Supply",   "slug": "psu",         "icon": "⚡", "display_order": 6},
-    {"name": "Cabinet",        "slug": "case",        "icon": "🖥️", "display_order": 7},
-    {"name": "CPU Cooler",     "slug": "cooler",      "icon": "❄️", "display_order": 8},
-    {"name": "Monitor",        "slug": "monitor",     "icon": "🖥", "display_order": 9},
-    {"name": "Case Fans",      "slug": "fans",        "icon": "🌀", "display_order": 10},
+    {"name": "Processors",     "slug": "cpu",         "icon": "", "display_order": 1},
+    {"name": "Graphics Cards", "slug": "gpu",         "icon": "", "display_order": 2},
+    {"name": "Motherboards",   "slug": "motherboard", "icon": "", "display_order": 3},
+    {"name": "Memory (RAM)",   "slug": "ram",         "icon": "", "display_order": 4},
+    {"name": "Storage",        "slug": "storage",     "icon": "", "display_order": 5},
+    {"name": "Power Supply",   "slug": "psu",         "icon": "", "display_order": 6},
+    {"name": "Cabinet",        "slug": "case",        "icon": "", "display_order": 7},
+    {"name": "CPU Cooler",     "slug": "cooler",      "icon": "", "display_order": 8},
+    {"name": "Monitor",        "slug": "monitor",     "icon": "", "display_order": 9},
+    {"name": "Case Fans",      "slug": "fans",        "icon": "", "display_order": 10},
+    {"name": "Keyboard",       "slug": "keyboard",    "icon": "", "display_order": 11},
+    {"name": "Mouse",          "slug": "mouse",       "icon": "", "display_order": 12},
+    {"name": "Mousepad",       "slug": "mousepad",    "icon": "", "display_order": 13},
+    {"name": "Headset",        "slug": "headset",     "icon": "", "display_order": 14},
 ]
 
 # ──────────────────────────────────────────────
@@ -218,6 +246,87 @@ FANS = [
     {"name": "Deepcool FC120 ARGB 120mm (3-Pack)",         "brand":"Deepcool",      "model":"FC120 ARGB 3-Pack","base":2199,"specs":{"size":"120mm","quantity":3,"rpm":"500-1800","airflow":"61.9 CFM","noise":"28 dBA","bearing":"FDB","pwm":True,"rgb":"ARGB","daisy_chain":True}},
 ]
 
+# ---------- Keyboards ----------
+KEYBOARDS = [
+    {"name": "Cosmic Byte CB-GK-21 Firefly",     "brand":"Cosmic Byte",   "model":"CB-GK-21 Firefly",   "base":1499,  "specs":{"type":"Membrane","layout":"Full Size","backlight":"RGB","connection":"Wired USB","anti_ghosting":True}},
+    {"name": "Redgear Shadow Blade",             "brand":"Redgear",       "model":"Shadow Blade",       "base":1799,  "specs":{"type":"Membrane","layout":"Full Size","backlight":"RGB","connection":"Wired USB","anti_ghosting":True}},
+    {"name": "Ant Esports MK1000",               "brand":"Ant Esports",   "model":"MK1000",             "base":2199,  "specs":{"type":"Mechanical","switch":"Outemu Blue","layout":"Full Size","backlight":"RGB","connection":"Wired USB"}},
+    {"name": "TVS Gold Bharat",                  "brand":"TVS",           "model":"Gold Bharat",        "base":2499,  "specs":{"type":"Mechanical","switch":"Cherry MX Blue","layout":"Full Size","backlight":"None","connection":"Wired USB"}},
+    {"name": "Redragon K552 Kumara",             "brand":"Redragon",      "model":"K552 Kumara",        "base":2799,  "specs":{"type":"Mechanical","switch":"Outemu Red","layout":"TKL","backlight":"RGB","connection":"Wired USB"}},
+    {"name": "Logitech K120",                    "brand":"Logitech",      "model":"K120",               "base":599,   "specs":{"type":"Membrane","layout":"Full Size","backlight":"None","connection":"Wired USB","spill_resistant":True}},
+    {"name": "HP K500F Backlit",                 "brand":"HP",            "model":"K500F",              "base":1299,  "specs":{"type":"Membrane","layout":"Full Size","backlight":"RGB","connection":"Wired USB","anti_ghosting":True}},
+    {"name": "Logitech G213 Prodigy",            "brand":"Logitech",      "model":"G213 Prodigy",       "base":3499,  "specs":{"type":"Mecha-Membrane","layout":"Full Size","backlight":"RGB","connection":"Wired USB","media_controls":True}},
+    {"name": "HyperX Alloy Origins Core",        "brand":"HyperX",        "model":"Alloy Origins Core", "base":5999,  "specs":{"type":"Mechanical","switch":"HyperX Red","layout":"TKL","backlight":"RGB","connection":"Wired USB","aircraft_grade_aluminum":True}},
+    {"name": "Logitech G Pro X",                 "brand":"Logitech",      "model":"G Pro X",            "base":9999,  "specs":{"type":"Mechanical","switch":"GX Blue Clicky","layout":"TKL","backlight":"RGB","connection":"Wired USB","hot_swappable":True}},
+    {"name": "Razer BlackWidow V3",              "brand":"Razer",         "model":"BlackWidow V3",      "base":8499,  "specs":{"type":"Mechanical","switch":"Razer Green","layout":"Full Size","backlight":"RGB","connection":"Wired USB","wrist_rest":True}},
+    {"name": "Razer Huntsman Mini",              "brand":"Razer",         "model":"Huntsman Mini",      "base":7999,  "specs":{"type":"Optical-Mechanical","switch":"Razer Optical Red","layout":"60%","backlight":"RGB","connection":"Wired USB"}},
+    {"name": "Corsair K70 RGB Pro",              "brand":"Corsair",       "model":"K70 RGB Pro",        "base":12999, "specs":{"type":"Mechanical","switch":"Cherry MX Red","layout":"Full Size","backlight":"RGB","connection":"Wired USB","media_controls":True,"wrist_rest":True}},
+    {"name": "SteelSeries Apex Pro",             "brand":"SteelSeries",   "model":"Apex Pro",           "base":17999, "specs":{"type":"OmniPoint Adjustable","switch":"OmniPoint","layout":"Full Size","backlight":"RGB","connection":"Wired USB","adjustable_actuation":True}},
+    {"name": "Ducky One 3 RGB TKL",              "brand":"Ducky",         "model":"One 3 RGB TKL",      "base":10999, "specs":{"type":"Mechanical","switch":"Cherry MX Brown","layout":"TKL","backlight":"RGB","connection":"Wired USB","hot_swappable":True}},
+    {"name": "Keychron K8 Pro",                  "brand":"Keychron",      "model":"K8 Pro",             "base":8499,  "specs":{"type":"Mechanical","switch":"Gateron G Pro Brown","layout":"TKL","backlight":"RGB","connection":"Wired/Bluetooth","hot_swappable":True,"mac_compatible":True}},
+    {"name": "Royal Kludge RK84",                "brand":"Royal Kludge",  "model":"RK84",               "base":4499,  "specs":{"type":"Mechanical","switch":"RK Brown","layout":"75%","backlight":"RGB","connection":"Wired/Bluetooth/2.4GHz","hot_swappable":True}},
+    {"name": "Zebronics Max Ninja",              "brand":"Zebronics",     "model":"Max Ninja",          "base":1999,  "specs":{"type":"Mechanical","switch":"Outemu Blue","layout":"Full Size","backlight":"RGB","connection":"Wired USB"}},
+]
+
+# ---------- Mice ----------
+MICE = [
+    {"name": "Logitech B100",                    "brand":"Logitech",      "model":"B100",               "base":399,   "specs":{"type":"Optical","dpi":"800","buttons":3,"connection":"Wired USB","ambidextrous":True}},
+    {"name": "HP X500",                          "brand":"HP",            "model":"X500",               "base":349,   "specs":{"type":"Optical","dpi":"1000","buttons":3,"connection":"Wired USB"}},
+    {"name": "Zebronics Zeb-Transformer-M",      "brand":"Zebronics",     "model":"Zeb-Transformer-M",  "base":499,   "specs":{"type":"Optical","dpi":"3200","buttons":6,"connection":"Wired USB","backlight":"RGB"}},
+    {"name": "Cosmic Byte Kilonova",             "brand":"Cosmic Byte",   "model":"Kilonova",           "base":899,   "specs":{"type":"Optical","dpi":"6400","buttons":7,"connection":"Wired USB","backlight":"RGB","braided_cable":True}},
+    {"name": "Redgear A-20",                     "brand":"Redgear",       "model":"A-20",               "base":799,   "specs":{"type":"Optical","dpi":"4800","buttons":6,"connection":"Wired USB","backlight":"RGB"}},
+    {"name": "Logitech G102 Lightsync",          "brand":"Logitech",      "model":"G102 Lightsync",     "base":1499,  "specs":{"type":"Optical","dpi":"8000","buttons":6,"connection":"Wired USB","backlight":"RGB","sensor":"Mercury"}},
+    {"name": "Razer DeathAdder Essential",       "brand":"Razer",         "model":"DeathAdder Essential","base":1799,  "specs":{"type":"Optical","dpi":"6400","buttons":5,"connection":"Wired USB","sensor":"Razer Optical"}},
+    {"name": "HyperX Pulsefire Haste",           "brand":"HyperX",        "model":"Pulsefire Haste",    "base":2999,  "specs":{"type":"Optical","dpi":"16000","buttons":6,"connection":"Wired USB","weight":"59g","honeycomb_shell":True}},
+    {"name": "Logitech G304 Lightspeed",         "brand":"Logitech",      "model":"G304 Lightspeed",    "base":2999,  "specs":{"type":"Optical","dpi":"12000","buttons":6,"connection":"Wireless 2.4GHz","sensor":"HERO","battery_life":"250 hrs"}},
+    {"name": "Razer Viper Mini",                 "brand":"Razer",         "model":"Viper Mini",         "base":2499,  "specs":{"type":"Optical","dpi":"8500","buttons":6,"connection":"Wired USB","weight":"61g","speedflex_cable":True}},
+    {"name": "Logitech G502 Hero",               "brand":"Logitech",      "model":"G502 Hero",          "base":4499,  "specs":{"type":"Optical","dpi":"25600","buttons":11,"connection":"Wired USB","sensor":"HERO 25K","adjustable_weights":True}},
+    {"name": "Razer DeathAdder V3",              "brand":"Razer",         "model":"DeathAdder V3",      "base":5999,  "specs":{"type":"Optical","dpi":"30000","buttons":5,"connection":"Wired USB","weight":"59g","sensor":"Focus Pro 30K"}},
+    {"name": "Logitech G Pro X Superlight",      "brand":"Logitech",      "model":"G Pro X Superlight", "base":10999, "specs":{"type":"Optical","dpi":"25600","buttons":5,"connection":"Wireless 2.4GHz","weight":"63g","sensor":"HERO 25K","battery_life":"70 hrs"}},
+    {"name": "Razer Viper V2 Pro",               "brand":"Razer",         "model":"Viper V2 Pro",       "base":12999, "specs":{"type":"Optical","dpi":"30000","buttons":5,"connection":"Wireless 2.4GHz","weight":"58g","sensor":"Focus Pro 30K"}},
+    {"name": "Corsair Dark Core RGB Pro SE",     "brand":"Corsair",       "model":"Dark Core RGB Pro SE","base":8999,  "specs":{"type":"Optical","dpi":"18000","buttons":9,"connection":"Wireless/Wired","qi_charging":True,"sensor":"MARKSMAN"}},
+    {"name": "SteelSeries Aerox 3 Wireless",     "brand":"SteelSeries",   "model":"Aerox 3 Wireless",   "base":7999,  "specs":{"type":"Optical","dpi":"18000","buttons":6,"connection":"Wireless 2.4GHz/Bluetooth","weight":"68g","ip54_rating":True}},
+    {"name": "Glorious Model O",                 "brand":"Glorious",      "model":"Model O",            "base":4499,  "specs":{"type":"Optical","dpi":"19000","buttons":6,"connection":"Wired USB","weight":"67g","honeycomb_shell":True}},
+    {"name": "Zowie EC2-C",                      "brand":"Zowie",         "model":"EC2-C",              "base":6499,  "specs":{"type":"Optical","dpi":"3200","buttons":5,"connection":"Wired USB","weight":"73g","paracord_cable":True,"esports_grade":True}},
+]
+
+# ---------- Mousepads ----------
+MOUSEPADS = [
+    {"name": "Ant Esports MP200 Small",          "brand":"Ant Esports",   "model":"MP200 Small",        "base":249,   "specs":{"size":"250x210x2mm","surface":"Cloth","base":"Rubber","stitched_edges":False}},
+    {"name": "Redgear MP35",                     "brand":"Redgear",       "model":"MP35",               "base":349,   "specs":{"size":"350x250x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True}},
+    {"name": "Cosmic Byte Dwarf Medium",         "brand":"Cosmic Byte",   "model":"Dwarf Medium",       "base":449,   "specs":{"size":"400x300x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True}},
+    {"name": "SteelSeries QcK Medium",           "brand":"SteelSeries",   "model":"QcK Medium",         "base":999,   "specs":{"size":"320x270x2mm","surface":"Cloth","base":"Rubber","stitched_edges":False}},
+    {"name": "Logitech G240 Cloth",              "brand":"Logitech",      "model":"G240 Cloth",         "base":1299,  "specs":{"size":"340x280x1mm","surface":"Cloth","base":"Rubber","stitched_edges":False,"low_friction":True}},
+    {"name": "HyperX Fury S Pro XL",             "brand":"HyperX",        "model":"Fury S Pro XL",      "base":1999,  "specs":{"size":"900x420x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True}},
+    {"name": "SteelSeries QcK Heavy XXL",        "brand":"SteelSeries",   "model":"QcK Heavy XXL",      "base":2999,  "specs":{"size":"900x400x6mm","surface":"Cloth","base":"Rubber","stitched_edges":True,"extra_thick":True}},
+    {"name": "Razer Gigantus V2 XXL",            "brand":"Razer",         "model":"Gigantus V2 XXL",    "base":2499,  "specs":{"size":"940x410x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True}},
+    {"name": "Corsair MM350 Pro Extended XL",    "brand":"Corsair",       "model":"MM350 Pro Extended XL","base":3999, "specs":{"size":"930x400x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True,"spill_proof":True}},
+    {"name": "Logitech G840 XL",                 "brand":"Logitech",      "model":"G840 XL",            "base":2999,  "specs":{"size":"900x400x3mm","surface":"Cloth","base":"Rubber","stitched_edges":True}},
+    {"name": "Glorious 3XL Extended",            "brand":"Glorious",      "model":"3XL Extended",       "base":3499,  "specs":{"size":"1219x609x3mm","surface":"Cloth","base":"Rubber","stitched_edges":True}},
+    {"name": "Razer Firefly V2 RGB",             "brand":"Razer",         "model":"Firefly V2",         "base":3999,  "specs":{"size":"355x255x3mm","surface":"Hard","base":"Rubber","stitched_edges":False,"rgb":True}},
+    {"name": "Corsair MM700 RGB Extended",       "brand":"Corsair",       "model":"MM700 RGB Extended", "base":5999,  "specs":{"size":"930x400x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True,"rgb":True,"usb_passthrough":True}},
+    {"name": "SteelSeries QcK Prism XL RGB",     "brand":"SteelSeries",   "model":"QcK Prism XL",       "base":4499,  "specs":{"size":"900x300x4mm","surface":"Cloth","base":"Rubber","stitched_edges":True,"rgb":True}},
+]
+
+# ---------- Headsets ----------
+HEADSETS = [
+    {"name": "Cosmic Byte H3",                   "brand":"Cosmic Byte",   "model":"H3",                 "base":599,   "specs":{"type":"Over-Ear","driver":"40mm","frequency":"20Hz-20kHz","connection":"3.5mm","microphone":True}},
+    {"name": "Redgear Cosmo 7.1",                "brand":"Redgear",       "model":"Cosmo 7.1",          "base":1499,  "specs":{"type":"Over-Ear","driver":"50mm","frequency":"20Hz-20kHz","connection":"USB","microphone":True,"virtual_surround":"7.1","rgb":True}},
+    {"name": "Ant Esports H1100 Pro",            "brand":"Ant Esports",   "model":"H1100 Pro",          "base":1299,  "specs":{"type":"Over-Ear","driver":"50mm","frequency":"20Hz-20kHz","connection":"USB/3.5mm","microphone":True,"virtual_surround":"7.1","rgb":True}},
+    {"name": "HyperX Cloud Stinger",             "brand":"HyperX",        "model":"Cloud Stinger",      "base":3499,  "specs":{"type":"Over-Ear","driver":"50mm","frequency":"18Hz-23kHz","connection":"3.5mm","microphone":True,"mic_monitoring":False,"weight":"275g"}},
+    {"name": "Logitech G335",                    "brand":"Logitech",      "model":"G335",               "base":4499,  "specs":{"type":"Over-Ear","driver":"40mm","frequency":"20Hz-20kHz","connection":"3.5mm","microphone":True,"weight":"240g","memory_foam":True}},
+    {"name": "Razer BlackShark V2 X",            "brand":"Razer",         "model":"BlackShark V2 X",    "base":3999,  "specs":{"type":"Over-Ear","driver":"50mm","frequency":"12Hz-28kHz","connection":"3.5mm","microphone":True,"triforce_drivers":True}},
+    {"name": "HyperX Cloud II",                  "brand":"HyperX",        "model":"Cloud II",           "base":6999,  "specs":{"type":"Over-Ear","driver":"53mm","frequency":"15Hz-25kHz","connection":"USB/3.5mm","microphone":True,"virtual_surround":"7.1","aluminum_frame":True}},
+    {"name": "Logitech G Pro X",                 "brand":"Logitech",      "model":"G Pro X",            "base":9999,  "specs":{"type":"Over-Ear","driver":"50mm","frequency":"20Hz-20kHz","connection":"USB/3.5mm","microphone":True,"blue_voice":True,"pro_g_driver":True}},
+    {"name": "Razer BlackShark V2 Pro",          "brand":"Razer",         "model":"BlackShark V2 Pro",  "base":14999, "specs":{"type":"Over-Ear","driver":"50mm","frequency":"12Hz-28kHz","connection":"Wireless 2.4GHz","microphone":True,"battery_life":"24 hrs","thx_spatial":True}},
+    {"name": "SteelSeries Arctis 7+",            "brand":"SteelSeries",   "model":"Arctis 7+",          "base":12999, "specs":{"type":"Over-Ear","driver":"40mm","frequency":"20Hz-20kHz","connection":"Wireless 2.4GHz/3.5mm","microphone":True,"battery_life":"30 hrs","ski_goggle_headband":True}},
+    {"name": "Corsair HS80 RGB Wireless",        "brand":"Corsair",       "model":"HS80 RGB Wireless",  "base":11999, "specs":{"type":"Over-Ear","driver":"50mm","frequency":"20Hz-40kHz","connection":"Wireless 2.4GHz","microphone":True,"dolby_atmos":True,"battery_life":"20 hrs"}},
+    {"name": "Logitech G733 Lightspeed",         "brand":"Logitech",      "model":"G733 Lightspeed",    "base":11499, "specs":{"type":"Over-Ear","driver":"40mm","frequency":"20Hz-20kHz","connection":"Wireless 2.4GHz","microphone":True,"battery_life":"29 hrs","weight":"278g","rgb":True}},
+    {"name": "HyperX Cloud Alpha",               "brand":"HyperX",        "model":"Cloud Alpha",        "base":8999,  "specs":{"type":"Over-Ear","driver":"50mm","frequency":"13Hz-27kHz","connection":"3.5mm","microphone":True,"dual_chamber_driver":True}},
+    {"name": "SteelSeries Arctis Nova Pro",      "brand":"SteelSeries",   "model":"Arctis Nova Pro",    "base":24999, "specs":{"type":"Over-Ear","driver":"40mm","frequency":"10Hz-40kHz","connection":"Wired USB","microphone":True,"active_noise_cancelling":True,"gamedac":True}},
+    {"name": "Astro A50 Gen 4",                  "brand":"Astro",         "model":"A50 Gen 4",          "base":29999, "specs":{"type":"Over-Ear","driver":"40mm","frequency":"20Hz-20kHz","connection":"Wireless 2.4GHz","microphone":True,"dolby_atmos":True,"battery_life":"15 hrs","base_station":True}},
+]
+
 
 # ──────────────────────────────────────────────
 # SEED LOGIC
@@ -264,6 +373,7 @@ def seed():
 
     ven_rows = db.table("vendors").select("id,slug").execute().data
     ven_map = {r["slug"]: r["id"] for r in ven_rows}
+    ven_id_to_slug = {r["id"]: r["slug"] for r in ven_rows}
     ven_list = list(ven_map.values())
 
     print(f"     Categories: {cat_map}")
@@ -281,6 +391,10 @@ def seed():
         ("cooler",      COOLERS),
         ("monitor",     MONITORS),
         ("fans",        FANS),
+        ("keyboard",    KEYBOARDS),
+        ("mouse",       MICE),
+        ("mousepad",    MOUSEPADS),
+        ("headset",     HEADSETS),
     ]
 
     total_comps = 0
@@ -316,11 +430,17 @@ def seed():
                 # ±4 % price jitter
                 jitter = 1 + random.uniform(-0.04, 0.04)
                 price = round(base_price * jitter)
+                
+                # Generate product URL
+                vendor_slug = ven_id_to_slug.get(v_id, "")
+                product_url = generate_product_url(vendor_slug, item["name"])
+                
                 price_row = {
                     "component_id": comp_id,
                     "vendor_id": v_id,
                     "price": price,
                     "in_stock": random.random() > 0.08,  # 92 % in stock
+                    "url": product_url,
                 }
                 try:
                     db.table("component_prices").upsert(

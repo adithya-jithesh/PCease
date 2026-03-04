@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import ORJSONResponse
 from .routers import auth, components, forum, advisor
 from .config import settings
 from .cache import get_cache, set_cache, clear_cache
@@ -29,7 +28,6 @@ app = FastAPI(
     version="4.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    default_response_class=ORJSONResponse,
     lifespan=lifespan,
 )
 

@@ -86,6 +86,8 @@ export default function Compare() {
     const [query, setQuery] = useState('')
     const [searchResults, setSearchResults] = useState([])
     const [searching, setSearching] = useState(false)
+    const [categories, setCategories] = useState([])
+    const [selectedCategory, setSelectedCategory] = useState('')
     const searchRef = useRef(null)
     const inputRef = useRef(null)
 
@@ -106,20 +108,29 @@ export default function Compare() {
     }, [])
 
     useEffect(() => {
-        if (!query.trim()) { setSearchResults([]); return }
+        API.getCategories()
+            .then(data => setCategories(data || []))
+            .catch(() => {})
+    }, [])
+
+    useEffect(() => {
+        if (!query.trim() && !selectedCategory) { setSearchResults([]); return }
         const t = setTimeout(() => {
             setSearching(true)
-            API.getComponents({ search: query })
+            const params = { limit: 50 }
+            if (query.trim()) params.search = query
+            if (selectedCategory) params.category = selectedCategory
+            API.getComponents(params)
                 .then(data => {
                     const list = data.components || data || []
                     const used = new Set(slots.filter(Boolean).map(s => s.id))
-                    setSearchResults(list.filter(c => !used.has(c.id)).slice(0, 8))
+                    setSearchResults(list.filter(c => !used.has(c.id)).slice(0, 12))
                 })
                 .catch(() => setSearchResults([]))
                 .finally(() => setSearching(false))
         }, 300)
         return () => clearTimeout(t)
-    }, [query, slots])
+    }, [query, selectedCategory, slots])
 
     useEffect(() => {
         const handler = (e) => {
@@ -132,6 +143,7 @@ export default function Compare() {
     const openSearch = (slotIdx) => {
         setActiveSlot(slotIdx)
         setQuery('')
+        setSelectedCategory('')
         setSearchResults([])
         setTimeout(() => inputRef.current?.focus(), 50)
     }
@@ -139,6 +151,7 @@ export default function Compare() {
     const closeSearch = () => {
         setActiveSlot(null)
         setQuery('')
+        setSelectedCategory('')
         setSearchResults([])
     }
 
@@ -322,11 +335,24 @@ export default function Compare() {
                                 />
                                 {searching && <FiLoader size={14} className="cp-spin cp-search-panel__spinner" />}
                             </div>
+                            <div className="cp-search-panel__filters">
+                                <button
+                                    className={`chip${!selectedCategory ? ' active' : ''}`}
+                                    onClick={() => setSelectedCategory('')}
+                                >All</button>
+                                {categories.map(cat => (
+                                    <button
+                                        key={cat.id}
+                                        className={`chip${selectedCategory === cat.slug ? ' active' : ''}`}
+                                        onClick={() => setSelectedCategory(cat.slug)}
+                                    >{cat.name}</button>
+                                ))}
+                            </div>
                             <div className="cp-search-panel__results">
-                                {!query.trim() && (
-                                    <p className="cp-search-panel__hint">Start typing to search components</p>
+                                {!query.trim() && !selectedCategory && (
+                                    <p className="cp-search-panel__hint">Search or select a category</p>
                                 )}
-                                {query.trim() && !searching && searchResults.length === 0 && (
+                                {(query.trim() || selectedCategory) && !searching && searchResults.length === 0 && (
                                     <p className="cp-search-panel__hint">No results found</p>
                                 )}
                                 {searchResults.map(c => {

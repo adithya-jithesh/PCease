@@ -313,6 +313,20 @@
 .cp-search-panel__input::placeholder { color: var(--text-muted); }
 .cp-search-panel__spinner { color: var(--text-muted); flex-shrink: 0; }
 
+.cp-search-panel__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    max-height: 100px;
+    overflow-y: auto;
+}
+.cp-search-panel__filters .chip {
+    font-size: .75rem;
+    padding: 4px 10px;
+}
+
 .cp-search-panel__results {
     max-height: 340px;
     overflow-y: auto;
