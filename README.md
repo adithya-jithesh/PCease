@@ -51,7 +51,7 @@ Most PC-building tools target the US market with Newegg/Amazon.com pricing. PCea
 |-------|-----------|
 | **Frontend** | React 18, Vite 5, React Router v6, react-hot-toast, Feather Icons |
 | **Backend** | FastAPI (Python 3.13), Pydantic v2, python-jose (JWT) |
-| **Database** | Supabase (hosted PostgreSQL), service-role key for server-side ops |
+| **Database** | Supabase (hosted PostgreSQL) |
 | **AI** | Google Gemini API (`google-generativeai`) |
 | **Hosting** | Frontend → Vercel, Backend → Render, DB → Supabase |
 | **Design** | Custom CSS design system — dark theme, CSS variables, responsive |
@@ -68,14 +68,7 @@ Most PC-building tools target the US market with Newegg/Amazon.com pricing. PCea
 | Python | ≥ 3.11 |
 | Supabase project | [supabase.com](https://supabase.com) (free tier works) |
 
-### 1. Clone
-
-```bash
-git clone https://github.com/adithya-jithesh/PCEase.git
-cd PCEase
-```
-
-### 2. Database
+### 1. Database
 
 Open the Supabase SQL editor and run `backend/supabase_migration.sql` to create all tables. Then seed component data:
 
@@ -88,40 +81,25 @@ pip install -r requirements.txt
 python seed_supabase.py
 ```
 
-### 3. Backend
+### 2. Backend
 
-Create `backend/.env`:
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-SUPABASE_SERVICE_KEY=your-service-role-key
-SECRET_KEY=any-random-secret-string
-GEMINI_API_KEY=your-google-gemini-api-key
-FRONTEND_URL=http://localhost:5173
-```
-
-Start the server:
+Create a `backend/.env` file with your own credentials (refer to `.env.example`). Then start the server:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-### 4. Frontend
+> **Never commit your `.env` file.** Make sure `.env` is listed in `.gitignore`.
 
-Create `frontend/.env`:
+### 3. Frontend
 
-```env
-VITE_API_URL=http://localhost:8000/api
-```
+Create a `frontend/.env` file with your backend URL, then run:
 
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-
-Open [http://localhost:5173](http://localhost:5173).
 
 ---
 
