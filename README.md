@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
   <strong>PCease</strong><br/>
   <em>India's open-source PC building platform</em>
 </p>
@@ -71,8 +71,8 @@ Most PC-building tools target the US market with Newegg/Amazon.com pricing. PCea
 ### 1. Clone
 
 ```bash
-git clone https://github.com/vaibhavshiroorkar/pcease.git
-cd pcease
+git clone https://github.com/adithya-jithesh/PCEase.git
+cd PCEase
 ```
 
 ### 2. Database
@@ -83,7 +83,7 @@ Open the Supabase SQL editor and run `backend/supabase_migration.sql` to create 
 cd backend
 python -m venv .venv
 .venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS / Linux
+source .venv/bin/activate     # macOS / Linux
 pip install -r requirements.txt
 python seed_supabase.py
 ```
@@ -177,124 +177,3 @@ Interactive docs available at `/docs` (Swagger UI) and `/redoc` when the server 
 ---
 
 ## Database Schema
-
-```
-categories        id · slug · name · description · icon
-vendors           id · slug · name · url · logo_url
-components        id · category_id · name · brand · model · specifications (jsonb) · image_url
-component_prices  id · component_id · vendor_id · price · currency · url · in_stock
-builds            id · user_id · name · components (jsonb) · total_price · created_at
-shared_builds     id · share_id · name · components (jsonb) · total_price · created_at
-users             id · username · email · hashed_password · created_at
-forum_threads     id · user_id · title · content · category · created_at
-forum_replies     id · thread_id · user_id · content · created_at
-forum_votes       id · thread_id · user_id · vote_type
-```
-
----
-
-## Project Structure
-
-```
-pcease/
-├── backend/
-│   ├── app/
-│   │   ├── main.py            # FastAPI app, CORS, router mounting
-│   │   ├── config.py          # Pydantic settings from .env
-│   │   ├── database.py        # Supabase client (service role key)
-│   │   ├── routers/
-│   │   │   ├── auth.py        # Register, login, JWT
-│   │   │   ├── components.py  # Browse, compare, builds, stats
-│   │   │   └── forum.py       # Threads, replies, voting
-│   │   ├── schemas/           # Pydantic request/response models
-│   │   └── utils/
-│   │       └── auth.py        # JWT decode, current_user dependency
-│   ├── seed_supabase.py       # Seeds 100+ components, 9 vendors, 500+ prices
-│   ├── supabase_migration.sql # Full schema DDL
-│   └── requirements.txt
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx            # Route definitions
-│   │   ├── main.jsx           # React root
-│   │   ├── pages/
-│   │   │   ├── Home.jsx       # Landing / hero page
-│   │   │   ├── Browse.jsx     # Component browser (grid + list)
-│   │   │   ├── Builder.jsx    # PC build tool
-│   │   │   ├── Compare.jsx    # Side-by-side comparison
-│   │   │   ├── Advisor.jsx    # AI recommendation + chat
-│   │   │   ├── Forum.jsx      # Community threads
-│   │   │   └── Auth.jsx       # Login / register
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx
-│   │   │   └── Footer.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx # Auth state + JWT management
-│   │   ├── services/
-│   │   │   └── api.js         # API client, price helpers, config
-│   │   └── styles/
-│   │       └── global.css     # Design system (CSS custom properties)
-│   ├── vite.config.js
-│   └── package.json
-│
-└── README.md
-```
-
----
-
-## Deployment
-
-### Backend → Render
-
-| Setting | Value |
-|---------|-------|
-| Build command | `pip install -r requirements.txt` |
-| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Root directory | `backend` |
-| Environment | Add every key from `backend/.env` |
-
-### Frontend → Vercel
-
-| Setting | Value |
-|---------|-------|
-| Framework preset | Vite |
-| Root directory | `frontend` |
-| Build command | `npm run build` |
-| Output directory | `dist` |
-| Environment | `VITE_API_URL` = your Render backend URL (e.g. `https://pcease-api.onrender.com/api`) |
-
-### Database → Supabase
-
-Free tier is sufficient. Enable **Row Level Security** only if you add public-facing write operations beyond what the service key already handles.
-
----
-
-## Vendors Tracked
-
-| Vendor | URL |
-|--------|-----|
-| Amazon India | amazon.in |
-| Flipkart | flipkart.com |
-| MDComputers | mdcomputers.in |
-| PrimeABGB | primeabgb.com |
-| PC Studio | pcstudio.in |
-| Vedant Computers | vedantcomputers.com |
-| IT Depot | itdepot.com |
-| Compify | compify.in |
-| EliteHubs | elitehubs.com |
-
----
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit your changes (`git commit -m "Add my feature"`)
-4. Push to the branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
-
----
-
-## License
-
-[MIT](LICENSE)
