@@ -432,7 +432,7 @@ async def ask_ai(request: Request, body: dict):
             import google.generativeai as genai
 
             genai.configure(api_key=settings.gemini_api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
 
             prompt = f"""You are PCease AI, an expert PC building assistant focused on the Indian market.
 Answer this question concisely and helpfully. Use Indian prices (₹) and Indian retailers when relevant.
@@ -440,7 +440,7 @@ Keep responses under 300 words. Use bullet points for lists.
 
 Question: {question}"""
 
-            response = model.generate_content(prom2t)
+            response = model.generate_content(prompt)
             return {"answer": response.text, "source": "ai"}
         except Exception:
             pass
