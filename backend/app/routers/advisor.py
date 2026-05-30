@@ -363,7 +363,7 @@ async def get_recommendation(request: Request, body: dict, db: Client = Depends(
             import google.generativeai as genai
 
             genai.configure(api_key=settings.gemini_api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
 
             prompt = f"""You are an expert PC building advisor for India. 
 Recommend a PC build based on:
@@ -440,7 +440,7 @@ Keep responses under 300 words. Use bullet points for lists.
 
 Question: {question}"""
 
-            response = model.generate_content(prompt)
+            response = model.generate_content(prom2t)
             return {"answer": response.text, "source": "ai"}
         except Exception:
             pass
