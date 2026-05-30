@@ -405,7 +405,10 @@ Use real Indian market prices (2025-2026). Stay within budget. Include only comp
             import json
             return json.loads(text.strip())
         except Exception as e:
-            # Fall back to smart database-based recommendation
+            # Log error and fall back
+            import traceback
+            print(f"Gemini API error: {str(e)}")
+            traceback.print_exc()
             pass
 
     # Fallback: smart database-based recommendation
