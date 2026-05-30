@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from supabase import Client
 from ..database import get_db
 from ..config import settings
 from typing import Dict, List, Optional
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+# Rate limiter: 10 requests per minute per IP
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/api/advisor", tags=["AI Advisor"])
 
@@ -341,10 +346,12 @@ def get_template(template_id: str, db: Client = Depends(get_db)):
 
 # ========== AI Recommendation ==========
 @router.post("/recommend")
-async def get_recommendation(body: dict, db: Client = Depends(get_db)):
+@limiter.limit("10/minute")
+async def get_recommendation(request: Request, body: dict, db: Client = Depends(get_db)):
     """
     Get AI-powered PC build recommendation.
     body: { budget: number, use_case: string, preferences?: string }
+    Rate limit: 10 requests per minute per IP address
     """
     budget = body.get("budget", 50000)
     use_case = body.get("use_case", "gaming")
@@ -406,10 +413,12 @@ Use real Indian market prices (2025-2026). Stay within budget. Include only comp
 
 
 @router.post("/ask")
-async def ask_ai(body: dict):
+@limiter.limit("20/minute")
+async def ask_ai(request: Request, body: dict):
     """
     Ask AI a PC building question.
     body: { question: string }
+    Rate limit: 20 requests per minute per IP address
     """
     question = body.get("question", "")
     if not question:

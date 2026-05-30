@@ -25,3 +25,6 @@ orjson>=3.10.0
 
 # AI Advisor
 google-generativeai>=0.4.0
+
+# Rate Limiting
+slowapi>=0.1.9

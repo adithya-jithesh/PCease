@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from .routers import auth, components, forum, advisor
 from .config import settings
 from .cache import get_cache, set_cache, clear_cache
@@ -30,6 +32,10 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+# Rate limiting setup
+app.state.limiter = advisor.limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Middleware
 app.add_middleware(GZipMiddleware, minimum_size=500)
