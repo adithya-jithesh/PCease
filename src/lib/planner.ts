@@ -1,11 +1,12 @@
-import { analyzeBuild, estimateWatts, recommendPsu } from "./compat";
+import { analyzeBuild, ENTRY_CHIPSETS, estimateWatts, recommendPsu } from "./compat";
 import type { Part, ResolvedBuild } from "./types";
 
 export const USE_CASES = {
   gaming: { label: "Gaming", cpu: 1.5, gpu: 3, ramGb: 16, storageGb: 1000 },
   streaming: { label: "Gaming + streaming", cpu: 2, gpu: 2.5, ramGb: 32, storageGb: 1000 },
   creator: { label: "Video & 3D work", cpu: 3, gpu: 1.5, ramGb: 32, storageGb: 2000 },
-  office: { label: "Office & study", cpu: 2, gpu: 0.5, ramGb: 16, storageGb: 500 },
+  // Office PCs gain nothing from a graphics card, so integrated graphics win.
+  office: { label: "Office & study", cpu: 2, gpu: 0, ramGb: 16, storageGb: 500 },
 } as const;
 
 export type UseCase = keyof typeof USE_CASES;
@@ -38,7 +39,11 @@ function completePlatform(
 
   const board = cheapest(
     pool.motherboard.filter(
-      (b) => spec(b, "socket") === spec(cpu, "socket") && memory.includes(String(spec(b, "memory"))),
+      (b) =>
+        spec(b, "socket") === spec(cpu, "socket") &&
+        memory.includes(String(spec(b, "memory"))) &&
+        // High-end chips need more than an entry-level board's power delivery.
+        !((cpu.tier ?? 0) >= 4 && ENTRY_CHIPSETS.includes(String(spec(b, "chipset")))),
     ),
   );
   if (!board) return null;
@@ -84,52 +89,62 @@ function completePlatform(
   return { ...partial, psu };
 }
 
-/** Swap parts for better ones while money is left, in order of usefulness. */
+/**
+ * Spend what's left in small, even steps: each round gives every part at most
+ * one cheapest-possible upgrade (in priority order), repeating until nothing
+ * else fits. This avoids pouring the whole remainder into a single part.
+ */
 function spendLeftover(build: ResolvedBuild, budget: number, pool: Record<Part["category"], Part[]>, useCase: UseCase) {
-  const upgrades: [keyof ResolvedBuild, (a: Part, b: Part) => boolean][] = [
-    // More or faster memory of the same generation
+  const capacity = (p: Part) => Number(spec(p, "capacity_gb"));
+  const upgrades: [keyof ResolvedBuild, (cur: Part, next: Part) => boolean][] = [
+    // More or faster memory of the same generation, never less of it
     ["ram", (cur, next) =>
       spec(next, "memory") === spec(cur, "memory") &&
-      (Number(spec(next, "capacity_gb")) > Number(spec(cur, "capacity_gb")) ||
-        Number(spec(next, "speed_mts")) > Number(spec(cur, "speed_mts")))],
-    // Bigger or faster SSD
+      capacity(next) >= capacity(cur) &&
+      (capacity(next) > capacity(cur) || Number(spec(next, "speed_mts")) > Number(spec(cur, "speed_mts")))],
+    // Bigger or faster SSD, never a smaller one
     ["storage", (cur, next) =>
-      Number(spec(next, "capacity_gb")) > Number(spec(cur, "capacity_gb")) ||
-      Number(spec(next, "read_mbs")) > Number(spec(cur, "read_mbs"))],
-    // Gold-rated PSU of at least the same wattage
+      capacity(next) >= capacity(cur) &&
+      (capacity(next) > capacity(cur) || Number(spec(next, "read_mbs")) > Number(spec(cur, "read_mbs")))],
+    // A Gold-rated unit of at least the same wattage
     ["psu", (cur, next) =>
       String(spec(next, "efficiency")).includes("Gold") &&
       !String(spec(cur, "efficiency")).includes("Gold") &&
       Number(spec(next, "wattage")) >= Number(spec(cur, "wattage"))],
-    // Better-cooling case
+    // A case with better airflow out of the box
     ["case", (cur, next) => Number(spec(next, "fans_included")) > Number(spec(cur, "fans_included"))],
   ];
   if (useCase === "gaming") upgrades.reverse();
 
-  for (const [slot, isBetter] of upgrades) {
-    const current = build[slot];
-    if (!current) continue;
-    const candidates = pool[slot]
-      .filter((p) => price(p) > price(current) && isBetter(current, p))
-      .sort((a, b) => price(a) - price(b));
-    for (const next of candidates) {
-      const trial = { ...build, [slot]: next };
-      if (sum(trial) > budget) break;
-      if (analyzeBuild(trial).checks.some((c) => c.level === "error")) continue;
-      build = trial;
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const [slot, isBetter] of upgrades) {
+      const current = build[slot];
+      if (!current) continue;
+      const next = pool[slot]
+        .filter((p) => price(p) > price(current) && isBetter(current, p))
+        .sort((a, b) => price(a) - price(b))
+        .find((p) => {
+          const trial = { ...build, [slot]: p };
+          return sum(trial) <= budget && !analyzeBuild(trial).checks.some((c) => c.level === "error");
+        });
+      if (next) {
+        build = { ...build, [slot]: next };
+        changed = true;
+      }
     }
   }
   return build;
 }
 
-export function planBuild(parts: Part[], budget: number, useCase: UseCase): Plan | null {
-  const pool = Object.fromEntries(
-    (["cpu", "gpu", "motherboard", "ram", "storage", "psu", "case", "cooler"] as const).map((c) => [
-      c,
-      priced(parts.filter((p) => p.category === c)),
-    ]),
-  ) as Record<Part["category"], Part[]>;
-
+/** Try every CPU/GPU pairing and keep the highest-scoring complete build within budget. */
+function searchPairings(
+  pool: Record<Part["category"], Part[]>,
+  budget: number,
+  useCase: UseCase,
+  lean: boolean,
+) {
   const weights = USE_CASES[useCase];
   let best: { build: ResolvedBuild; score: number; total: number } | null = null;
 
@@ -139,8 +154,7 @@ export function planBuild(parts: Part[], budget: number, useCase: UseCase): Plan
       useCase === "office" && spec(cpu, "igpu") ? [undefined, ...pool.gpu] : pool.gpu;
 
     for (const gpu of gpus) {
-      let build = completePlatform(cpu, gpu, pool, useCase);
-      if (!build || sum(build) > budget) build = completePlatform(cpu, gpu, pool, useCase, true);
+      const build = completePlatform(cpu, gpu, pool, useCase, lean);
       if (!build) continue;
       const total = sum(build);
       if (total > budget) continue;
@@ -151,7 +165,22 @@ export function planBuild(parts: Part[], budget: number, useCase: UseCase): Plan
       }
     }
   }
+  return best;
+}
 
+export function planBuild(parts: Part[], budget: number, useCase: UseCase): Plan | null {
+  const pool = Object.fromEntries(
+    (["cpu", "gpu", "motherboard", "ram", "storage", "psu", "case", "cooler"] as const).map((c) => [
+      c,
+      priced(parts.filter((p) => p.category === c)),
+    ]),
+  ) as Record<Part["category"], Part[]>;
+
+  // Prefer a properly specced platform (enough RAM and storage, a real cooler).
+  // Only fall back to the lean platform when nothing fits the budget otherwise;
+  // trading a 1 TB SSD for a bigger GPU makes a worse PC, not a better one.
+  const best =
+    searchPairings(pool, budget, useCase, false) ?? searchPairings(pool, budget, useCase, true);
   if (!best) return null;
 
   const build = spendLeftover(best.build, budget, pool, useCase);

@@ -71,3 +71,10 @@ describe("recommendPsu", () => {
     expect(recommendPsu(700)).toBe(1000);
   });
 });
+
+describe("board tier", () => {
+  it("warns when a high-end CPU sits on an entry-level board", () => {
+    const build = { cpu: p("core-i7-14700kf"), motherboard: p("msi-pro-h610m-e-ddr4") };
+    expect(titles(build, "warn")).toContain("Entry-level board for a high-end CPU");
+  });
+});

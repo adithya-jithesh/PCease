@@ -33,6 +33,9 @@ const PLATFORM_OVERHEAD = 40;
 const PSU_MINIMUM_MARGIN = 1.1;
 const PSU_HEADROOM = 1.3;
 
+/** Budget chipsets whose power delivery struggles with high-end CPUs. */
+export const ENTRY_CHIPSETS = ["H610", "A520"];
+
 const str = (v: unknown) => (v == null ? undefined : String(v));
 const num = (v: unknown) => (typeof v === "number" ? v : undefined);
 const arr = (v: unknown) => (Array.isArray(v) ? (v as string[]) : undefined);
@@ -69,6 +72,15 @@ export function analyzeBuild(build: ResolvedBuild): BuildAnalysis {
             detail: `${cpu.name} needs ${cpuSocket}, but the ${board.name} is ${boardSocket}.`,
           },
     );
+
+    const chipset = str(board.specs.chipset);
+    if ((cpu.tier ?? 0) >= 4 && chipset && ENTRY_CHIPSETS.includes(chipset)) {
+      checks.push({
+        level: "warn",
+        title: "Entry-level board for a high-end CPU",
+        detail: `${chipset} boards have basic power delivery and may throttle the ${cpu.name}. A B-series board is a safer match.`,
+      });
+    }
 
     const supported = arr(cpu.specs.memory) ?? [];
     const boardMem = str(board.specs.memory);

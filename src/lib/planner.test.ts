@@ -31,6 +31,13 @@ describe("planBuild", () => {
     expect(large.build.gpu!.tier!).toBeGreaterThan(small.build.gpu!.tier!);
   });
 
+  it("keeps a proper platform when the budget allows it", () => {
+    const plan = planBuild(parts, 80000, "gaming")!;
+    expect(plan.build.cooler).toBeDefined();
+    expect(Number(plan.build.storage!.specs.capacity_gb)).toBeGreaterThanOrEqual(1000);
+    expect(Number(plan.build.ram!.specs.capacity_gb)).toBeGreaterThanOrEqual(16);
+  });
+
   it("can skip the graphics card for office builds", () => {
     const plan = planBuild(parts, 45000, "office")!;
     expect(plan.build.gpu).toBeUndefined();
