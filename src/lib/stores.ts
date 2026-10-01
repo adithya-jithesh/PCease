@@ -87,7 +87,11 @@ export function useCompare() {
     (id: number) => compareStore.write(compareStore.read().filter((x) => x !== id)),
     [],
   );
+  const replace = useCallback(
+    (next: number[]) => compareStore.write(next.slice(0, MAX_COMPARE)),
+    [],
+  );
   const clear = useCallback(() => compareStore.write([]), []);
 
-  return { ids, toggle, remove, clear, full: ids.length >= MAX_COMPARE };
+  return { ids, toggle, remove, replace, clear, full: ids.length >= MAX_COMPARE };
 }
