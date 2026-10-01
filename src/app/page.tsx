@@ -1,69 +1,118 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Cpu, IndianRupee, MessagesSquare, ShieldCheck, Sparkles } from "lucide-react";
+import { CATEGORY_META } from "@/lib/catalog";
+import { getCatalogueStats } from "@/lib/data";
+import { CATEGORIES } from "@/lib/types";
 
-export default function Home() {
+const FEATURES = [
+  {
+    icon: ShieldCheck,
+    title: "Compatibility, as you pick",
+    body: "Sockets, memory generations, case clearance, cooler fit and power budget are checked live. No surprises on build day.",
+  },
+  {
+    icon: IndianRupee,
+    title: "Indian prices, side by side",
+    body: "See every part's price across Amazon.in, Flipkart, MD Computers, PrimeABGB and more, with the cheapest one highlighted.",
+  },
+  {
+    icon: Sparkles,
+    title: "A planner that knows your budget",
+    body: "Tell the advisor what you'll use it for and how much you want to spend. It drafts a complete, compatible build.",
+  },
+];
+
+export default async function HomePage() {
+  const stats = await getCatalogueStats().catch(() => ({ parts: 0, retailers: 0 }));
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <section className="mx-auto max-w-6xl px-4 pt-16 pb-12 sm:pt-24">
+        <p className="eyebrow">PC building, without the guesswork</p>
+        <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
+          Spec it. Price it. <span className="text-accent">Build it.</span>
+        </h1>
+        <p className="mt-5 max-w-xl text-lg text-muted">
+          Plan your next PC with live compatibility checks and prices from the stores you actually
+          buy from.
+        </p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/builder" className="btn-primary px-5 py-2.5">
+            Start a build <ArrowRight className="size-4" />
+          </Link>
+          <Link href="/advisor" className="btn-outline px-5 py-2.5">
+            <Sparkles className="size-4" /> Plan by budget
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <dl className="mt-12 flex gap-10 font-mono text-sm">
+          <div>
+            <dt className="text-muted">Parts tracked</dt>
+            <dd className="mt-1 text-2xl font-semibold">{stats.parts}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Retailers</dt>
+            <dd className="mt-1 text-2xl font-semibold">{stats.retailers}</dd>
+          </div>
+          <div>
+            <dt className="text-muted">Checks per build</dt>
+            <dd className="mt-1 text-2xl font-semibold">10</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="flex items-end justify-between gap-4">
+          <h2 className="font-display text-2xl font-bold">Browse by category</h2>
+          <Link href="/parts" className="text-sm text-muted hover:text-ink">
+            All parts →
+          </Link>
         </div>
-      </main>
-    </div>
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {CATEGORIES.map((cat) => (
+            <Link
+              key={cat}
+              href={`/parts?category=${cat}`}
+              className="card group p-4 transition hover:-translate-y-0.5 hover:border-ink"
+            >
+              <p className="font-mono text-xs text-accent">{CATEGORY_META[cat].label}</p>
+              <p className="mt-6 font-display text-lg font-semibold">{CATEGORY_META[cat].plural}</p>
+              <p className="text-sm text-muted">{CATEGORY_META[cat].blurb}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-3">
+        {FEATURES.map(({ icon: Icon, title, body }) => (
+          <div key={title} className="card p-6">
+            <Icon className="size-5 text-accent" />
+            <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="flex flex-col items-start gap-6 rounded-3xl bg-ink p-8 text-bg sm:flex-row sm:items-center sm:justify-between sm:p-12">
+          <div>
+            <h2 className="flex items-center gap-2 font-display text-2xl font-bold">
+              <MessagesSquare className="size-6" /> Stuck on a choice?
+            </h2>
+            <p className="mt-2 max-w-md opacity-70">
+              Post your build in the forum and get a second opinion from people who&apos;ve been
+              there.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Link href="/forum" className="btn bg-bg text-ink hover:opacity-90">
+              Visit the forum
+            </Link>
+            <Link href="/parts?category=cpu" className="btn border border-bg/30 hover:border-bg">
+              <Cpu className="size-4" /> Browse CPUs
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
