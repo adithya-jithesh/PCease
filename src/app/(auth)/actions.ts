@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 export interface AuthState {
   error?: string;
   message?: string;
+  /** Set when the account exists but its email hasn't been confirmed yet. */
+  pendingEmail?: string;
 }
 
 const credentials = z.object({
@@ -40,6 +42,12 @@ export async function signIn(_: AuthState, form: FormData): Promise<AuthState> {
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error?.code === "email_not_confirmed") {
+    return {
+      error: "Confirm your email before signing in. Check your inbox (and spam) for the link.",
+      pendingEmail: parsed.data.email,
+    };
+  }
   if (error) return { error: "That email and password don't match." };
 
   revalidatePath("/", "layout");
@@ -63,11 +71,31 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
 
   // With email confirmation on, there's no session yet.
   if (!data.session) {
-    return { message: "Check your inbox for a confirmation link to finish signing up." };
+    return {
+      message: "Check your inbox (and spam) for a confirmation link to finish signing up.",
+      pendingEmail: parsed.data.email,
+    };
   }
 
   revalidatePath("/", "layout");
   redirect(safeNext(form.get("next")));
+}
+
+export async function resendConfirmation(email: string): Promise<AuthState> {
+  const parsed = z.string().trim().email().safeParse(email);
+  if (!parsed.success) return { error: "Enter a valid email address." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data,
+    options: { emailRedirectTo: `${await siteOrigin()}/auth/callback?next=/dashboard` },
+  });
+  if (error?.code === "over_email_send_rate_limit") {
+    return { error: "Too many emails sent recently. Wait a few minutes and try again." };
+  }
+  if (error) return { error: error.message };
+  return { message: `Sent a new confirmation link to ${parsed.data}.` };
 }
 
 export async function signInWithGoogle(form: FormData) {

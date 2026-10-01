@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useOptimistic, useRef, useTransition } from "react";
 import { ArrowBigDown, ArrowBigUp, Loader2, Trash2 } from "lucide-react";
+import { submitWithoutReset } from "@/lib/forms";
 import { createReply, deleteReply, deleteThread, vote, type FormState } from "../actions";
 
 export function VoteButtons({ threadId, score, myVote }: { threadId: number; score: number; myVote: number }) {
@@ -40,7 +41,7 @@ export function ReplyForm({ threadId }: { threadId: number }) {
   }, [pending, state]);
 
   return (
-    <form ref={form} action={action} className="space-y-2">
+    <form ref={form} onSubmit={submitWithoutReset(action)} className="space-y-2">
       <input type="hidden" name="thread_id" value={threadId} />
       <textarea name="body" required maxLength={5000} rows={4} placeholder="Write a reply…" className="input" />
       {state.error && <p className="text-sm text-err">{state.error}</p>}

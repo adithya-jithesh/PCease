@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
+import { submitWithoutReset } from "@/lib/forms";
 import { FORUM_TOPICS } from "@/lib/types";
 import { createThread, type FormState } from "../actions";
 import { TOPIC_LABELS } from "../topics";
@@ -10,7 +11,7 @@ export function NewThreadForm({ builds }: { builds: { id: string; title: string;
   const [state, action, pending] = useActionState<FormState, FormData>(createThread, {});
 
   return (
-    <form action={action} className="mt-8 space-y-4">
+    <form onSubmit={submitWithoutReset(action)} className="mt-8 space-y-4">
       <label className="block space-y-1">
         <span className="text-sm font-medium">Title</span>
         <input name="title" required minLength={5} maxLength={160} className="input" />

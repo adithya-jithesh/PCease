@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
-import { signIn, signInWithGoogle, signUp, type AuthState } from "../actions";
+import { submitWithoutReset } from "@/lib/forms";
+import { resendConfirmation, signIn, signInWithGoogle, signUp, type AuthState } from "../actions";
 
 export function AuthForm({ next, google }: { next: string; google: boolean }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -46,7 +47,7 @@ export function AuthForm({ next, google }: { next: string; google: boolean }) {
         ))}
       </div>
 
-      <form action={mode === "signin" ? signInAction : signUpAction} className="space-y-3">
+      <form onSubmit={submitWithoutReset(mode === "signin" ? signInAction : signUpAction)} className="space-y-3">
         <input type="hidden" name="next" value={next} />
         {mode === "signup" && (
           <label className="block space-y-1">
@@ -80,12 +81,34 @@ export function AuthForm({ next, google }: { next: string; google: boolean }) {
             {state.message}
           </p>
         )}
+        {state.pendingEmail && <ResendConfirmation email={state.pendingEmail} />}
 
         <button disabled={pending} className="btn-primary w-full py-2.5">
           {pending && <Loader2 className="size-4 animate-spin" />}
           {mode === "signin" ? "Sign in" : "Create account"}
         </button>
       </form>
+    </div>
+  );
+}
+
+function ResendConfirmation({ email }: { email: string }) {
+  const [result, setResult] = useState<AuthState>({});
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <div className="text-sm">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => startTransition(async () => setResult(await resendConfirmation(email)))}
+        className="inline-flex items-center gap-1.5 text-accent underline disabled:opacity-50"
+      >
+        {pending && <Loader2 className="size-3.5 animate-spin" />}
+        Resend confirmation email
+      </button>
+      {result.message && <p className="mt-1 text-ok">{result.message}</p>}
+      {result.error && <p className="mt-1 text-err">{result.error}</p>}
     </div>
   );
 }
