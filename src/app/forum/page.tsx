@@ -47,7 +47,7 @@ export default async function ForumPage({ searchParams }: PageProps<"/forum">) {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4">
+        <div className="-mx-4 flex gap-1.5 no-scrollbar overflow-x-auto px-4">
           <Link href={href({ topic: undefined })} className={`btn shrink-0 ${!topic ? "bg-accent-soft text-accent" : "btn-outline"}`}>
             All
           </Link>

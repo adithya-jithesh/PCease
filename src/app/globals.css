@@ -52,7 +52,14 @@ body {
 }
 
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition disabled:pointer-events-none disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition disabled:pointer-events-none disabled:opacity-50;
+}
+/* Horizontally swipeable rows (category and topic chips) without a visible scrollbar. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 @utility btn-primary {
   @apply btn bg-accent text-accent-ink hover:brightness-110;

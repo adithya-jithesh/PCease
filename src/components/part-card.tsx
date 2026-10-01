@@ -24,12 +24,12 @@ export function PartCard({ part }: { part: Part }) {
           ))}
         </div>
       </Link>
-      <div className="mt-4 flex items-end justify-between gap-2 border-t border-line pt-3">
-        <div>
-          <p className="text-[11px] text-muted">from</p>
-          <p className="font-mono text-lg font-semibold">{formatINR(part.best_price)}</p>
-        </div>
-        <div className="flex items-center gap-1">
+      <div className="mt-4 border-t border-line pt-3">
+        <p className="font-mono text-lg font-semibold">
+          <span className="mr-1.5 font-sans text-[11px] font-normal text-muted">from</span>
+          {formatINR(part.best_price)}
+        </p>
+        <div className="mt-3 flex items-center justify-between gap-2">
           <CompareToggle id={part.id} />
           <AddToBuildButton id={part.id} category={part.category} compact />
         </div>
