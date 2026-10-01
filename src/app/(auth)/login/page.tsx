@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getEnabledProviders } from "@/lib/supabase/auth-settings";
 import { getUser } from "@/lib/supabase/server";
 import { AuthForm } from "./auth-form";
 
@@ -10,6 +11,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const raw = typeof params.next === "string" ? params.next : "";
   const next = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
   if (await getUser()) redirect(next);
+  const providers = await getEnabledProviders();
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
@@ -22,7 +24,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           Sign-in didn&apos;t complete. Please try again.
         </p>
       )}
-      <AuthForm next={next} />
+      <AuthForm next={next} google={providers.google} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { signIn, signInWithGoogle, signUp, type AuthState } from "../actions";
 
-export function AuthForm({ next }: { next: string }) {
+export function AuthForm({ next, google }: { next: string; google: boolean }) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [signInState, signInAction, signingIn] = useActionState<AuthState, FormData>(signIn, {});
   const [signUpState, signUpAction, signingUp] = useActionState<AuthState, FormData>(signUp, {});
@@ -14,19 +14,23 @@ export function AuthForm({ next }: { next: string }) {
 
   return (
     <div className="mt-8 space-y-6">
-      <form action={signInWithGoogle}>
-        <input type="hidden" name="next" value={next} />
-        <button className="btn-outline w-full py-2.5">
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.6 3.9-5.4 3.9-3.3 0-5.9-2.7-5.9-6s2.6-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.6 6.7 2.6 12s4.2 9.5 9.4 9.5c5.4 0 9-3.8 9-9.2 0-.6-.1-1.1-.2-1.6H12z" />
-          </svg>
-          Continue with Google
-        </button>
-      </form>
+      {google && (
+        <form action={signInWithGoogle}>
+          <input type="hidden" name="next" value={next} />
+          <button className="btn-outline w-full py-2.5">
+            <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+              <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.6 3.9-5.4 3.9-3.3 0-5.9-2.7-5.9-6s2.6-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.5 14.6 2.5 12 2.5 6.8 2.5 2.6 6.7 2.6 12s4.2 9.5 9.4 9.5c5.4 0 9-3.8 9-9.2 0-.6-.1-1.1-.2-1.6H12z" />
+            </svg>
+            Continue with Google
+          </button>
+        </form>
+      )}
 
-      <div className="flex items-center gap-3 text-xs text-muted">
-        <span className="h-px flex-1 bg-line" /> or with email <span className="h-px flex-1 bg-line" />
-      </div>
+      {google && (
+        <div className="flex items-center gap-3 text-xs text-muted">
+          <span className="h-px flex-1 bg-line" /> or with email <span className="h-px flex-1 bg-line" />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 rounded-full bg-surface-2 p-1 text-sm" role="tablist">
         {(["signin", "signup"] as const).map((m) => (
