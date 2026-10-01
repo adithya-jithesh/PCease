@@ -19,7 +19,7 @@ export default async function BuilderPage({ searchParams }: PageProps<"/builder"
   let editing = null;
   if (typeof buildId === "string" && auth.user) {
     const { data } = await supabase
-      .from("builds")
+      .from("saved_builds")
       .select("id, title, notes, parts, is_public")
       .eq("id", buildId)
       .eq("owner_id", auth.user.id)

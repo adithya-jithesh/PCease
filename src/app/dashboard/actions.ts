@@ -14,7 +14,7 @@ async function ownerClient() {
 
 export async function setBuildVisibility(id: string, isPublic: boolean) {
   const { supabase, userId } = await ownerClient();
-  await supabase.from("builds").update({ is_public: isPublic }).eq("id", id).eq("owner_id", userId);
+  await supabase.from("saved_builds").update({ is_public: isPublic }).eq("id", id).eq("owner_id", userId);
   revalidatePath("/dashboard");
   revalidatePath(`/builds/${id}`);
 }
@@ -22,13 +22,13 @@ export async function setBuildVisibility(id: string, isPublic: boolean) {
 export async function duplicateBuild(id: string) {
   const { supabase, userId } = await ownerClient();
   const { data } = await supabase
-    .from("builds")
+    .from("saved_builds")
     .select("title, notes, parts, total_inr")
     .eq("id", id)
     .eq("owner_id", userId)
     .single();
   if (!data) return;
-  await supabase.from("builds").insert({
+  await supabase.from("saved_builds").insert({
     ...data,
     title: `${data.title} (copy)`.slice(0, 80),
     owner_id: userId,
@@ -39,6 +39,6 @@ export async function duplicateBuild(id: string) {
 
 export async function deleteBuild(id: string) {
   const { supabase, userId } = await ownerClient();
-  await supabase.from("builds").delete().eq("id", id).eq("owner_id", userId);
+  await supabase.from("saved_builds").delete().eq("id", id).eq("owner_id", userId);
   revalidatePath("/dashboard");
 }

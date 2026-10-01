@@ -44,14 +44,14 @@ export async function saveBuild(raw: z.input<typeof input>): Promise<SaveResult>
 
   const { data, error } = parsed.data.id
     ? await supabase
-        .from("builds")
+        .from("saved_builds")
         .update(row)
         .eq("id", parsed.data.id)
         .eq("owner_id", user.id)
         .select("id")
         .single()
     : await supabase
-        .from("builds")
+        .from("saved_builds")
         .insert({ ...row, owner_id: user.id })
         .select("id")
         .single();

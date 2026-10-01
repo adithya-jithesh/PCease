@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   const [{ data: profile }, { data: buildRows }, { data: threads }] = await Promise.all([
     supabase.from("profiles").select("username, created_at").eq("id", user.id).single(),
-    supabase.from("builds").select("*").eq("owner_id", user.id).order("updated_at", { ascending: false }),
+    supabase.from("saved_builds").select("*").eq("owner_id", user.id).order("updated_at", { ascending: false }),
     supabase
       .from("threads")
       .select("id, title, reply_count, score, created_at")

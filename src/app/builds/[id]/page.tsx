@@ -14,7 +14,7 @@ async function loadBuild(id: string) {
   const supabase = await createClient();
   // RLS only returns public builds, or private ones to their owner.
   const { data } = await supabase
-    .from("builds")
+    .from("saved_builds")
     .select("id, title, notes, parts, updated_at, is_public, owner:profiles(username)")
     .eq("id", id)
     .maybeSingle();

@@ -109,7 +109,7 @@ group by p.id;
 -- ---------------------------------------------------------------------------
 -- Builds
 -- ---------------------------------------------------------------------------
-create table public.builds (
+create table public.saved_builds (
   id          uuid primary key default gen_random_uuid(),
   owner_id    uuid not null references public.profiles (id) on delete cascade,
   title       text not null default 'Untitled build' check (char_length(title) <= 80),
@@ -122,7 +122,7 @@ create table public.builds (
   updated_at  timestamptz not null default now()
 );
 
-create index builds_owner_idx on public.builds (owner_id, updated_at desc);
+create index saved_builds_owner_idx on public.saved_builds (owner_id, updated_at desc);
 
 -- ---------------------------------------------------------------------------
 -- Forum
@@ -137,7 +137,7 @@ create table public.threads (
   topic        public.forum_topic not null default 'general',
   title        text not null check (char_length(title) between 5 and 160),
   body         text not null check (char_length(body) between 10 and 10000),
-  build_id     uuid references public.builds (id) on delete set null,
+  build_id     uuid references public.saved_builds (id) on delete set null,
   score        integer not null default 0,
   reply_count  integer not null default 0,
   created_at   timestamptz not null default now(),
@@ -212,7 +212,7 @@ alter table public.profiles     enable row level security;
 alter table public.retailers    enable row level security;
 alter table public.parts        enable row level security;
 alter table public.listings     enable row level security;
-alter table public.builds       enable row level security;
+alter table public.saved_builds       enable row level security;
 alter table public.threads      enable row level security;
 alter table public.replies      enable row level security;
 alter table public.thread_votes enable row level security;
@@ -228,13 +228,13 @@ create policy "users update own profile" on public.profiles
   for update using ((select auth.uid()) = id) with check ((select auth.uid()) = id);
 
 -- Builds: owners have full access, everyone can read public builds
-create policy "read public or own builds" on public.builds
+create policy "read public or own builds" on public.saved_builds
   for select using (is_public or (select auth.uid()) = owner_id);
-create policy "insert own builds" on public.builds
+create policy "insert own builds" on public.saved_builds
   for insert with check ((select auth.uid()) = owner_id);
-create policy "update own builds" on public.builds
+create policy "update own builds" on public.saved_builds
   for update using ((select auth.uid()) = owner_id) with check ((select auth.uid()) = owner_id);
-create policy "delete own builds" on public.builds
+create policy "delete own builds" on public.saved_builds
   for delete using ((select auth.uid()) = owner_id);
 
 -- Forum

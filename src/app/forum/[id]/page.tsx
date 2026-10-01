@@ -38,7 +38,7 @@ export default async function ThreadPage({ params }: PageProps<"/forum/[id]">) {
       .order("created_at"),
     supabase.auth.getUser(),
     thread.build_id
-      ? supabase.from("builds").select("id, title, total_inr").eq("id", thread.build_id).maybeSingle()
+      ? supabase.from("saved_builds").select("id, title, total_inr").eq("id", thread.build_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
   const user = auth.user;

@@ -13,7 +13,7 @@ export default async function NewThreadPage() {
   if (!user) redirect("/login?next=/forum/new");
 
   const { data: builds } = await supabase
-    .from("builds")
+    .from("saved_builds")
     .select("id, title, is_public")
     .eq("owner_id", user.id)
     .order("updated_at", { ascending: false });
