@@ -1,16 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 export function MobileNav({ items }: { items: { href: string; label: string }[] }) {
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-
-  useEffect(() => setOpen(false), [pathname]);
-
   return (
     <div className="md:hidden">
       <button
@@ -28,6 +23,7 @@ export function MobileNav({ items }: { items: { href: string; label: string }[] 
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setOpen(false)}
               className="block rounded-lg px-3 py-2.5 text-base font-medium hover:bg-surface-2"
             >
               {item.label}
