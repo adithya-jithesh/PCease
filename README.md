@@ -84,7 +84,3 @@ supabase/
 
 - Seed prices are indicative street prices. Refresh the `listings` table before relying on them.
 - The AI chat's rate limit is held in memory, per server instance. Use a shared store if you need exact limits across instances.
-
-## Acknowledgements
-
-PCease started as a project with [Vaibhav Shiroorkar](https://github.com/vaibhavshiroorkar/pcease). This version is a ground-up rewrite with a new stack, design and data model.
