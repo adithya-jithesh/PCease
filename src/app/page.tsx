@@ -93,21 +93,21 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="flex flex-col items-start gap-6 rounded-3xl bg-ink p-8 text-bg sm:flex-row sm:items-center sm:justify-between sm:p-12">
+        <div className="flex flex-col items-start gap-6 rounded-3xl border border-line bg-gradient-to-br from-surface-2 to-accent-soft p-8 sm:flex-row sm:items-center sm:justify-between sm:p-12">
           <div>
             <h2 className="flex items-center gap-2 font-display text-2xl font-bold">
               <MessagesSquare className="size-6" /> Stuck on a choice?
             </h2>
-            <p className="mt-2 max-w-md opacity-70">
+            <p className="mt-2 max-w-md text-muted">
               Post your build in the forum and get a second opinion from people who&apos;ve been
               there.
             </p>
           </div>
           <div className="flex gap-3">
-            <Link href="/forum" className="btn bg-bg text-ink hover:opacity-90">
+            <Link href="/forum" className="btn-primary">
               Visit the forum
             </Link>
-            <Link href="/parts?category=cpu" className="btn border border-bg/30 hover:border-bg">
+            <Link href="/parts?category=cpu" className="btn-outline">
               <Cpu className="size-4" /> Browse CPUs
             </Link>
           </div>

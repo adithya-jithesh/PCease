@@ -37,7 +37,7 @@ export function Filters({ brands }: { brands: string[] }) {
       <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
         <button
           onClick={() => update({ category: null, brand: null })}
-          className={`btn shrink-0 ${!category ? "bg-ink text-bg" : "btn-outline"}`}
+          className={`btn shrink-0 ${!category ? "bg-accent-soft text-accent" : "btn-outline"}`}
         >
           All
         </button>
@@ -45,7 +45,7 @@ export function Filters({ brands }: { brands: string[] }) {
           <button
             key={c}
             onClick={() => update({ category: c, brand: null })}
-            className={`btn shrink-0 ${category === c ? "bg-ink text-bg" : "btn-outline"}`}
+            className={`btn shrink-0 ${category === c ? "bg-accent-soft text-accent" : "btn-outline"}`}
           >
             {CATEGORY_META[c].plural}
           </button>

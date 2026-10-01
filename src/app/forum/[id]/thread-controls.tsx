@@ -22,7 +22,7 @@ export function VoteButtons({ threadId, score, myVote }: { threadId: number; sco
       </button>
       <span>{optimistic.score}</span>
       <button onClick={() => cast(-1)} aria-label="Downvote" aria-pressed={optimistic.myVote === -1}>
-        <ArrowBigDown className={`size-6 ${optimistic.myVote === -1 ? "fill-ink text-ink" : "text-muted hover:text-ink"}`} />
+        <ArrowBigDown className={`size-6 ${optimistic.myVote === -1 ? "fill-err text-err" : "text-muted hover:text-ink"}`} />
       </button>
     </div>
   );

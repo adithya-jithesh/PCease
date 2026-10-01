@@ -48,11 +48,11 @@ export default async function ForumPage({ searchParams }: PageProps<"/forum">) {
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4">
-          <Link href={href({ topic: undefined })} className={`btn shrink-0 ${!topic ? "bg-ink text-bg" : "btn-outline"}`}>
+          <Link href={href({ topic: undefined })} className={`btn shrink-0 ${!topic ? "bg-accent-soft text-accent" : "btn-outline"}`}>
             All
           </Link>
           {FORUM_TOPICS.map((t) => (
-            <Link key={t} href={href({ topic: t })} className={`btn shrink-0 ${topic === t ? "bg-ink text-bg" : "btn-outline"}`}>
+            <Link key={t} href={href({ topic: t })} className={`btn shrink-0 ${topic === t ? "bg-accent-soft text-accent" : "btn-outline"}`}>
               {TOPIC_LABELS[t]}
             </Link>
           ))}

@@ -19,7 +19,7 @@ Plan a PC for the Indian market: compare part prices across Indian retailers, ch
 | Layer | Choice |
 | --- | --- |
 | App | Next.js 16 (App Router, Server Components, Server Actions), React 19, TypeScript |
-| Styling | Tailwind CSS v4 with a light/dark token system |
+| Styling | Tailwind CSS v4 with a navy and teal design-token theme |
 | Data & auth | Supabase (Postgres, row-level security, Supabase Auth) |
 | AI | Google Gemini (`@google/genai`), streamed from a route handler |
 | Testing | Vitest |

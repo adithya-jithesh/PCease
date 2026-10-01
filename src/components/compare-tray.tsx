@@ -12,7 +12,7 @@ export function CompareTray() {
 
   return (
     <div className="fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
-      <div className="flex items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-5 text-sm text-bg shadow-xl">
+      <div className="flex items-center gap-3 rounded-full border border-line bg-surface-2 py-2 pr-2 pl-5 text-sm text-ink shadow-xl shadow-black/40">
         <GitCompareArrows className="size-4" />
         <span>
           {ids.length} of {MAX_COMPARE} selected
