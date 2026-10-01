@@ -67,6 +67,9 @@ export async function signUp(_: AuthState, form: FormData): Promise<AuthState> {
       emailRedirectTo: `${await siteOrigin()}/auth/callback?next=${encodeURIComponent(safeNext(form.get("next")))}`,
     },
   });
+  if (error?.code === "over_email_send_rate_limit") {
+    return { error: "We can't send more confirmation emails right now. Please try again in an hour." };
+  }
   if (error) return { error: error.message };
 
   // With email confirmation on, there's no session yet.
