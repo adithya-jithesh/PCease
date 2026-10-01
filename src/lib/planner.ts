@@ -30,8 +30,10 @@ function completePlatform(
   gpu: Part | undefined,
   pool: Record<Part["category"], Part[]>,
   useCase: UseCase,
+  lean = false,
 ): ResolvedBuild | null {
-  const want = USE_CASES[useCase];
+  // Lean mode drops to the cheapest working memory/storage and the stock cooler.
+  const want = lean ? { ramGb: 0, storageGb: 0 } : USE_CASES[useCase];
   const memory = spec(cpu, "memory") as string[];
 
   const board = cheapest(
@@ -56,7 +58,10 @@ function completePlatform(
     }),
   );
 
-  const cooler = cheapest(
+  const stockCoolerOk = lean && cpu.specs.cooler_included === true;
+  const cooler = stockCoolerOk
+    ? undefined
+    : cheapest(
     pool.cooler.filter((c) => {
       const sockets = spec(c, "sockets") as string[];
       const height = Number(spec(c, "height_mm") ?? 0);
@@ -68,9 +73,10 @@ function completePlatform(
     }),
   );
 
-  if (!ram || !storage || !chassis || !cooler) return null;
+  if (!ram || !storage || !chassis || (!cooler && !stockCoolerOk)) return null;
 
-  const partial: ResolvedBuild = { cpu, gpu, motherboard: board, ram, storage, case: chassis, cooler };
+  const partial: ResolvedBuild = { cpu, gpu, motherboard: board, ram, storage, case: chassis };
+  if (cooler) partial.cooler = cooler;
   const needed = recommendPsu(estimateWatts(partial));
   const psu = cheapest(pool.psu.filter((p) => Number(spec(p, "wattage")) >= needed));
   if (!psu) return null;
@@ -133,7 +139,8 @@ export function planBuild(parts: Part[], budget: number, useCase: UseCase): Plan
       useCase === "office" && spec(cpu, "igpu") ? [undefined, ...pool.gpu] : pool.gpu;
 
     for (const gpu of gpus) {
-      const build = completePlatform(cpu, gpu, pool, useCase);
+      let build = completePlatform(cpu, gpu, pool, useCase);
+      if (!build || sum(build) > budget) build = completePlatform(cpu, gpu, pool, useCase, true);
       if (!build) continue;
       const total = sum(build);
       if (total > budget) continue;
@@ -149,8 +156,10 @@ export function planBuild(parts: Part[], budget: number, useCase: UseCase): Plan
 
   const build = spendLeftover(best.build, budget, pool, useCase);
   if (!build.gpu) delete build.gpu;
+  if (!build.cooler) delete build.cooler;
   const total = sum(build);
   const notes: string[] = [];
+  if (!build.cooler) notes.push("Uses the CPU's bundled cooler to save money. An aftermarket cooler is an easy upgrade later.");
   if (!build.gpu) notes.push("Uses the CPU's integrated graphics. Add a graphics card later if you start gaming.");
   if (build.cpu?.tier && build.gpu?.tier && build.gpu.tier - build.cpu.tier >= 2)
     notes.push("Leans heavily on the GPU, which is the right call for high-resolution gaming.");

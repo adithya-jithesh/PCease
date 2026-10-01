@@ -29,6 +29,8 @@ const DEFAULT_WATTS: Partial<Record<Category, number>> = {
   cooler: 5,
 };
 const PLATFORM_OVERHEAD = 40;
+// Below this margin, GPU transient spikes can trip the PSU's protection.
+const PSU_MINIMUM_MARGIN = 1.1;
 const PSU_HEADROOM = 1.3;
 
 const str = (v: unknown) => (v == null ? undefined : String(v));
@@ -178,7 +180,13 @@ export function analyzeBuild(build: ResolvedBuild): BuildAnalysis {
     }
   }
 
-  if (cpu && !cooler) {
+  if (cpu && !cooler && cpu.specs.cooler_included) {
+    checks.push({
+      level: "ok",
+      title: "Stock cooler included",
+      detail: `${cpu.name} ships with a cooler that's fine at stock settings.`,
+    });
+  } else if (cpu && !cooler) {
     checks.push({
       level: "warn",
       title: "No CPU cooler",
@@ -199,11 +207,11 @@ export function analyzeBuild(build: ResolvedBuild): BuildAnalysis {
 
   if (psu) {
     const wattage = num(psu.specs.wattage) ?? 0;
-    if (wattage < estimatedWatts) {
+    if (wattage < estimatedWatts * PSU_MINIMUM_MARGIN) {
       checks.push({
         level: "error",
         title: "Power supply too weak",
-        detail: `Estimated draw is ${estimatedWatts} W; this unit is ${wattage} W.`,
+        detail: `Estimated draw is ${estimatedWatts} W, leaving no margin for spikes on a ${wattage} W unit.`,
       });
     } else if (wattage < recommendedPsu) {
       checks.push({
