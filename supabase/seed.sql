@@ -9,15 +9,14 @@ insert into public.retailers (slug, name, homepage, search_url) values
   ('vedant',      'Vedant Computers', 'https://www.vedantcomputers.com',    'https://www.vedantcomputers.com/index.php?route=product/search&search={q}'),
   ('itdepot',     'The IT Depot',     'https://www.theitdepot.com',         'https://www.theitdepot.com/search.html?keywords={q}'),
   ('elitehubs',   'EliteHubs',        'https://elitehubs.com',              'https://elitehubs.com/search?q={q}'),
-  ('pcstudio',    'PC Studio',        'https://www.pcstudio.in',            'https://www.pcstudio.in/?s={q}&post_type=product');
+  ('pcstudio',    'PC Studio',        'https://www.pcstudio.in',            'https://www.pcstudio.in/?s={q}&post_type=product')
+on conflict (slug) do nothing;
 
--- Parts with a reference price used to generate retailer listings below.
-create temporary table seed_parts (
-  slug text, category public.part_category, brand text, name text,
-  specs jsonb, watts int, tier smallint, ref_price int
-);
-
-insert into seed_parts values
+-- Parts, plus listings generated from each part's reference price.
+-- One statement with no temp tables, so it works however the SQL editor runs
+-- it, and it's safe to re-run (existing rows are updated, not duplicated).
+with seed_parts (slug, category, brand, name, specs, watts, tier, ref_price) as (
+values
 -- CPUs ---------------------------------------------------------------------
 ('ryzen-5-5500',      'cpu', 'AMD',   'Ryzen 5 5500',      '{"socket":"AM4","cores":6,"threads":12,"base_ghz":3.6,"boost_ghz":4.2,"memory":["DDR4"],"igpu":false,"cooler_included":true}', 65, 1, 7000),
 ('ryzen-5-5600g',     'cpu', 'AMD',   'Ryzen 5 5600G',     '{"socket":"AM4","cores":6,"threads":12,"base_ghz":3.9,"boost_ghz":4.4,"memory":["DDR4"],"igpu":true,"cooler_included":true}', 65, 1, 11000),
@@ -86,23 +85,29 @@ insert into seed_parts values
 ('cm-hyper-212-spectrum-v3','cooler', 'Cooler Master', 'Hyper 212 Spectrum V3', '{"type":"Air","sockets":["AM4","AM5","LGA1700"],"tdp_rating":180,"height_mm":154}', 4, null, 2500),
 ('deepcool-ak400',          'cooler', 'Deepcool',      'AK400',                 '{"type":"Air","sockets":["AM4","AM5","LGA1700"],"tdp_rating":220,"height_mm":155}', 4, null, 2700),
 ('thermalright-pa120-se',   'cooler', 'Thermalright',  'Peerless Assassin 120 SE','{"type":"Air","sockets":["AM4","AM5","LGA1700"],"tdp_rating":245,"height_mm":155}', 5, null, 3500),
-('arctic-lf3-240',          'cooler', 'Arctic',        'Liquid Freezer III 240','{"type":"AIO","sockets":["AM4","AM5","LGA1700"],"tdp_rating":300,"radiator_mm":240}', 8, null, 8500);
-
-insert into public.parts (slug, category, brand, name, specs, watts, tier)
-select slug, category, brand, name, specs, watts, tier from seed_parts;
-
+('arctic-lf3-240',          'cooler', 'Arctic',        'Liquid Freezer III 240','{"type":"AIO","sockets":["AM4","AM5","LGA1700"],"tdp_rating":300,"radiator_mm":240}', 8, null, 8500)
+),
+upserted as (
+  insert into public.parts (slug, category, brand, name, specs, watts, tier)
+  select slug, category::public.part_category, brand, name, specs::jsonb, watts::int, tier::smallint
+  from seed_parts
+  on conflict (slug) do update
+    set category = excluded.category, brand = excluded.brand, name = excluded.name,
+        specs = excluded.specs, watts = excluded.watts, tier = excluded.tier
+  returning id, slug
+)
 -- Spread each reference price across 3-6 retailers with a small, deterministic
 -- variation so price comparison has something to compare.
 insert into public.listings (part_id, retailer_id, price_inr, in_stock)
 select
-  p.id,
+  u.id,
   r.id,
-  (round(s.ref_price * (0.96 + ((p.id * 7 + r.id * 13) % 10) / 100.0) / 10) * 10 - 1)::int,
-  ((p.id + r.id) % 11) <> 0
+  (round(s.ref_price * (0.96 + ((u.id * 7 + r.id * 13) % 10) / 100.0) / 10) * 10 - 1)::int,
+  ((u.id + r.id) % 11) <> 0
 from seed_parts s
-join public.parts p on p.slug = s.slug
+join upserted u on u.slug = s.slug
 cross join public.retailers r
-where (p.id * 3 + r.id) % 4 <> 0
-   or r.slug = 'amazon';
-
-drop table seed_parts;
+where (u.id * 3 + r.id) % 4 <> 0
+   or r.slug = 'amazon'
+on conflict (part_id, retailer_id) do update
+  set price_inr = excluded.price_inr, in_stock = excluded.in_stock, updated_at = now();
