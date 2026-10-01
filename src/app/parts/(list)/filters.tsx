@@ -34,7 +34,7 @@ export function Filters({ brands }: { brands: string[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 flex gap-1.5 no-scrollbar overflow-x-auto px-4 pb-1">
         <button
           onClick={() => update({ category: null, brand: null })}
           className={`btn shrink-0 ${!category ? "bg-accent-soft text-accent" : "btn-outline"}`}
