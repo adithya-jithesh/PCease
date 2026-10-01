@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { CATEGORY_META, headlineSpecs } from "@/lib/catalog";
+import { headlineSpecs, slotNoun } from "@/lib/catalog";
 import { analyzeBuild } from "@/lib/compat";
 import { formatINR } from "@/lib/format";
 import type { Category, Part, ResolvedBuild } from "@/lib/types";
@@ -29,9 +29,28 @@ export function PartPicker({ slot, parts, current, onPick, onClose }: Props) {
   const [q, setQ] = useState("");
   const [compatibleOnly, setCompatibleOnly] = useState(true);
 
+  // Keep the latest onClose without re-running the effect below.
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    dialog.current?.showModal();
+    onCloseRef.current = onClose;
+  });
+
+  // Open as a modal on mount. Listen for the native `close` event directly so
+  // Escape, the close button and picking a part all hand control back to the
+  // parent, whichever way the dialog was dismissed.
+  useEffect(() => {
+    const el = dialog.current;
+    if (!el) return;
+    const handleClose = () => onCloseRef.current();
+    el.addEventListener("close", handleClose);
+    if (!el.open) el.showModal();
+    return () => el.removeEventListener("close", handleClose);
   }, []);
+
+  const close = () => {
+    dialog.current?.close();
+    onClose();
+  };
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -45,14 +64,13 @@ export function PartPicker({ slot, parts, current, onPick, onClose }: Props) {
   return (
     <dialog
       ref={dialog}
-      onClose={onClose}
-      onClick={(e) => e.target === dialog.current && dialog.current?.close()}
+      onClick={(e) => e.target === dialog.current && close()}
       className="m-auto h-[min(85vh,720px)] w-[min(100vw-2rem,720px)] rounded-2xl border border-line bg-surface p-0 text-ink backdrop:bg-black/50"
     >
       <div className="flex h-full flex-col">
         <header className="flex items-center gap-3 border-b border-line p-4">
-          <h2 className="font-display text-lg font-semibold">Choose a {CATEGORY_META[slot].label.toLowerCase()}</h2>
-          <button onClick={() => dialog.current?.close()} className="btn-ghost ml-auto px-2" aria-label="Close">
+          <h2 className="font-display text-lg font-semibold">Choose {slotNoun(slot)}</h2>
+          <button onClick={close} className="btn-ghost ml-auto px-2" aria-label="Close">
             <X className="size-5" />
           </button>
         </header>
@@ -78,7 +96,7 @@ export function PartPicker({ slot, parts, current, onPick, onClose }: Props) {
               <button
                 onClick={() => {
                   onPick(part);
-                  dialog.current?.close();
+                  close();
                 }}
                 className="flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-surface-2"
               >

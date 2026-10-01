@@ -121,6 +121,14 @@ export const CATEGORY_META: Record<Category, CategoryMeta> = {
   },
 };
 
+/** "CPU", "motherboard", "power supply", "CPU cooler": label for use mid-sentence. */
+export function slotNoun(category: Category): string {
+  return CATEGORY_META[category].label
+    .split(" ")
+    .map((word) => (word === word.toUpperCase() ? word : word.toLowerCase()))
+    .join(" ");
+}
+
 export function formatSpec(category: Category, key: string, value: Specs[string]): string {
   if (value === null || value === undefined || value === "") return "—";
   const field = CATEGORY_META[category].fields.find((f) => f.key === key);

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Check, Copy, Loader2, Plus, RotateCcw, Save, Trash2, Zap } from "lucide-react";
 import { BuildChecks, StatusPill } from "@/components/build-checks";
-import { CATEGORY_META, headlineSpecs } from "@/lib/catalog";
+import { CATEGORY_META, headlineSpecs, slotNoun } from "@/lib/catalog";
 import { analyzeBuild } from "@/lib/compat";
 import { formatINR } from "@/lib/format";
 import { encodeSelection } from "@/lib/share";
@@ -109,7 +109,7 @@ export function Builder({
                     onClick={() => setPicking(slot)}
                     className="flex flex-1 items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2 text-sm text-muted transition hover:border-accent hover:text-accent"
                   >
-                    <Plus className="size-4" /> Choose {CATEGORY_META[slot].label.toLowerCase()}
+                    <Plus className="size-4" /> Choose {slotNoun(slot)}
                   </button>
                 )}
               </li>
@@ -146,6 +146,7 @@ export function Builder({
 
       {picking && (
         <PartPicker
+          key={picking}
           slot={picking}
           parts={parts}
           current={resolved}
