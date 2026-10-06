@@ -266,7 +266,11 @@ export function Chat({ enabled, catalog }: { enabled: boolean; catalog: CatalogI
 
 /** Markdown answer where [[slug]] references become live part chips. */
 function AdvisorMarkdown({ text, bySlug }: { text: string; bySlug: Map<string, CatalogItem> }) {
-  const withLinks = text.replace(/\[\[([a-z0-9-]+)\]\]/g, (_, slug: string) => `[${slug}](part:${slug})`);
+  // Models occasionally vary the casing of slugs, so match case-insensitively.
+  const withLinks = text.replace(/\[\[([a-z0-9-]+)\]\]/gi, (_, slug: string) => {
+    const normalized = slug.toLowerCase();
+    return `[${normalized}](part:${normalized})`;
+  });
 
   return (
     <div className="prose-advisor text-sm leading-relaxed">

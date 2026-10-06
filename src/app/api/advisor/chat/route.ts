@@ -1,15 +1,14 @@
-import { GoogleGenAI, type Content, type Part as GenPart } from "@google/genai";
+import { ThinkingLevel, type Content, type GoogleGenAI, type Part as GenPart } from "@google/genai";
 import { z } from "zod";
 import type { AdvisorEvent } from "@/lib/advisor/events";
 import { GUARD_INSTRUCTION, OFF_TOPIC_REPLY, systemInstruction } from "@/lib/advisor/prompt";
 import { runTool, TOOL_DECLARATIONS, TOOL_STATUS } from "@/lib/advisor/tools";
+import { createGemini, isRetryable, MODELS, withModelFallback } from "@/lib/ai";
 import { listParts } from "@/lib/data";
 import { sanitizeSelection } from "@/lib/share";
 import { createClient } from "@/lib/supabase/server";
 import type { Part } from "@/lib/types";
 
-const MODEL = "gemini-2.5-flash";
-const GUARD_MODEL = "gemini-2.5-flash-lite";
 const MAX_TOOL_ROUNDS = 6;
 
 const body = z.object({
@@ -42,21 +41,23 @@ async function isInScope(ai: GoogleGenAI, messages: { role: string; text: string
       .slice(-4)
       .map((m) => `${m.role === "user" ? "User" : "Advisor"}: ${m.text.slice(0, 1000)}`)
       .join("\n");
-    const res = await ai.models.generateContent({
-      model: GUARD_MODEL,
-      contents: transcript,
-      config: {
-        systemInstruction: GUARD_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseJsonSchema: {
-          type: "object",
-          properties: { in_scope: { type: "boolean" } },
-          required: ["in_scope"],
+    const { result: res } = await withModelFallback(MODELS.fast, (model) =>
+      ai.models.generateContent({
+        model,
+        contents: transcript,
+        config: {
+          systemInstruction: GUARD_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseJsonSchema: {
+            type: "object",
+            properties: { in_scope: { type: "boolean" } },
+            required: ["in_scope"],
+          },
+          thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+          maxOutputTokens: 50,
         },
-        temperature: 0,
-        maxOutputTokens: 20,
-      },
-    });
+      }),
+    );
     return JSON.parse(res.text ?? "{}").in_scope !== false;
   } catch (err) {
     console.warn("advisor guard failed, continuing", err);
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
     }));
   };
 
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = createGemini(apiKey, 45_000);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -118,12 +119,25 @@ export async function POST(request: Request) {
         const config = {
           systemInstruction: systemInstruction(currentBuild),
           tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
-          temperature: 0.4,
-          maxOutputTokens: 2048,
+          // Gemini 3 works best at its default temperature; keep thinking light for snappy replies.
+          thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          maxOutputTokens: 4096,
         };
 
+        // Pick whichever model is available for the first turn, then stay on it:
+        // its thought signatures in the history only work with the same model.
+        let model: string | undefined;
         for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-          const response = await ai.models.generateContentStream({ model: MODEL, contents, config });
+          let response;
+          if (!model) {
+            const picked = await withModelFallback(MODELS.chat, (m) =>
+              ai.models.generateContentStream({ model: m, contents, config }),
+            );
+            model = picked.model;
+            response = picked.result;
+          } else {
+            response = await ai.models.generateContentStream({ model, contents, config });
+          }
           const modelParts: GenPart[] = [];
 
           for await (const chunk of response) {
@@ -154,7 +168,12 @@ export async function POST(request: Request) {
         }
       } catch (err) {
         console.error("advisor request failed", err);
-        send({ t: "error", v: "The advisor ran into a problem. Please try again." });
+        send({
+          t: "error",
+          v: isRetryable(err)
+            ? "The AI is very busy right now. Please try again in a minute."
+            : "The advisor ran into a problem. Please try again.",
+        });
       } finally {
         send({ t: "done" });
         controller.close();

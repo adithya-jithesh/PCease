@@ -28,6 +28,7 @@ try {
   process.exit(1);
 }
 
+if (report.stopped) console.log(`\nStopped early: ${report.stopped}`);
 console.log(`\nChecked ${report.checked} parts: ${report.updated} prices updated, ${report.rejected} rejected.`);
 for (const part of report.parts) {
   for (const u of part.updated) console.log(`  ✓ ${part.slug} @ ${u.store}: ${u.from ?? "new"} → ${u.to}`);

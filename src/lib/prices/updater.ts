@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { createGemini, isQuotaError } from "../ai";
 import { createAdminClient } from "../supabase/admin";
 import { lookupPrices } from "./lookup";
 import { judgeOffer, median, type RetailerRef } from "./validate";
@@ -27,7 +27,14 @@ export interface RefreshReport {
   updated: number;
   rejected: number;
   parts: PartReport[];
+  /** Set when the run stopped early, e.g. because Gemini is out of quota. */
+  stopped?: string;
 }
+
+export const GROUNDING_QUOTA_MESSAGE =
+  "Gemini's Google Search quota is exhausted for this API key. Free keys get little or no search " +
+  "grounding: enable billing on the key's Google Cloud project (https://aistudio.google.com/apikey → " +
+  "Set up billing) or wait for the quota to reset.";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -38,7 +45,7 @@ export async function refreshPrices(options: RefreshOptions): Promise<RefreshRep
 
   const started = Date.now();
   const db = createAdminClient();
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = createGemini(apiKey, 90_000);
 
   const { data: retailers, error: rErr } = await db.from("retailers").select("id, slug, name, homepage");
   if (rErr || !retailers) throw new Error(`Couldn't load retailers: ${rErr?.message}`);
@@ -52,6 +59,7 @@ export async function refreshPrices(options: RefreshOptions): Promise<RefreshRep
 
   const { data: run } = await db.from("price_runs").insert({ trigger }).select("id").single();
   const report: RefreshReport = { checked: 0, updated: 0, rejected: 0, parts: [] };
+  let quotaFailuresInARow = 0;
 
   for (const [index, part] of parts.entries()) {
     if (Date.now() - started > budgetMs) {
@@ -102,8 +110,21 @@ export async function refreshPrices(options: RefreshOptions): Promise<RefreshRep
           to: verdict.price,
         });
       }
+      quotaFailuresInARow = 0;
     } catch (err) {
       partReport.error = err instanceof Error ? err.message : String(err);
+      if (isQuotaError(err)) {
+        partReport.error = GROUNDING_QUOTA_MESSAGE;
+        quotaFailuresInARow++;
+      }
+    }
+
+    // Out of quota on every model: further lookups would fail the same way.
+    if (quotaFailuresInARow >= 2) {
+      report.stopped = GROUNDING_QUOTA_MESSAGE;
+      report.updated += partReport.updated.length;
+      log(`Stopping: ${GROUNDING_QUOTA_MESSAGE}`);
+      break;
     }
 
     // Mark as checked even when nothing was found, so the rotation moves on.
@@ -125,7 +146,7 @@ export async function refreshPrices(options: RefreshOptions): Promise<RefreshRep
         checked: report.checked,
         updated: report.updated,
         rejected: report.rejected,
-        details: report.parts,
+        details: report.stopped ? [...report.parts, { stopped: report.stopped }] : report.parts,
       })
       .eq("id", run.id);
   }

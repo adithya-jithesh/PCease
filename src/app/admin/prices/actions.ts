@@ -71,6 +71,7 @@ export async function refreshStalest(): Promise<ActionResult> {
   try {
     const report = await refreshPrices({ trigger: "admin", limit: 5, budgetMs: 100_000 });
     revalidateCatalogue();
+    if (report.stopped) return { ok: false, message: report.stopped };
     return {
       ok: true,
       message: `Checked ${report.checked} parts: ${report.updated} prices updated, ${report.rejected} rejected.`,

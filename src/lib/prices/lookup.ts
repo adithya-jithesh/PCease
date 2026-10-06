@@ -1,7 +1,6 @@
 import type { GoogleGenAI } from "@google/genai";
+import { MODELS, withModelFallback } from "../ai";
 import { hostOf, parseOffers, type RawOffer, type RetailerRef } from "./validate";
-
-export const PRICE_MODEL = "gemini-2.5-flash";
 
 export interface LookupPart {
   brand: string;
@@ -47,11 +46,9 @@ Rules:
 Reply with JSON only, no other text:
 {"offers":[{"store":"<store id from the list>","price_inr":12345,"in_stock":true,"url":"<product page url>"}]}`;
 
-  const res = await ai.models.generateContent({
-    model: PRICE_MODEL,
-    contents: prompt,
-    config: { tools: [{ googleSearch: {} }], temperature: 0 },
-  });
+  const { result: res } = await withModelFallback(MODELS.prices, (model) =>
+    ai.models.generateContent({ model, contents: prompt, config: { tools: [{ googleSearch: {} }] } }),
+  );
 
   const chunks = res.candidates?.[0]?.groundingMetadata?.groundingChunks ?? [];
   const evidenceHosts = chunks
