@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isAdmin } from "@/lib/admin";
 import { getUser } from "@/lib/supabase/server";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
@@ -15,7 +16,7 @@ export async function SiteHeader() {
         <NavLinks />
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <UserMenu email={user.email ?? ""} />
+            <UserMenu email={user.email ?? ""} admin={isAdmin(user)} />
           ) : (
             <Link href="/login" className="btn-primary">
               Sign in

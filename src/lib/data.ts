@@ -1,4 +1,5 @@
 import "server-only";
+import { bestPriceByDay, type PriceEvent } from "./price-history";
 import { createClient } from "./supabase/server";
 import type { BuildSelection, Category, Part, PartWithListings, ResolvedBuild } from "./types";
 import { CATEGORIES } from "./types";
@@ -100,4 +101,19 @@ export async function getCatalogueStats() {
     supabase.from("retailers").select("*", { count: "exact", head: true }),
   ]);
   return { parts: parts.count ?? 0, retailers: retailers.count ?? 0 };
+}
+
+/** Best in-stock price per day over the last `days` days (empty if no history yet). */
+export async function getPriceHistory(partId: number, days = 90) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("price_history")
+    .select("retailer_id, price_inr, in_stock, recorded_at")
+    .eq("part_id", partId)
+    .order("recorded_at", { ascending: true })
+    .limit(2000);
+  // The table arrives with migration 0002; treat its absence as "no history".
+  if (error || !data) return [];
+  const series = bestPriceByDay(data as PriceEvent[]);
+  return series.slice(-days);
 }

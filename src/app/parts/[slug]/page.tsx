@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { AddToBuildButton, CompareToggle } from "@/components/part-actions";
 import { CATEGORY_META, formatSpec } from "@/lib/catalog";
-import { getPart } from "@/lib/data";
+import { getPart, getPriceHistory } from "@/lib/data";
+import { PriceHistoryChart } from "@/components/price-history-chart";
+import { CategoryIcon } from "@/components/category-icon";
 import { formatINR, retailerLink, timeAgo } from "@/lib/format";
 
 export async function generateMetadata({ params }: PageProps<"/parts/[slug]">): Promise<Metadata> {
@@ -21,6 +23,7 @@ export default async function PartPage({ params }: PageProps<"/parts/[slug]">) {
   if (!part) notFound();
 
   const meta = CATEGORY_META[part.category];
+  const history = await getPriceHistory(part.id);
   const inStock = part.listings.filter((l) => l.in_stock);
   const best = inStock[0];
   const worst = inStock[inStock.length - 1];
@@ -36,7 +39,9 @@ export default async function PartPage({ params }: PageProps<"/parts/[slug]">) {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div>
-          <p className="font-mono text-xs text-accent">{meta.label}</p>
+          <p className="flex items-center gap-1.5 font-mono text-xs text-accent">
+            <CategoryIcon category={part.category} className="size-3.5" /> {meta.label}
+          </p>
           <p className="mt-2 text-muted">{part.brand}</p>
           <h1 className="font-display text-3xl font-bold sm:text-4xl">{part.name}</h1>
 
@@ -73,6 +78,10 @@ export default async function PartPage({ params }: PageProps<"/parts/[slug]">) {
                 Save {formatINR(worst.price_inr - best.price_inr)} vs. the priciest store
               </p>
             )}
+
+            <div className="mt-5 border-t border-line pt-4">
+              <PriceHistoryChart series={history} />
+            </div>
 
             <ul className="mt-5 space-y-2">
               {part.listings.map((l, i) => (

@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseKey, supabaseUrl } from "@/lib/supabase/env";
 
-const PROTECTED = ["/dashboard", "/forum/new"];
+const PROTECTED = ["/dashboard", "/forum/new", "/admin"];
 
 // Refreshes the Supabase session cookie on every request and bounces
 // signed-out visitors away from account-only pages.

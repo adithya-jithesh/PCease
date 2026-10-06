@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LayoutGrid, LogOut, UserRound } from "lucide-react";
+import { IndianRupee, LayoutGrid, LogOut, UserRound } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 
-export function UserMenu({ email }: { email: string }) {
+export function UserMenu({ email, admin = false }: { email: string; admin?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -39,6 +39,15 @@ export function UserMenu({ email }: { email: string }) {
           >
             <LayoutGrid className="size-4" /> My builds
           </Link>
+          {admin && (
+            <Link
+              href="/admin/prices"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2"
+            >
+              <IndianRupee className="size-4" /> Price admin
+            </Link>
+          )}
           <form action={signOut}>
             <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-surface-2">
               <LogOut className="size-4" /> Sign out

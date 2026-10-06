@@ -14,7 +14,7 @@ on conflict (slug) do nothing;
 
 -- Parts, plus listings generated from each part's reference price.
 -- One statement with no temp tables, so it works however the SQL editor runs
--- it, and it's safe to re-run (existing rows are updated, not duplicated).
+-- it, and it's safe to re-run (part details are refreshed; existing prices are kept).
 with seed_parts (slug, category, brand, name, specs, watts, tier, ref_price) as (
 values
 -- CPUs ---------------------------------------------------------------------
@@ -109,5 +109,6 @@ join upserted u on u.slug = s.slug
 cross join public.retailers r
 where (u.id * 3 + r.id) % 4 <> 0
    or r.slug = 'amazon'
-on conflict (part_id, retailer_id) do update
-  set price_inr = excluded.price_inr, in_stock = excluded.in_stock, updated_at = now();
+-- Never overwrite a listing that already exists: its price may be newer than
+-- this file (updated by the price job or an admin).
+on conflict (part_id, retailer_id) do nothing;
