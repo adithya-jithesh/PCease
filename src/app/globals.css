@@ -112,3 +112,49 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Markdown answers from the AI advisor. */
+.prose-advisor > * + * {
+  margin-top: 0.6em;
+}
+.prose-advisor ul,
+.prose-advisor ol {
+  padding-left: 1.25em;
+}
+.prose-advisor ul {
+  list-style: disc;
+}
+.prose-advisor ol {
+  list-style: decimal;
+}
+.prose-advisor li + li {
+  margin-top: 0.3em;
+}
+.prose-advisor li::marker {
+  color: var(--muted);
+}
+.prose-advisor strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.prose-advisor code {
+  font-family: var(--font-jetbrains), monospace;
+  font-size: 0.9em;
+}
+.prose-advisor table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.prose-advisor th,
+.prose-advisor td {
+  border: 1px solid var(--line);
+  padding: 0.35em 0.6em;
+  text-align: left;
+  white-space: nowrap;
+}
+.prose-advisor th {
+  background: var(--surface-2);
+  font-weight: 600;
+}
