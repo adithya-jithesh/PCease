@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Check, Copy, Loader2, Plus, RotateCcw, Save, Trash2, Zap } from "lucide-react";
+import { Check, Copy, Loader2, Plus, RotateCcw, Save, Sparkles, Trash2, Zap } from "lucide-react";
 import { BuildChecks, StatusPill } from "@/components/build-checks";
+import { CategoryTile } from "@/components/category-icon";
 import { CATEGORY_META, headlineSpecs, slotNoun } from "@/lib/catalog";
 import { analyzeBuild } from "@/lib/compat";
 import { formatINR } from "@/lib/format";
@@ -55,12 +56,18 @@ export function Builder({
   const analysis = useMemo(() => analyzeBuild(resolved), [resolved]);
   const count = Object.keys(resolved).length;
 
+  const filled = CATEGORIES.filter((slot) => resolved[slot]).length;
+  const hasErrors = analysis.checks.some((c) => c.level === "error");
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 pt-10 pb-28 lg:pb-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">{editing ? "Editing saved build" : "Builder"}</p>
           <h1 className="mt-2 font-display text-3xl font-bold">{editing?.title ?? "Your build"}</h1>
+          <p className="mt-1 text-sm text-muted">
+            Pick a part for each slot. We&apos;ll check that everything fits together as you go.
+          </p>
         </div>
         {count > 0 && (
           <button onClick={clear} className="btn-ghost text-muted">
@@ -69,19 +76,33 @@ export function Builder({
         )}
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
+      <div className="mt-6 flex items-center gap-3">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${hasErrors ? "bg-err" : "bg-accent"}`}
+            style={{ width: `${(filled / CATEGORIES.length) * 100}%` }}
+          />
+        </div>
+        <span className="font-mono text-xs text-muted">
+          {filled}/{CATEGORIES.length} parts
+        </span>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
         <ol className="space-y-2">
           {CATEGORIES.map((slot) => {
             const part = resolved[slot];
             return (
-              <li key={slot} className="card flex items-center gap-4 p-4">
-                <span className="w-24 shrink-0 font-mono text-xs text-muted sm:w-28">
-                  {CATEGORY_META[slot].label}
-                </span>
+              <li
+                key={slot}
+                className={`card flex items-center gap-4 p-3 transition sm:p-4 ${part ? "" : "border-dashed bg-transparent"}`}
+              >
+                <CategoryTile category={slot} className={part ? "" : "bg-surface-2 text-muted"} />
                 {part ? (
                   <>
                     <div className="min-w-0 flex-1">
-                      <Link href={`/parts/${part.slug}`} className="font-medium hover:underline">
+                      <p className="font-mono text-[11px] text-muted">{CATEGORY_META[slot].label}</p>
+                      <Link href={`/parts/${part.slug}`} className="font-medium hover:text-accent">
                         {part.brand} {part.name}
                       </Link>
                       <div className="mt-1 hidden flex-wrap gap-1 sm:flex">
@@ -89,15 +110,16 @@ export function Builder({
                           <span key={s} className="chip">{s}</span>
                         ))}
                       </div>
+                      <p className="font-mono text-sm font-semibold sm:hidden">{formatINR(part.best_price)}</p>
                     </div>
                     <span className="hidden font-mono font-semibold sm:block">{formatINR(part.best_price)}</span>
                     <div className="flex">
-                      <button onClick={() => setPicking(slot)} className="btn-ghost px-2 text-xs text-muted">
+                      <button onClick={() => setPicking(slot)} className="btn-ghost px-2.5 text-xs text-muted">
                         Swap
                       </button>
                       <button
                         onClick={() => setPart(slot, null)}
-                        className="btn-ghost px-2 text-muted"
+                        className="btn-ghost px-2 text-muted hover:text-err"
                         aria-label={`Remove ${CATEGORY_META[slot].label}`}
                       >
                         <Trash2 className="size-4" />
@@ -107,9 +129,17 @@ export function Builder({
                 ) : (
                   <button
                     onClick={() => setPicking(slot)}
-                    className="flex flex-1 items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2 text-sm text-muted transition hover:border-accent hover:text-accent"
+                    className="group flex flex-1 items-center justify-between gap-2 text-left text-sm"
                   >
-                    <Plus className="size-4" /> Choose {slotNoun(slot)}
+                    <span>
+                      <span className="block font-medium text-ink group-hover:text-accent">
+                        Choose {slotNoun(slot)}
+                      </span>
+                      <span className="text-xs text-muted">{CATEGORY_META[slot].blurb}</span>
+                    </span>
+                    <span className="grid size-8 place-items-center rounded-full border border-line text-muted transition group-hover:border-accent group-hover:text-accent">
+                      <Plus className="size-4" />
+                    </span>
                   </button>
                 )}
               </li>
@@ -118,31 +148,65 @@ export function Builder({
         </ol>
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <div className="card p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted">Total</p>
-              {count > 0 && <StatusPill checks={analysis.checks} />}
-            </div>
-            <p className="font-mono text-3xl font-semibold">{formatINR(analysis.total)}</p>
-            <p className="mt-3 flex items-center gap-1.5 text-sm text-muted">
-              <Zap className="size-4 text-accent" />
-              ~{analysis.estimatedWatts} W load · {analysis.recommendedPsu} W PSU recommended
-            </p>
-            {analysis.missing.length > 0 && count > 0 && (
+          {count === 0 ? (
+            <div className="card glow p-5">
+              <h2 className="font-display text-lg font-semibold">Not sure where to start?</h2>
               <p className="mt-2 text-sm text-muted">
-                Still needed: {analysis.missing.map((m) => CATEGORY_META[m].label).join(", ")}
+                Most builds start with the CPU, since it decides which motherboard and memory fit. Or
+                let the advisor draft a whole build for your budget and tweak it here.
               </p>
-            )}
-          </div>
+              <div className="mt-4 flex flex-col gap-2">
+                <button onClick={() => setPicking("cpu")} className="btn-primary">
+                  <Plus className="size-4" /> Pick a CPU
+                </button>
+                <Link href="/advisor" className="btn-outline">
+                  <Sparkles className="size-4" /> Plan with the AI advisor
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="card p-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted">Total</p>
+                  <StatusPill checks={analysis.checks} />
+                </div>
+                <p className="font-mono text-3xl font-semibold">{formatINR(analysis.total)}</p>
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-muted">
+                  <Zap className="size-4 text-accent" />
+                  ~{analysis.estimatedWatts} W load · {analysis.recommendedPsu} W PSU recommended
+                </p>
+                {analysis.missing.length > 0 && (
+                  <p className="mt-2 text-sm text-muted">
+                    Still needed: {analysis.missing.map((m) => CATEGORY_META[m].label).join(", ")}
+                  </p>
+                )}
+              </div>
 
-          <div className="card p-5">
-            <h2 className="mb-4 font-display font-semibold">Compatibility</h2>
-            <BuildChecks checks={analysis.checks} />
-          </div>
+              <div className="card p-5">
+                <h2 className="mb-4 font-display font-semibold">Compatibility</h2>
+                <BuildChecks checks={analysis.checks} />
+              </div>
 
-          {count > 0 && <BuildActions build={build} signedIn={signedIn} editing={editing} />}
+              <BuildActions build={build} signedIn={signedIn} editing={editing} />
+            </>
+          )}
         </aside>
       </div>
+
+      {count > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/95 px-4 py-3 backdrop-blur lg:hidden">
+          <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+            <div>
+              <p className="font-mono text-lg font-semibold">{formatINR(analysis.total)}</p>
+              <p className="text-xs text-muted">
+                {filled}/{CATEGORIES.length} parts · ~{analysis.estimatedWatts} W
+              </p>
+            </div>
+            <StatusPill checks={analysis.checks} />
+          </div>
+        </div>
+      )}
 
       {picking && (
         <PartPicker

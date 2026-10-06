@@ -113,7 +113,7 @@ export default async function ComparePage({ searchParams }: PageProps<"/compare"
               <td className="p-4" />
               {parts.map((p) => (
                 <td key={p.id} className="p-4">
-                  <AddToBuildButton id={p.id} category={p.category} compact />
+                  <AddToBuildButton id={p.id} category={p.category} name={p.name} compact />
                 </td>
               ))}
             </tr>

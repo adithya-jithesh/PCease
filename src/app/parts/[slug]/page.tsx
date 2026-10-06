@@ -41,8 +41,8 @@ export default async function PartPage({ params }: PageProps<"/parts/[slug]">) {
           <h1 className="font-display text-3xl font-bold sm:text-4xl">{part.name}</h1>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            <AddToBuildButton id={part.id} category={part.category} goToBuilder />
-            <CompareToggle id={part.id} />
+            <AddToBuildButton id={part.id} category={part.category} name={part.name} goToBuilder />
+            <CompareToggle id={part.id} name={part.name} />
           </div>
 
           <h2 className="mt-10 font-display text-xl font-semibold">Specifications</h2>
