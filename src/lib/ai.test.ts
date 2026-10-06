@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isQuotaError, isRetryable, withModelFallback } from "./ai";
+import { isQuotaError, isRetryable, markBusy, orderByAvailability, withModelFallback } from "./ai";
 
 const apiError = (code: number, status: string) =>
   new Error(JSON.stringify({ error: { code, message: "x", status } }));
@@ -9,6 +9,8 @@ describe("isRetryable", () => {
     expect(isRetryable(apiError(503, "UNAVAILABLE"))).toBe(true);
     expect(isRetryable(apiError(429, "RESOURCE_EXHAUSTED"))).toBe(true);
     expect(isRetryable(new Error("This operation was aborted"))).toBe(true);
+    expect(isRetryable(new Error("Incomplete JSON segment at the end"))).toBe(true);
+    expect(isRetryable(new TypeError("fetch failed"))).toBe(true);
     expect(isRetryable(apiError(404, "NOT_FOUND"))).toBe(false);
     expect(isRetryable(apiError(400, "INVALID_ARGUMENT"))).toBe(false);
   });
@@ -47,5 +49,16 @@ describe("withModelFallback", () => {
     await expect(withModelFallback(["a", "b"], async () => Promise.reject(apiError(429, "RESOURCE_EXHAUSTED")))).rejects.toThrow(
       /RESOURCE_EXHAUSTED/,
     );
+  });
+});
+
+describe("orderByAvailability", () => {
+  it("moves recently busy models to the end", () => {
+    markBusy("cooldown-test-a");
+    expect(orderByAvailability(["cooldown-test-a", "cooldown-test-b", "cooldown-test-c"])).toEqual([
+      "cooldown-test-b",
+      "cooldown-test-c",
+      "cooldown-test-a",
+    ]);
   });
 });

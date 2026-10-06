@@ -84,7 +84,11 @@ export function Chat({ enabled, catalog }: { enabled: boolean; catalog: CatalogI
     if (!question || streaming) return;
     setInput("");
 
-    const history: Message[] = [...messages.filter((m) => !m.error), { role: "user", text: question }];
+    // If the last exchange failed, replace it rather than stacking a second copy of
+    // the question on top (the failed question is put back in the box for resending).
+    const last = messages.at(-1);
+    const kept = last?.role === "model" && last.error ? messages.slice(0, -2) : messages;
+    const history: Message[] = [...kept, { role: "user", text: question }];
     let reply: Message = { role: "model", text: "", status: "Thinking…" };
     const update = (patch: Partial<Message>) => {
       reply = { ...reply, ...patch };
@@ -120,6 +124,7 @@ export function Chat({ enabled, catalog }: { enabled: boolean; catalog: CatalogI
           if (!line.trim()) continue;
           const event = JSON.parse(line) as AdvisorEvent;
           if (event.t === "text") update({ text: reply.text + event.v, status: undefined });
+          else if (event.t === "rewind") update({ text: reply.text.slice(0, event.v) });
           else if (event.t === "status") update({ status: event.v });
           else if (event.t === "build") update({ build: event.v });
           else if (event.t === "error") update({ error: event.v, status: undefined });

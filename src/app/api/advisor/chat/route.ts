@@ -3,13 +3,14 @@ import { z } from "zod";
 import type { AdvisorEvent } from "@/lib/advisor/events";
 import { GUARD_INSTRUCTION, OFF_TOPIC_REPLY, systemInstruction } from "@/lib/advisor/prompt";
 import { runTool, TOOL_DECLARATIONS, TOOL_STATUS } from "@/lib/advisor/tools";
-import { createGemini, isRetryable, MODELS, withModelFallback } from "@/lib/ai";
+import { createGemini, isRetryable, markBusy, MODELS, withModelFallback } from "@/lib/ai";
 import { listParts } from "@/lib/data";
 import { sanitizeSelection } from "@/lib/share";
 import { createClient } from "@/lib/supabase/server";
 import type { Part } from "@/lib/types";
 
 const MAX_TOOL_ROUNDS = 6;
+const MAX_TURN_RETRIES = 2;
 
 const body = z.object({
   messages: z
@@ -127,7 +128,11 @@ export async function POST(request: Request) {
         // Pick whichever model is available for the first turn, then stay on it:
         // its thought signatures in the history only work with the same model.
         let model: string | undefined;
-        for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+        // Characters of answer text sent so far, so a failed attempt can be withdrawn.
+        let sent = 0;
+
+        /** One model turn, streamed to the browser. */
+        const streamTurn = async (): Promise<GenPart[]> => {
           let response;
           if (!model) {
             const picked = await withModelFallback(MODELS.chat, (m) =>
@@ -138,12 +143,40 @@ export async function POST(request: Request) {
           } else {
             response = await ai.models.generateContentStream({ model, contents, config });
           }
-          const modelParts: GenPart[] = [];
-
+          const parts: GenPart[] = [];
           for await (const chunk of response) {
             for (const part of chunk.candidates?.[0]?.content?.parts ?? []) {
-              modelParts.push(part);
-              if (part.text && !part.thought) send({ t: "text", v: part.text });
+              parts.push(part);
+              if (part.text && !part.thought) {
+                send({ t: "text", v: part.text });
+                sent += part.text.length;
+              }
+            }
+          }
+          return parts;
+        };
+
+        for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
+          // Google sometimes drops a stream part-way when it's overloaded. Retry the
+          // turn, withdrawing any half-written text first.
+          const sentBefore = sent;
+          let modelParts: GenPart[] | undefined;
+          for (let attempt = 0; !modelParts; attempt++) {
+            try {
+              modelParts = await streamTurn();
+            } catch (err) {
+              if (!isRetryable(err) || attempt >= MAX_TURN_RETRIES) throw err;
+              console.warn(`advisor turn failed on ${model}, retrying`, err instanceof Error ? err.message : err);
+              if (sent > sentBefore) {
+                send({ t: "rewind", v: sentBefore });
+                sent = sentBefore;
+              }
+              send({ t: "status", v: "The AI is busy, retrying…" });
+              // Before any tool calls we're free to switch to another model.
+              if (round === 0 && model) {
+                markBusy(model);
+                model = undefined;
+              }
             }
           }
 

@@ -30,12 +30,34 @@ function statusOf(err: unknown): number | null {
   return match ? Number(match[1]) : null;
 }
 
-/** Overloaded, rate-limited, out of quota or timed out: worth trying another model. */
+/**
+ * Overloaded, rate-limited, out of quota, timed out, or the connection dropped
+ * mid-stream: worth trying again or with another model.
+ */
 export function isRetryable(err: unknown): boolean {
   const status = statusOf(err);
   if (status && [429, 500, 503, 504].includes(status)) return true;
   const message = String(err instanceof Error ? err.message : err);
-  return /RESOURCE_EXHAUSTED|UNAVAILABLE|overloaded|high demand|aborted|timed? ?out/i.test(message);
+  return /RESOURCE_EXHAUSTED|UNAVAILABLE|overloaded|high demand|aborted|timed? ?out|Incomplete JSON|fetch failed|ECONNRESET|socket|terminated|network/i.test(
+    message,
+  );
+}
+
+// Models that just failed with a busy/quota error are tried last for a while,
+// so every request doesn't wait on the same overloaded model first.
+const COOLDOWN_MS = 60_000;
+const busyUntil = new Map<string, number>();
+
+export function markBusy(model: string) {
+  busyUntil.set(model, Date.now() + COOLDOWN_MS);
+}
+
+/** Preference order with recently-busy models moved to the end. */
+export function orderByAvailability(models: string[]): string[] {
+  const now = Date.now();
+  const ready = models.filter((m) => (busyUntil.get(m) ?? 0) <= now);
+  const cooling = models.filter((m) => (busyUntil.get(m) ?? 0) > now);
+  return [...ready, ...cooling];
 }
 
 export function isQuotaError(err: unknown): boolean {
@@ -48,12 +70,13 @@ export async function withModelFallback<T>(
   call: (model: string) => Promise<T>,
 ): Promise<{ result: T; model: string }> {
   let lastError: unknown = new Error("No Gemini models configured");
-  for (const model of models) {
+  for (const model of orderByAvailability(models)) {
     try {
       return { result: await call(model), model };
     } catch (err) {
       lastError = err;
       if (!isRetryable(err)) throw err;
+      markBusy(model);
       console.warn(`Gemini ${model} unavailable, trying the next model`, statusOf(err) ?? "");
     }
   }
