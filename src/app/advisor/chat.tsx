@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { ArrowUp, Bot, Check, Loader2, Plus, RotateCcw, Sparkles, Wrench } from "lucide-react";
 import { CategoryIcon } from "@/components/category-icon";
 import type { AdvisorEvent } from "@/lib/advisor/events";
+import { humanize, resolveSlug } from "@/lib/advisor/slugs";
 import { formatINR } from "@/lib/format";
 import { useBuild } from "@/lib/stores";
 import { toast } from "@/lib/toast";
@@ -280,8 +281,8 @@ function AdvisorMarkdown({ text, bySlug }: { text: string; bySlug: Map<string, C
         components={{
           a: ({ href, children }) => {
             if (href?.startsWith("part:")) {
-              const item = bySlug.get(href.slice(5));
-              return item ? <PartChip item={item} /> : <span>{children}</span>;
+              const item = resolveSlug(href.slice(5), bySlug);
+              return item ? <PartChip item={item} /> : <span className="font-medium">{humanize(href.slice(5))}</span>;
             }
             return (
               <a href={href} target="_blank" rel="noreferrer nofollow" className="text-accent underline">
